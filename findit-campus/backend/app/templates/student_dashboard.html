@@ -355,14 +355,23 @@
     let items = [];
 
     try {
-      const lostRes = await apiFetch('/lost?status=Searching&limit=5');
-
+      const lostRes = await apiFetch('/lost?limit=10');
       if (lostRes && lostRes.ok && lostRes.data && lostRes.data.data) {
         const lostList = extractArray(lostRes.data.data, 'reports');
         items.push(...lostList.map(i => ({ ...i, type: 'LOST' })));
       }
     } catch(e) {
-      console.error("Error fetching reports:", e);
+      console.error("Error fetching lost reports:", e);
+    }
+
+    try {
+      const foundRes = await apiFetch('/found?limit=10');
+      if (foundRes && foundRes.ok && foundRes.data && foundRes.data.data) {
+        const foundList = extractArray(foundRes.data.data, 'reports');
+        items.push(...foundList.map(i => ({ ...i, type: 'FOUND' })));
+      }
+    } catch(e) {
+      console.error("Error fetching found reports:", e);
     }
 
     if (items.length === 0) {

@@ -12,8 +12,13 @@ import bcrypt
 import zipfile
 import xml.etree.ElementTree as ET
 
-SQLITE_PATH = r'c:/Users/saive/Music/final year project/findit-campus/backend/findit_campus.db'
-EXCEL_PATH = r'c:/Users/saive/Music/final year project/login_password_roll_numbers (2).xlsx'
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+SQLITE_PATH = os.path.join(BASE_DIR, 'findit-campus', 'backend', 'findit_campus.db')
+if not os.path.exists(SQLITE_PATH):
+    SQLITE_PATH = os.path.join(BASE_DIR, 'findit_campus.db')
+EXCEL_PATH = os.path.join(BASE_DIR, 'login_password_roll_numbers (2).xlsx')
+if not os.path.exists(EXCEL_PATH):
+    EXCEL_PATH = os.path.join(BASE_DIR, 'login_password_roll_numbers.xlsx')
 
 
 def read_excel_records(filepath):

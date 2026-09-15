@@ -10,12 +10,21 @@ from app.models.question_answer import QuestionAnswer
 lost_routes_bp = Blueprint('lost_routes', __name__)
 
 def trigger_matching_async(report_id, report_type):
-    """Run AI matching asynchronously in a background thread."""
+    """Run AI matching. Synchronous on Vercel (where daemon threads are killed), async locally."""
     from app.services.matching_service import matching_service
-    # We need application context to query database inside thread
     from flask import current_app
     app = current_app._get_current_object()
-    
+
+    # On Vercel serverless: daemon threads get killed when response ends.
+    # Matching takes ~20ms, so running synchronously guarantees matching & emails execute!
+    if os.getenv('VERCEL'):
+        try:
+            matches = matching_service.run_matching(report_id, report_type)
+            print(f"[MatchingService] Serverless matching complete for {report_type} #{report_id}: {len(matches)} matches")
+        except Exception as e:
+            print(f"[MatchingService] Serverless matching error: {e}")
+        return
+
     def run_with_context():
         with app.app_context():
             try:

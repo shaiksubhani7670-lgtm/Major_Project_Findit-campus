@@ -20,7 +20,7 @@ def _send_async_email(app, msg):
 
 
 def _send_email(subject, recipients, body_html, body_text=None):
-    """Send an email with HTML body asynchronously in a background thread."""
+    """Send an email with HTML body. Synchronous on Vercel, threaded locally."""
     try:
         msg = Message(
             subject=subject,
@@ -28,6 +28,16 @@ def _send_email(subject, recipients, body_html, body_text=None):
             html=body_html,
             body=body_text or ''
         )
+        import os
+        if os.getenv('VERCEL'):
+            try:
+                mail.send(msg)
+                print(f"[EmailService] Synchronous serverless email sent to {recipients}")
+                return True
+            except Exception as e:
+                print(f"[EmailService] Failed to send email to {recipients}: {e}")
+                return False
+
         try:
             app = current_app._get_current_object()
             thr = threading.Thread(target=_send_async_email, args=(app, msg))
