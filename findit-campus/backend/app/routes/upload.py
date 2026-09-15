@@ -68,9 +68,19 @@ from flask import send_from_directory
 
 def _get_upload_dir(report_type):
     """Get or create separate directory for lost/found uploads inside static folder."""
+    # On Vercel or serverless (where /var/task is read-only), ALWAYS use /tmp/uploads
+    if os.getenv('VERCEL') or (os.path.exists('/tmp') and not os.access(current_app.root_path, os.W_OK)):
+        tmp_dir = os.path.join('/tmp', 'uploads', report_type)
+        os.makedirs(tmp_dir, exist_ok=True)
+        return tmp_dir
+
     upload_dir = os.path.join(current_app.root_path, 'static', 'uploads', report_type)
     try:
         os.makedirs(upload_dir, exist_ok=True)
+        test_file = os.path.join(upload_dir, '.write_test')
+        with open(test_file, 'w') as f:
+            f.write('1')
+        os.remove(test_file)
         return upload_dir
     except (OSError, PermissionError):
         tmp_dir = os.path.join('/tmp', 'uploads', report_type)
@@ -80,20 +90,27 @@ def _get_upload_dir(report_type):
 def _save_file_local(file, report_type):
     """Save a single file locally, return (url, filename) or raise."""
     upload_dir = _get_upload_dir(report_type)
-    ext = file.filename.rsplit('.', 1)[1].lower()
+    ext = file.filename.rsplit('.', 1)[1].lower() if '.' in file.filename else 'jpg'
     unique_name = f"{uuid.uuid4().hex}.{ext}"
     filepath = os.path.join(upload_dir, unique_name)
-    file.save(filepath)
-    if '/tmp' in upload_dir:
-        url = f"/api/upload/file/{report_type}/{unique_name}"
-    else:
-        url = f"/static/uploads/{report_type}/{unique_name}"
+    try:
+        file.save(filepath)
+    except (OSError, PermissionError):
+        tmp_dir = os.path.join('/tmp', 'uploads', report_type)
+        os.makedirs(tmp_dir, exist_ok=True)
+        filepath = os.path.join(tmp_dir, unique_name)
+        file.save(filepath)
+
+    url = f"/static/uploads/{report_type}/{unique_name}"
     return url, unique_name
 
 @upload_bp.route('/file/<report_type>/<filename>')
 def serve_tmp_file(report_type, filename):
-    tmp_dir = os.path.join('/tmp', 'uploads', report_type)
-    return send_from_directory(tmp_dir, filename)
+    tmp_path = os.path.join('/tmp', 'uploads', report_type, filename)
+    if os.path.exists(tmp_path):
+        return send_from_directory(os.path.dirname(tmp_path), filename)
+    static_path = os.path.join(current_app.root_path, 'static', 'uploads', report_type)
+    return send_from_directory(static_path, filename)
 
 def _save_file(file, report_type):
     """

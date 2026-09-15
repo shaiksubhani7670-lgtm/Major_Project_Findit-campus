@@ -89,8 +89,21 @@ def import_students():
 def poster(report_id):
     return render_template('poster.html', report_id=report_id)
 
+import os
+from flask import send_from_directory, current_app
+
 @pages_bp.route('/verify-email')
 def verify_email_page():
     return render_template('verify_email.html')
+
+@pages_bp.route('/static/uploads/<report_type>/<filename>')
+def serve_static_upload(report_type, filename):
+    tmp_path = os.path.join('/tmp', 'uploads', report_type, filename)
+    if os.path.exists(tmp_path):
+        return send_from_directory(os.path.dirname(tmp_path), filename)
+    static_path = os.path.join(current_app.root_path, 'static', 'uploads', report_type)
+    if os.path.exists(os.path.join(static_path, filename)):
+        return send_from_directory(static_path, filename)
+    return "File not found", 404
 
 
