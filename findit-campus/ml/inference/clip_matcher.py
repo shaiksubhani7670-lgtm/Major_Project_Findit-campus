@@ -33,7 +33,10 @@ import logging
 from typing import Optional, Union
 from pathlib import Path
 
-import numpy as np
+try:
+    import numpy as np
+except ImportError:
+    np = None
 
 logger = logging.getLogger(__name__)
 

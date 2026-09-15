@@ -28,7 +28,10 @@ import re
 from difflib import SequenceMatcher
 from typing import List
 
-import numpy as np
+try:
+    import numpy as np
+except ImportError:
+    np = None
 
 logger = logging.getLogger(__name__)
 

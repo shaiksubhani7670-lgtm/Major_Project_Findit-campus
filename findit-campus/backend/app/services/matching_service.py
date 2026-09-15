@@ -21,9 +21,15 @@ Privacy rules (unchanged):
   - Contact details revealed only after ownership verification.
 """
 
+import os
+import sys
 import json
 import logging
 from datetime import datetime, timedelta, timezone
+
+_ml_parent = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', '..'))
+if _ml_parent not in sys.path:
+    sys.path.insert(0, _ml_parent)
 
 try:
     import numpy as np
@@ -54,10 +60,26 @@ class MatchingService:
     # ------------------------------------------------------------------
     # Thresholds
     # ------------------------------------------------------------------
+    MIN_SAVE_THRESHOLD     = 50.0   # ≥ this → save match to DB
     MATCH_ALERT_THRESHOLD  = 70.0   # ≥ this → send alert to lost user
     MATCH_STATUS_THRESHOLD = 95.0   # ≥ this → mark items Matched
     CANDIDATE_WINDOW_DAYS  = 60     # only compare within 60 days
     MAX_FULL_SCORE_CANDIDATES = 20  # BM25+RRF top-K before expensive ML
+
+    CATEGORY_SYNONYMS = {
+        'phone': {'phone', 'mobile', 'smartphone', 'cellphone', 'cell phone', 'electronics'},
+        'mobile': {'phone', 'mobile', 'smartphone', 'cellphone', 'cell phone', 'electronics'},
+        'electronics': {'phone', 'mobile', 'laptop', 'charger', 'power bank', 'pen drive', 'calculator', 'electronics'},
+        'laptop': {'laptop', 'computer', 'pc', 'notebook', 'electronics'},
+        'bag': {'bag', 'backpack', 'laptop bag', 'lunch box'},
+        'backpack': {'bag', 'backpack', 'laptop bag'},
+        'ring': {'ring', 'jewelry', 'chain', 'bracelet'},
+        'chain': {'ring', 'jewelry', 'chain', 'bracelet'},
+        'bracelet': {'ring', 'jewelry', 'chain', 'bracelet'},
+        'earbuds': {'earbuds', 'headphones', 'airpods', 'earphones', 'electronics'},
+        'watch': {'watch', 'smartwatch'},
+        'spectacles': {'spectacles', 'glasses', 'sunglasses'},
+    }
 
     # ------------------------------------------------------------------
     # Lazy loaders
@@ -121,11 +143,25 @@ class MatchingService:
             return []
 
         cutoff = datetime.now(timezone.utc) - timedelta(days=self.CANDIDATE_WINDOW_DAYS)
+        cat = (lost_item.category or '').strip().lower()
+        synonyms = self.CATEGORY_SYNONYMS.get(cat, {cat}) | {cat}
+
         candidates = FoundItem.query.filter(
-            FoundItem.category == lost_item.category,
             FoundItem.status == "Searching",
             FoundItem.created_at >= cutoff,
+            db.func.lower(FoundItem.category).in_(synonyms)
         ).all()
+
+        # If few candidates found, also retrieve recent searching items so AI can score them
+        if len(candidates) < 5:
+            more_candidates = FoundItem.query.filter(
+                FoundItem.status == "Searching",
+                FoundItem.created_at >= cutoff,
+            ).order_by(FoundItem.created_at.desc()).limit(20).all()
+            cand_ids = {c.report_id for c in candidates}
+            for mc in more_candidates:
+                if mc.report_id not in cand_ids:
+                    candidates.append(mc)
 
         logger.info(
             f"[MatchingService] Lost#{lost_id}: {len(candidates)} DB candidates "
@@ -140,11 +176,25 @@ class MatchingService:
             return []
 
         cutoff = datetime.now(timezone.utc) - timedelta(days=self.CANDIDATE_WINDOW_DAYS)
+        cat = (found_item.category or '').strip().lower()
+        synonyms = self.CATEGORY_SYNONYMS.get(cat, {cat}) | {cat}
+
         candidates = LostItem.query.filter(
-            LostItem.category == found_item.category,
             LostItem.status == "Searching",
             LostItem.created_at >= cutoff,
+            db.func.lower(LostItem.category).in_(synonyms)
         ).all()
+
+        # If few candidates found, also retrieve recent searching items so AI can score them
+        if len(candidates) < 5:
+            more_candidates = LostItem.query.filter(
+                LostItem.status == "Searching",
+                LostItem.created_at >= cutoff,
+            ).order_by(LostItem.created_at.desc()).limit(20).all()
+            cand_ids = {c.report_id for c in candidates}
+            for mc in more_candidates:
+                if mc.report_id not in cand_ids:
+                    candidates.append(mc)
 
         logger.info(
             f"[MatchingService] Found#{found_id}: {len(candidates)} DB candidates "
@@ -287,6 +337,10 @@ class MatchingService:
                     f"{existing.overall_score}% → {overall}%"
                 )
             return existing
+
+        # ------ Minimum score to persist match ------
+        if overall < self.MIN_SAVE_THRESHOLD:
+            return None
 
         # ------ Create new match --------------------------------------
         new_match = Match(
