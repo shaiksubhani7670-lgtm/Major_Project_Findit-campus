@@ -136,7 +136,7 @@
     noMatches.classList.add('hidden');
     grid.classList.add('hidden');
 
-    const res = await apiFetch('/matches/');
+    const res = await apiFetch('/match');
     loader.classList.add('hidden');
 
     if (res && res.ok && res.data && res.data.success) {

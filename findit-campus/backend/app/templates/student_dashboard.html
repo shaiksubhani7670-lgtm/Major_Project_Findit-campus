@@ -223,10 +223,10 @@
 
       <div class="card-flat p-5 space-y-1">
         <div class="flex items-center justify-between text-slate-400">
-          <span class="text-[10px] font-bold uppercase tracking-wider">Found Reports</span>
-          <i data-lucide="plus-circle" class="w-4 h-4 text-emerald-600"></i>
+          <span class="text-[10px] font-bold uppercase tracking-wider">AI Matches</span>
+          <i data-lucide="sparkles" class="w-4 h-4 text-purple-600"></i>
         </div>
-        <div id="stat-found" class="text-2xl font-bold text-slate-900 font-mono">0</div>
+        <div id="stat-matches" class="text-2xl font-bold text-purple-600 font-mono">0</div>
       </div>
 
       <div class="card-flat p-5 space-y-1">
@@ -342,7 +342,9 @@
         }
         const stats = pData.statistics || {};
         document.getElementById('stat-lost').innerText = stats.total_lost_reports || 0;
-        document.getElementById('stat-found').innerText = stats.total_found_reports || 0;
+        if (document.getElementById('stat-matches')) {
+          document.getElementById('stat-matches').innerText = stats.total_matches || 0;
+        }
         document.getElementById('stat-recovered').innerText = stats.items_returned || 0;
         document.getElementById('stat-pending').innerText = stats.pending_reports || 0;
       }
@@ -362,16 +364,6 @@
       }
     } catch(e) {
       console.error("Error fetching lost reports:", e);
-    }
-
-    try {
-      const foundRes = await apiFetch('/found?limit=10');
-      if (foundRes && foundRes.ok && foundRes.data && foundRes.data.data) {
-        const foundList = extractArray(foundRes.data.data, 'reports');
-        items.push(...foundList.map(i => ({ ...i, type: 'FOUND' })));
-      }
-    } catch(e) {
-      console.error("Error fetching found reports:", e);
     }
 
     if (items.length === 0) {
@@ -428,6 +420,9 @@
       }
 
       if (matches.length > 0) {
+        if (document.getElementById('stat-matches')) {
+          document.getElementById('stat-matches').innerText = matches.length;
+        }
         notifContainer.innerHTML = matches.slice(0, 4).map(m => {
           const itemObj = m.lost_item || m.found_item;
           const imgUrl = getImageUrl(itemObj);

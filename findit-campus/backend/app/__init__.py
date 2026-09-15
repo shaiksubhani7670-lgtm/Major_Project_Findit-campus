@@ -92,6 +92,7 @@ def _register_blueprints(app):
     app.register_blueprint(lost_routes_bp, url_prefix='/api/lost')
     app.register_blueprint(found_routes_bp, url_prefix='/api/found')
     app.register_blueprint(match_routes_bp, url_prefix='/api/match')
+    app.register_blueprint(match_routes_bp, url_prefix='/api/matches', name='matches_routes_bp')
     app.register_blueprint(claim_routes_bp, url_prefix='/api/claim')
     app.register_blueprint(claim_routes_bp, url_prefix='/api/claims', name='claims_routes_bp')
     app.register_blueprint(notification_routes_bp, url_prefix='/api/notifications')

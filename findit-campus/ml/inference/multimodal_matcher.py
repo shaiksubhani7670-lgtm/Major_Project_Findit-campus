@@ -112,13 +112,34 @@ def _colour_score(lost_colour: str, found_colour: str) -> float:
     return 0.0
 
 
-def _brand_score(lost_ad: Optional[dict], found_ad: Optional[dict]) -> float:
+_KNOWN_BRANDS = {
+    'vivo', 'oppo', 'samsung', 'apple', 'iphone', 'redmi', 'xiaomi', 'realme', 'oneplus',
+    'motorola', 'moto', 'nokia', 'google', 'pixel', 'asus', 'lenovo', 'hp', 'dell',
+    'acer', 'boat', 'noise', 'fire-boltt', 'casio', 'titan', 'fastrack', 'fossil',
+    'timex', 'rolex', 'sony', 'jbl', 'canon', 'nikon', 'logitech', 'zebronics'
+}
+
+def _extract_brand_from_text(text: str) -> str:
+    if not text:
+        return ""
+    words = set(re.findall(r'[a-zA-Z0-9]+', text.lower()))
+    for b in _KNOWN_BRANDS:
+        if b in words:
+            return b
+    return ""
+
+def _brand_score(lost_ad: Optional[dict], found_ad: Optional[dict], lost_item: Optional[dict] = None, found_item: Optional[dict] = None) -> float:
     ld, fd = (lost_ad or {}), (found_ad or {})
 
     lb = (ld.get("brand") or "").strip().lower()
     fb = (fd.get("brand") or "").strip().lower()
     lm = (ld.get("model") or "").strip().lower()
     fm = (fd.get("model") or "").strip().lower()
+
+    if not lb and lost_item:
+        lb = _extract_brand_from_text((lost_item.get("item_name") or "") + " " + (lost_item.get("description") or ""))
+    if not fb and found_item:
+        fb = _extract_brand_from_text((found_item.get("item_name") or "") + " " + (found_item.get("description") or ""))
 
     if not lb and not fb:
         return 0.5   # no brand info — neutral
@@ -354,8 +375,11 @@ class MultimodalMatcher:
         lost_img  = lost_images[0]  if lost_images  else None
         found_img = found_images[0] if found_images else None
 
-        both_images = bool(lost_images and found_images)
-        one_image   = bool(lost_images or found_images) and not both_images
+        siglip = self._get_siglip()
+        siglip_available = bool(siglip and siglip.is_available())
+
+        both_images = bool(lost_images and found_images and siglip_available)
+        one_image   = bool((lost_images or found_images) and not both_images and siglip_available)
 
         if both_images:
             weights, mode = _WEIGHTS_BOTH_IMAGES, "both_images"
@@ -373,11 +397,11 @@ class MultimodalMatcher:
         lost_desc  = (lost.get("description")  or "")
         found_desc = (found.get("description") or "")
 
-        if lost_img and blip.is_available():
+        if lost_img and blip and blip.is_available():
             lost_desc, used  = blip.enrich_description(lost_desc, lost_img)
             blip_used = blip_used or used
 
-        if found_img and blip.is_available():
+        if found_img and blip and blip.is_available():
             found_desc, used = blip.enrich_description(found_desc, found_img)
             blip_used = blip_used or used
 
@@ -396,13 +420,11 @@ class MultimodalMatcher:
         # ----------------------------------------------------------------
         # 4. SigLIP visual / cross-modal similarity
         # ----------------------------------------------------------------
-        visual_sim = 0.0
-        siglip = self._get_siglip()
-
-        if both_images and siglip.is_available():
+        visual_sim = 0.5
+        if both_images:
             # Multi-image averaging across all uploaded photos
             visual_sim = _multi_image_score(lost_images, found_images, siglip)
-        elif one_image and siglip.is_available():
+        elif one_image:
             if lost_images:
                 # Found has only text → found_text ↔ lost images
                 visual_sim = _cross_modal_score(found_text, lost_images, siglip)
@@ -419,6 +441,8 @@ class MultimodalMatcher:
         brand_sim = _brand_score(
             lost.get("additional_details"),
             found.get("additional_details"),
+            lost_item=lost,
+            found_item=found,
         )
         loc_sim  = _location_score(
             lost.get("location", ""), found.get("location", "")

@@ -59,13 +59,20 @@ def list_matches():
             'data': {'matches': []}
         }), 200
 
-    # Query matches matching these IDs
-    query = Match.query.filter(
-        db.or_(
-            Match.lost_report_id.in_(lost_ids) if lost_ids else False,
-            Match.found_report_id.in_(found_ids) if found_ids else False
-        )
-    )
+    conditions = []
+    if lost_ids:
+        conditions.append(Match.lost_report_id.in_(lost_ids))
+    if found_ids:
+        conditions.append(Match.found_report_id.in_(found_ids))
+
+    if not conditions:
+        return jsonify({
+            'success': True,
+            'message': 'No matches found',
+            'data': {'matches': []}
+        }), 200
+
+    query = Match.query.filter(db.or_(*conditions))
 
     matches = query.order_by(Match.overall_score.desc()).all()
     matches_data = []

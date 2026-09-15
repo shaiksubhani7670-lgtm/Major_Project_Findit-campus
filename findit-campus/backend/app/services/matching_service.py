@@ -60,9 +60,9 @@ class MatchingService:
     # ------------------------------------------------------------------
     # Thresholds
     # ------------------------------------------------------------------
-    MIN_SAVE_THRESHOLD     = 50.0   # ≥ this → save match to DB
-    MATCH_ALERT_THRESHOLD  = 70.0   # ≥ this → send alert to lost user
-    MATCH_STATUS_THRESHOLD = 95.0   # ≥ this → mark items Matched
+    MIN_SAVE_THRESHOLD     = 45.0   # ≥ this → save match to DB
+    MATCH_ALERT_THRESHOLD  = 55.0   # ≥ this → send alert to lost user
+    MATCH_STATUS_THRESHOLD = 90.0   # ≥ this → mark items Matched
     CANDIDATE_WINDOW_DAYS  = 60     # only compare within 60 days
     MAX_FULL_SCORE_CANDIDATES = 20  # BM25+RRF top-K before expensive ML
 
@@ -147,7 +147,7 @@ class MatchingService:
         synonyms = self.CATEGORY_SYNONYMS.get(cat, {cat}) | {cat}
 
         candidates = FoundItem.query.filter(
-            FoundItem.status == "Searching",
+            FoundItem.status.notin_(["Completed", "Returned", "Cancelled"]),
             FoundItem.created_at >= cutoff,
             db.func.lower(FoundItem.category).in_(synonyms)
         ).all()
@@ -155,7 +155,7 @@ class MatchingService:
         # If few candidates found, also retrieve recent searching items so AI can score them
         if len(candidates) < 5:
             more_candidates = FoundItem.query.filter(
-                FoundItem.status == "Searching",
+                FoundItem.status.notin_(["Completed", "Returned", "Cancelled"]),
                 FoundItem.created_at >= cutoff,
             ).order_by(FoundItem.created_at.desc()).limit(20).all()
             cand_ids = {c.report_id for c in candidates}
@@ -180,7 +180,7 @@ class MatchingService:
         synonyms = self.CATEGORY_SYNONYMS.get(cat, {cat}) | {cat}
 
         candidates = LostItem.query.filter(
-            LostItem.status == "Searching",
+            LostItem.status.notin_(["Completed", "Returned", "Cancelled"]),
             LostItem.created_at >= cutoff,
             db.func.lower(LostItem.category).in_(synonyms)
         ).all()
@@ -188,7 +188,7 @@ class MatchingService:
         # If few candidates found, also retrieve recent searching items so AI can score them
         if len(candidates) < 5:
             more_candidates = LostItem.query.filter(
-                LostItem.status == "Searching",
+                LostItem.status.notin_(["Completed", "Returned", "Cancelled"]),
                 LostItem.created_at >= cutoff,
             ).order_by(LostItem.created_at.desc()).limit(20).all()
             cand_ids = {c.report_id for c in candidates}
@@ -371,6 +371,11 @@ class MatchingService:
         if overall >= self.MATCH_ALERT_THRESHOLD:
             self._notify_lost_user(lost, found, overall, explanation)
             self._notify_found_user(lost, found, overall, explanation)
+            try:
+                db.session.commit()
+            except Exception as exc:
+                db.session.rollback()
+                logger.warning(f"[MatchingService] Notification commit error: {exc}")
             self._send_match_email(lost, found, overall, explanation)
 
         logger.info(
