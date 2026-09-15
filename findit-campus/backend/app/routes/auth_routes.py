@@ -67,11 +67,18 @@ def login():
         student = Student.query.filter(db.func.lower(Student.roll_number) == login_id.lower()).first()
 
     if not student:
+        print(f"[Auth Debug] Student not found for login_id: '{login_id}' in DB: {db.engine.url}")
         return jsonify({'success': False, 'message': 'Invalid Credentials'}), 401
 
     # Look up account
     account = Account.query.filter_by(student_id=student.student_id).first()
-    if not account or not account.check_password(password):
+    if not account:
+        print(f"[Auth Debug] Account not found for student_id: {student.student_id}")
+        return jsonify({'success': False, 'message': 'Invalid Credentials'}), 401
+
+    is_valid = account.check_password(password)
+    if not is_valid:
+        print(f"[Auth Debug] Password check failed for student {student.roll_number}")
         return jsonify({'success': False, 'message': 'Invalid Credentials'}), 401
 
     if account.status != 'active':

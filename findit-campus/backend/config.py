@@ -27,7 +27,9 @@ class Config:
         os.getenv('DATABASE_URL')
         or os.getenv('POSTGRES_URL_NON_POOLING')  # Neon non-pooled (best for serverless)
         or os.getenv('POSTGRES_URL')              # Neon pooled
-    )
+    if _raw_db_url:
+        _raw_db_url = _raw_db_url.strip().strip('"\'')
+        print(f"[Config] Using Cloud PostgreSQL Database")
     if not _raw_db_url:
         bundled_db = os.path.join(os.path.dirname(__file__), 'findit_campus.db')
         if not os.path.exists(bundled_db):
