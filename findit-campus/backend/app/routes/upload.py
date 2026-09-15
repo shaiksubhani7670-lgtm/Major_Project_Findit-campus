@@ -64,11 +64,18 @@ def _upload_to_cloudinary(file, report_type):
     )
     return result['secure_url'], result['public_id']
 
+from flask import send_from_directory
+
 def _get_upload_dir(report_type):
     """Get or create separate directory for lost/found uploads inside static folder."""
     upload_dir = os.path.join(current_app.root_path, 'static', 'uploads', report_type)
-    os.makedirs(upload_dir, exist_ok=True)
-    return upload_dir
+    try:
+        os.makedirs(upload_dir, exist_ok=True)
+        return upload_dir
+    except (OSError, PermissionError):
+        tmp_dir = os.path.join('/tmp', 'uploads', report_type)
+        os.makedirs(tmp_dir, exist_ok=True)
+        return tmp_dir
 
 def _save_file_local(file, report_type):
     """Save a single file locally, return (url, filename) or raise."""
@@ -77,8 +84,16 @@ def _save_file_local(file, report_type):
     unique_name = f"{uuid.uuid4().hex}.{ext}"
     filepath = os.path.join(upload_dir, unique_name)
     file.save(filepath)
-    url = f"/static/uploads/{report_type}/{unique_name}"
+    if '/tmp' in upload_dir:
+        url = f"/api/upload/file/{report_type}/{unique_name}"
+    else:
+        url = f"/static/uploads/{report_type}/{unique_name}"
     return url, unique_name
+
+@upload_bp.route('/file/<report_type>/<filename>')
+def serve_tmp_file(report_type, filename):
+    tmp_dir = os.path.join('/tmp', 'uploads', report_type)
+    return send_from_directory(tmp_dir, filename)
 
 def _save_file(file, report_type):
     """

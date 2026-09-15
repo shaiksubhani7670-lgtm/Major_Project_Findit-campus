@@ -63,7 +63,10 @@ def create_app(config_class=None):
     with app.app_context():
         from app.models import student, account, lost_item, found_item, question_answer, match, claim, notification
         from app.models import messaging  # Message + PushSubscription
-        db.create_all()
+        try:
+            db.create_all()
+        except Exception as e:
+            print(f"[App] db.create_all() notice: {e}")
 
     return app
 

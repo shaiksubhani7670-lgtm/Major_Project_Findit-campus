@@ -77,10 +77,15 @@ def login():
     if account.status != 'active':
         return jsonify({'success': False, 'message': 'Account is inactive. Contact administration.'}), 403
 
-    # Update last login
-    is_first_login = account.last_login is None
-    account.last_login = datetime.now(timezone.utc)
-    db.session.commit()
+    # Update last login (safely catch errors so login never fails on read-only environments)
+    is_first_login = False
+    try:
+        is_first_login = account.last_login is None
+        account.last_login = datetime.now(timezone.utc)
+        db.session.commit()
+    except Exception as e:
+        db.session.rollback()
+        print(f"[Auth] Notice: Could not update last_login timestamp: {e}")
 
     # Send welcome email on very first login (synchronous — Vercel serverless kills daemon threads)
     if is_first_login:

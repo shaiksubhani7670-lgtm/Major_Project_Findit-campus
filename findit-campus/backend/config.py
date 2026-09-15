@@ -27,8 +27,30 @@ class Config:
         os.getenv('DATABASE_URL')
         or os.getenv('POSTGRES_URL_NON_POOLING')  # Neon non-pooled (best for serverless)
         or os.getenv('POSTGRES_URL')              # Neon pooled
-        or f"sqlite:///{os.path.join(os.path.dirname(__file__), 'findit_campus.db')}"
     )
+    if not _raw_db_url:
+        bundled_db = os.path.join(os.path.dirname(__file__), 'findit_campus.db')
+        if not os.path.exists(bundled_db):
+            alt_db = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', 'findit_campus.db'))
+            if os.path.exists(alt_db):
+                bundled_db = alt_db
+
+        # On Vercel / serverless (where filesystem is read-only except /tmp)
+        if os.getenv('VERCEL') or (os.path.exists('/tmp') and not os.access(os.path.dirname(bundled_db), os.W_OK)):
+            import shutil
+            tmp_db = '/tmp/findit_campus.db'
+            if not os.path.exists(tmp_db) and os.path.exists(bundled_db):
+                try:
+                    shutil.copy2(bundled_db, tmp_db)
+                except Exception as e:
+                    print(f"[Config] Error copying database to /tmp: {e}")
+            if os.path.exists(tmp_db):
+                _raw_db_url = f"sqlite:///{tmp_db}"
+            else:
+                _raw_db_url = f"sqlite:///{bundled_db}"
+        else:
+            _raw_db_url = f"sqlite:///{bundled_db}"
+
     # Neon / Heroku return postgres:// but SQLAlchemy requires postgresql://
     if _raw_db_url.startswith('postgres://'):
         _raw_db_url = _raw_db_url.replace('postgres://', 'postgresql://', 1)
