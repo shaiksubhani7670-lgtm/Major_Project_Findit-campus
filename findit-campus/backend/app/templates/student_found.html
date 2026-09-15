@@ -1,0 +1,875 @@
+{% extends "base.html" %}
+
+{% block title %}Report Found Item — FindIt Campus{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-slate-50 flex flex-col md:flex-row">
+  
+  <!-- Left Sidebar Navigation -->
+  <aside class="hidden md:flex w-64 bg-white border-r border-slate-200/80 shrink-0 flex-col justify-between h-screen sticky top-0 shadow-sm z-20">
+    <div>
+      <div class="p-6 border-b border-slate-100 flex items-center justify-between">
+        <div class="flex items-center gap-3">
+          <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-blue-600 via-indigo-600 to-violet-600 p-0.5 shadow-md shadow-indigo-500/20">
+            <div class="w-full h-full bg-slate-900 rounded-[10px] flex items-center justify-center">
+              <i data-lucide="sparkles" class="w-4 h-4 text-indigo-400"></i>
+            </div>
+          </div>
+          <div>
+            <span class="font-extrabold text-base text-slate-900 font-display block leading-none">FindIt Campus</span>
+            <span class="text-[9px] font-bold text-indigo-600 uppercase tracking-wider mt-1 block">Smart Lost & Found</span>
+          </div>
+        </div>
+      </div>
+      <nav class="p-4 space-y-1.5">
+        <a href="/dashboard" class="flex items-center gap-3 px-4 py-3 text-xs font-semibold text-slate-600 rounded-xl hover:bg-slate-100 transition-colors">
+          <i data-lucide="layout-dashboard" class="w-4 h-4 text-slate-400"></i> Dashboard Home
+        </a>
+        <a href="/browse-lost" class="flex items-center gap-3 px-4 py-3 text-xs font-semibold text-slate-600 rounded-xl hover:bg-slate-100 transition-colors">
+          <i data-lucide="search" class="w-4 h-4 text-slate-400"></i> Browse Lost Items
+        </a>
+        <a href="/report-lost" class="flex items-center gap-3 px-4 py-3 text-xs font-semibold text-slate-600 rounded-xl hover:bg-slate-100 transition-colors">
+          <i data-lucide="file-plus" class="w-4 h-4 text-slate-400"></i> Report Lost Item
+        </a>
+        <a href="/report-found" class="flex items-center gap-3 px-4 py-3 text-xs font-bold text-indigo-600 bg-indigo-50/80 rounded-xl border border-indigo-100">
+          <i data-lucide="plus-circle" class="w-4 h-4 text-indigo-600"></i> Report Found Item
+        </a>
+        <a href="/my-reports" class="flex items-center gap-3 px-4 py-3 text-xs font-semibold text-slate-600 rounded-xl hover:bg-slate-100 transition-colors">
+          <i data-lucide="archive" class="w-4 h-4 text-slate-400"></i> My Activity Logs
+        </a>
+        <a href="/notifications" class="flex items-center gap-3 px-4 py-3 text-xs font-semibold text-slate-600 rounded-xl hover:bg-slate-100 transition-colors">
+          <i data-lucide="bell" class="w-4 h-4 text-slate-400"></i> AI Match Alerts
+        </a>
+        <a href="/profile" class="flex items-center gap-3 px-4 py-3 text-xs font-semibold text-slate-600 rounded-xl hover:bg-slate-100 transition-colors">
+          <i data-lucide="user-check" class="w-4 h-4 text-slate-400"></i> Student Profile
+        </a>
+      </nav>
+    </div>
+
+    <div class="p-4 border-t border-slate-100 space-y-3">
+      <button onclick="logout()" class="w-full flex items-center justify-center gap-2 px-4 py-2.5 text-xs font-bold text-rose-600 bg-rose-50/60 hover:bg-rose-100 rounded-xl transition-colors">
+        <i data-lucide="log-out" class="w-3.5 h-3.5"></i> Logout Account
+      </button>
+    </div>
+  </aside>
+
+  <!-- Main Content Panel -->
+  <main class="flex-1 p-6 md:p-10 space-y-6 max-w-4xl mx-auto w-full">
+    <div class="flex items-center justify-between border-b border-gray-200 pb-4">
+      <div>
+        <h1 class="text-2xl font-bold tracking-tight text-gray-900 font-display">Report Found Item</h1>
+        <p class="text-xs text-gray-500 mt-1">Submit details of an item you found on campus</p>
+      </div>
+      <div class="text-xs font-semibold text-gray-400 font-mono">STEP <span id="current-step-indicator">1</span> OF 5</div>
+    </div>
+
+    <!-- Progress Indicator Bar -->
+    <div class="w-full bg-gray-200 h-2 rounded-full overflow-hidden">
+      <div id="wizard-progress-bar" class="h-full bg-blue-600 transition-all duration-300" style="width: 20%"></div>
+    </div>
+
+    <!-- WIZARD STEPS CONTENT -->
+    <div class="bg-white border border-gray-200 rounded-xl p-6 md:p-8 shadow-sm">
+      
+      <!-- Step 1: Category Selection -->
+      <div id="step-1" class="space-y-6">
+        <h3 class="text-lg font-bold text-gray-800">Select Item Category</h3>
+        <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4" id="categories-grid">
+          <!-- Dynamically populated categories -->
+        </div>
+      </div>
+
+      <!-- Step 2: Common Details -->
+      <div id="step-2" class="hidden space-y-6">
+        <h3 class="text-lg font-bold text-gray-800">Common Details</h3>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+          <div class="flex flex-col">
+            <label class="text-xs font-bold text-gray-600 mb-1.5 uppercase font-mono">Item Name *</label>
+            <input type="text" id="c_item_name" class="w-full input-clean" placeholder="e.g., iPhone 13 Pro">
+          </div>
+          <div class="flex flex-col">
+            <label class="text-xs font-bold text-gray-600 mb-1.5 uppercase font-mono">Color *</label>
+            <input type="text" id="c_color" class="w-full input-clean" placeholder="e.g., Blue, Midnight Black">
+          </div>
+          <div class="flex flex-col">
+            <label class="text-xs font-bold text-gray-600 mb-1.5 uppercase font-mono">Location Found *</label>
+            <select id="c_location" class="w-full input-clean">
+              <option value="">Select College Location</option>
+              <option value="Library">Library</option>
+              <option value="Canteen">Canteen</option>
+              <option value="Ground">Ground</option>
+              <option value="Parking Area">Parking Area</option>
+              <option value="Bus Stop">Bus Stop</option>
+              <option value="Block A">Block A</option>
+              <option value="Block B">Block B</option>
+              <option value="Lab">Lab</option>
+              <option value="Classroom">Classroom</option>
+              <option value="Auditorium">Auditorium</option>
+              <option value="Hostel">Hostel</option>
+              <option value="Others">Others</option>
+            </select>
+          </div>
+          <div class="flex flex-col">
+            <label class="text-xs font-bold text-gray-600 mb-1.5 uppercase font-mono">Date Found *</label>
+            <input type="date" id="c_date" class="w-full input-clean">
+          </div>
+          <div class="flex flex-col">
+            <label class="text-xs font-bold text-gray-600 mb-1.5 uppercase font-mono">Time Found (Optional)</label>
+            <input type="time" id="c_time" class="w-full input-clean">
+          </div>
+        </div>
+
+        <div class="flex flex-col">
+          <label class="text-xs font-bold text-gray-600 mb-1.5 uppercase font-mono">Description *</label>
+          <textarea id="c_description" rows="4" class="w-full input-clean resize-none" placeholder="Provide details where exactly you found the item, its brand, model, case details..."></textarea>
+        </div>
+
+        <div class="flex flex-col">
+          <label class="text-xs font-bold text-gray-600 mb-1.5 uppercase font-mono">Upload Image (Optional)</label>
+          <div class="flex items-center gap-4">
+            <input type="file" id="c_image_file" onchange="uploadImageHandler(this)" class="hidden" accept="image/png, image/jpeg, image/jpg">
+            <button type="button" onclick="document.getElementById('c_image_file').click()" class="btn-white py-2.5 flex items-center gap-2">
+              <i data-lucide="upload" class="w-4 h-4 text-gray-500"></i> Choose File
+            </button>
+            <span id="upload-status" class="text-xs text-gray-500">No file selected (Max 5 MB)</span>
+          </div>
+          <div id="image-preview-container" class="hidden mt-4">
+            <img id="image-preview" src="" class="max-w-[200px] border border-gray-200 rounded-lg shadow-sm">
+            <input type="hidden" id="uploaded_image_url">
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 3: Category Specific Details -->
+      <div id="step-3" class="hidden space-y-6">
+        <h3 class="text-lg font-bold text-gray-800"><span id="spec-category-title"></span> Details</h3>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-5" id="category-specific-fields-container">
+          <!-- Populated dynamically based on category selection -->
+        </div>
+      </div>
+
+      <!-- Step 4: Category Questions -->
+      <div id="step-4" class="hidden space-y-6">
+        <h3 class="text-lg font-bold text-gray-800">Ownership Questions</h3>
+        <p class="text-xs text-gray-400 font-semibold">Answer these questions to match the true owner. Keep it accurate.</p>
+        <div class="space-y-6" id="category-specific-questions-container">
+          <!-- Populated dynamically -->
+        </div>
+      </div>
+
+      <!-- Step 5: Preview & Submit -->
+      <div id="step-5" class="hidden space-y-6">
+        <h3 class="text-lg font-bold text-gray-800">Preview Found Report</h3>
+        <div class="border border-gray-200 rounded-xl p-6 bg-slate-50 space-y-4">
+          <div class="grid grid-cols-2 sm:grid-cols-3 gap-4 text-sm border-b border-gray-200 pb-4">
+            <div>
+              <span class="text-xs text-gray-400 font-bold block">CATEGORY</span>
+              <span id="prev-category" class="font-semibold text-gray-900 capitalize"></span>
+            </div>
+            <div>
+              <span class="text-xs text-gray-400 block font-bold">ITEM NAME</span>
+              <span id="prev-item-name" class="font-semibold text-gray-900"></span>
+            </div>
+            <div>
+              <span class="text-xs text-gray-400 block font-bold">COLOR</span>
+              <span id="prev-color" class="font-semibold text-gray-900"></span>
+            </div>
+            <div>
+              <span class="text-xs text-gray-400 block font-bold">LOCATION FOUND</span>
+              <span id="prev-location" class="font-semibold text-gray-900"></span>
+            </div>
+            <div>
+              <span class="text-xs text-gray-400 block font-bold">DATE FOUND</span>
+              <span id="prev-date" class="font-semibold text-gray-900"></span>
+            </div>
+          </div>
+          <div>
+            <span class="text-xs text-gray-400 block font-bold">DESCRIPTION</span>
+            <p id="prev-description" class="text-sm leading-relaxed mt-1 text-gray-700"></p>
+          </div>
+          <div id="prev-image-container" class="hidden">
+            <span class="text-xs text-gray-400 block font-bold mb-1">UPLOADED IMAGE</span>
+            <img id="prev-image" src="" class="max-w-[200px] border border-gray-200 rounded-lg shadow-sm">
+          </div>
+          <div class="border-t border-gray-200 pt-4 space-y-3">
+            <span class="text-xs text-gray-400 block font-bold">SPECIFIC DETAILS & QUESTIONS</span>
+            <div id="prev-qa-container" class="space-y-2 text-sm text-gray-700"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Navigation buttons -->
+      <div class="flex items-center justify-between border-t border-gray-100 pt-6 mt-8" id="navigation-buttons">
+        <button type="button" id="prev-btn" onclick="navigateStep(-1)" class="btn-white text-sm py-2.5 px-6 hidden">
+          Back
+        </button>
+        <div class="flex-1"></div>
+        <button type="button" id="next-btn" onclick="navigateStep(1)" class="btn-blue text-sm py-2.5 px-6 hidden">
+          Next
+        </button>
+        <button type="button" id="submit-report-btn" onclick="submitFoundReport()" class="btn-blue text-sm py-2.5 px-6 hidden">
+          Submit Found Report
+        </button>
+      </div>
+
+    </div>
+  </main>
+
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  let currentStep = 1;
+  let selectedCategory = '';
+  
+  // Reuse same categories & configurations as lost report
+  // (Include category definition & build code)
+</script>
+<script>
+  // Add direct variables copy from student_report script for category configuration
+</script>
+<script>
+  // We can write the inline javascript here
+  const CATEGORIES = [
+    { name: "Phone", icon: "📱" },
+    { name: "Laptop", icon: "💻" },
+    { name: "Earbuds", icon: "🎧" },
+    { name: "Watch", icon: "⌚" },
+    { name: "Wallet", icon: "👛" },
+    { name: "Ring", icon: "💍" },
+    { name: "Chain", icon: "📿" },
+    { name: "Bracelet", icon: "🪬" },
+    { name: "Shoes", icon: "👟" },
+    { name: "ID Card", icon: "🪪" },
+    { name: "Book", icon: "📚" },
+    { name: "Keys", icon: "🔑" },
+    { name: "Water Bottle", icon: "🥤" },
+    { name: "Lunch Box", icon: "🍱" },
+    { name: "Backpack", icon: "🎒" },
+    { name: "Calculator", icon: "🧮" },
+    { name: "Charger", icon: "🔌" },
+    { name: "Power Bank", icon: "🔋" },
+    { name: "Spectacles", icon: "👓" },
+    { name: "Umbrella", icon: "☂️" },
+    { name: "Helmet", icon: "🪖" },
+    { name: "Pen Drive", icon: "💾" },
+    { name: "Jacket / Hoodie", icon: "🧥" },
+    { name: "Others", icon: "📦" }
+  ];
+
+  // We can reference target categories
+  // Let's copy-paste CATEGORY_CONFIGS directly to keep the found form completely standalone and robust
+  const CATEGORY_CONFIGS = {
+    "Phone": {
+      fields: [
+        { id: "brand", label: "Brand *", type: "text", required: true, placeholder: "e.g., Apple, Samsung, OnePlus" },
+        { id: "model", label: "Model *", type: "text", required: true, placeholder: "e.g., iPhone 13, Galaxy S21" }
+      ],
+      questions: [
+        { q: "Back Cover?", type: "boolean" },
+        { q: "Stickers?", type: "boolean" },
+        { q: "Screen Scratched?", type: "boolean" },
+        { q: "Any Unique Feature?", type: "text" }
+      ]
+    },
+    "Laptop": {
+      fields: [
+        { id: "brand", label: "Brand *", type: "text", required: true, placeholder: "e.g., Dell, HP, Lenovo" },
+        { id: "model", label: "Model *", type: "text", required: true, placeholder: "e.g., ThinkPad E14" },
+        { id: "screen_size", label: "Screen Size (Optional)", type: "text", required: false }
+      ],
+      questions: [
+        { q: "Stickers?", type: "boolean" },
+        { q: "Charger Available?", type: "boolean" },
+        { q: "Visible Scratches?", type: "boolean" },
+        { q: "Any Unique Feature?", type: "text" }
+      ]
+    },
+    "Earbuds": {
+      fields: [
+        { id: "brand", label: "Brand *", type: "text", required: true, placeholder: "e.g., Boat, Noise, Apple" },
+        { id: "model", label: "Model *", type: "text", required: true, placeholder: "e.g., Airdopes 131" }
+      ],
+      questions: [
+        { q: "Charging Case Available?", type: "boolean" },
+        { q: "Scratches?", type: "boolean" },
+        { q: "Silicone Tips?", type: "boolean" },
+        { q: "Any Unique Feature?", type: "text" }
+      ]
+    },
+    "Watch": {
+      fields: [
+        { id: "brand", label: "Brand *", type: "text", required: true, placeholder: "e.g., Casio, Fastrack, Noise" },
+        { id: "strap_color", label: "Strap Color *", type: "text", required: true, placeholder: "e.g., Black leather, Silver metal" }
+      ],
+      questions: [
+        { q: "Smart Watch?", type: "boolean" },
+        { q: "Scratches?", type: "boolean" },
+        { q: "Leather Strap?", type: "boolean" },
+        { q: "Any Unique Feature?", type: "text" }
+      ]
+    },
+    "Wallet": {
+      fields: [
+        { id: "brand", label: "Brand (Optional)", type: "text", required: false },
+        { id: "material", label: "Material *", type: "text", required: true, placeholder: "e.g., Leather, Canvas" }
+      ],
+      questions: [
+        { q: "Contains ID Card?", type: "boolean" },
+        { q: "Has Zipper?", type: "boolean" },
+        { q: "Cash Inside?", type: "boolean" },
+        { q: "Any Unique Feature?", type: "text" }
+      ]
+    },
+    "Ring": {
+      fields: [
+        { id: "material", label: "Material *", type: "text", required: true, placeholder: "e.g., Gold, Silver" },
+        { id: "ring_size", label: "Ring Size (Optional)", type: "text", required: false }
+      ],
+      questions: [
+        { q: "Gemstone?", type: "boolean" },
+        { q: "Engraving?", type: "boolean" },
+        { q: "Adjustable?", type: "boolean" },
+        { q: "Any Unique Feature?", type: "text" }
+      ]
+    },
+    "Chain": {
+      fields: [
+        { id: "material", label: "Material *", type: "text", required: true, placeholder: "e.g., Gold, Silver" }
+      ],
+      questions: [
+        { q: "Has Pendant?", type: "boolean" },
+        { q: "Thick Chain?", type: "boolean" },
+        { q: "Broken Clasp?", type: "boolean" },
+        { q: "Any Unique Feature?", type: "text" }
+      ]
+    },
+    "Bracelet": {
+      fields: [
+        { id: "material", label: "Material *", type: "text", required: true, placeholder: "e.g., Metal, Beads" }
+      ],
+      questions: [
+        { q: "Has Charms?", type: "boolean" },
+        { q: "Adjustable?", type: "boolean" },
+        { q: "Engraving?", type: "boolean" },
+        { q: "Any Unique Feature?", type: "text" }
+      ]
+    },
+    "Shoes": {
+      fields: [
+        { id: "brand", label: "Brand *", type: "text", required: true, placeholder: "e.g., Nike, Adidas" },
+        { id: "shoe_size", label: "Shoe Size *", type: "text", required: true }
+      ],
+      questions: [
+        { q: "Has Laces?", type: "boolean" },
+        { q: "Dirty Marks?", type: "boolean" },
+        { q: "Brand Logo Visible?", type: "boolean" },
+        { q: "Any Unique Feature?", type: "text" }
+      ]
+    },
+    "ID Card": {
+      fields: [
+        { id: "card_holder_type", label: "Student or Staff *", type: "select", options: ["Student", "Staff"], required: true },
+        { id: "department", label: "Department *", type: "text", required: true, placeholder: "e.g., CSE, ECE" }
+      ],
+      questions: [
+        { q: "Card Holder?", type: "boolean" },
+        { q: "Lanyard Attached?", type: "boolean" },
+        { q: "Transparent Holder?", type: "boolean" },
+        { q: "Holder/Lanyard Color?", type: "text" }
+      ]
+    },
+    "Book": {
+      fields: [
+        { id: "title", label: "Book Title *", type: "text", required: true, placeholder: "e.g., Engineering Mathematics" },
+        { id: "author", label: "Author *", type: "text", required: true }
+      ],
+      questions: [
+        { q: "Name Written?", type: "boolean" },
+        { q: "Handwritten Notes?", type: "boolean" },
+        { q: "Bookmark?", type: "boolean" },
+        { q: "Any Unique Feature?", type: "text" }
+      ]
+    },
+    "Keys": {
+      fields: [
+        { id: "number_of_keys", label: "Number of Keys *", type: "number", required: true }
+      ],
+      questions: [
+        { q: "Keychain Attached?", type: "boolean" },
+        { q: "Tag Attached?", type: "boolean" },
+        { q: "Bike/Car Key?", type: "boolean" },
+        { q: "Any Unique Feature?", type: "text" }
+      ]
+    },
+    "Water Bottle": {
+      fields: [
+        { id: "brand", label: "Brand *", type: "text", required: true, placeholder: "e.g., Milton, Cello" },
+        { id: "capacity", label: "Capacity (Optional)", type: "text", required: false }
+      ],
+      questions: [
+        { q: "Has Stickers?", type: "boolean" },
+        { q: "Name Written?", type: "boolean" },
+        { q: "Carrying Handle?", type: "boolean" },
+        { q: "Any Unique Feature?", type: "text" }
+      ]
+    },
+    "Lunch Box": {
+      fields: [
+        { id: "brand", label: "Brand *", type: "text", required: true, placeholder: "e.g., Tupperware, Milton" },
+        { id: "compartments", label: "Number of Compartments *", type: "number", required: true }
+      ],
+      questions: [
+        { q: "Multiple Compartments?", type: "boolean" },
+        { q: "Spoon Included?", type: "boolean" },
+        { q: "Insulated?", type: "boolean" },
+        { q: "Any Unique Feature?", type: "text" }
+      ]
+    },
+    "Backpack": {
+      fields: [
+        { id: "brand", label: "Brand *", type: "text", required: true, placeholder: "e.g., Wildcraft, Skybags" },
+        { id: "compartments", label: "Number of Compartments *", type: "number", required: true }
+      ],
+      questions: [
+        { q: "Laptop Compartment?", type: "boolean" },
+        { q: "Bottle Pocket?", type: "boolean" },
+        { q: "Keychain Attached?", type: "boolean" },
+        { q: "Any Unique Feature?", type: "text" }
+      ]
+    },
+    "Calculator": {
+      fields: [
+        { id: "brand", label: "Brand *", type: "text", required: true },
+        { id: "model", label: "Model *", type: "text", required: true }
+      ],
+      questions: [
+        { q: "Scientific Calculator?", type: "boolean" },
+        { q: "Protective Cover?", type: "boolean" },
+        { q: "Name Written?", type: "boolean" },
+        { q: "Any Unique Feature?", type: "text" }
+      ]
+    },
+    "Charger": {
+      fields: [
+        { id: "brand", label: "Brand *", type: "text", required: true },
+        { id: "type", label: "Type *", type: "text", required: true }
+      ],
+      questions: [
+        { q: "Cable Included?", type: "boolean" },
+        { q: "Fast Charger?", type: "boolean" },
+        { q: "Damaged?", type: "boolean" },
+        { q: "Any Unique Feature?", type: "text" }
+      ]
+    },
+    "Power Bank": {
+      fields: [
+        { id: "brand", label: "Brand *", type: "text", required: true },
+        { id: "capacity", label: "Capacity *", type: "text", required: true }
+      ],
+      questions: [
+        { q: "Digital Display?", type: "boolean" },
+        { q: "Built-in Cable?", type: "boolean" },
+        { q: "Scratches?", type: "boolean" },
+        { q: "Any Unique Feature?", type: "text" }
+      ]
+    },
+    "Spectacles": {
+      fields: [
+        { id: "brand", label: "Brand (Optional)", type: "text", required: false },
+        { id: "frame_type", label: "Frame Type *", type: "text", required: true }
+      ],
+      questions: [
+        { q: "Case Included?", type: "boolean" },
+        { q: "Power Glasses?", type: "boolean" },
+        { q: "Lens Scratched?", type: "boolean" },
+        { q: "Any Unique Feature?", type: "text" }
+      ]
+    },
+    "Umbrella": {
+      fields: [
+        { id: "brand", label: "Brand (Optional)", type: "text", required: false },
+        { id: "type", label: "Type *", type: "text", required: true }
+      ],
+      questions: [
+        { q: "Foldable?", type: "boolean" },
+        { q: "Automatic?", type: "boolean" },
+        { q: "Pattern?", type: "boolean" },
+        { q: "Any Unique Feature?", type: "text" }
+      ]
+    },
+    "Helmet": {
+      fields: [
+        { id: "brand", label: "Brand *", type: "text", required: true },
+        { id: "helmet_type", label: "Helmet Type *", type: "text", required: true }
+      ],
+      questions: [
+        { q: "Full Face?", type: "boolean" },
+        { q: "Stickers?", type: "boolean" },
+        { q: "Tinted Visor?", type: "boolean" },
+        { q: "Any Unique Feature?", type: "text" }
+      ]
+    },
+    "Pen Drive": {
+      fields: [
+        { id: "brand", label: "Brand *", type: "text", required: true },
+        { id: "storage_capacity", label: "Storage Capacity *", type: "text", required: true }
+      ],
+      questions: [
+        { q: "Metal Body?", type: "boolean" },
+        { q: "Keychain Attached?", type: "boolean" },
+        { q: "Password Protected?", type: "boolean" },
+        { q: "Any Unique Feature?", type: "text" }
+      ]
+    },
+    "Jacket / Hoodie": {
+      fields: [
+        { id: "brand", label: "Brand *", type: "text", required: true },
+        { id: "size", label: "Size *", type: "text", required: true }
+      ],
+      questions: [
+        { q: "Has Hood?", type: "boolean" },
+        { q: "Has Zipper?", type: "boolean" },
+        { q: "Logo Present?", type: "boolean" },
+        { q: "Any Unique Feature?", type: "text" }
+      ]
+    },
+    "Others": {
+      fields: [
+        { id: "custom_details", label: "Custom Details Field *", type: "textarea", required: true }
+      ],
+      questions: [
+        { q: "Question 1?", type: "boolean" },
+        { q: "Question 2?", type: "boolean" },
+        { q: "Question 3?", type: "boolean" },
+        { q: "Any Unique Feature?", type: "text" }
+      ]
+    }
+  };
+
+  function initCategories() {
+    const grid = document.getElementById('categories-grid');
+    grid.innerHTML = CATEGORIES.map(cat => `
+      <div onclick="selectCategory('${cat.name}')" 
+           class="card-clean card-clean-hover p-5 flex flex-col items-center justify-center gap-3 cursor-pointer border border-gray-200 hover:border-blue-500 rounded-xl text-center">
+        <span class="text-3xl">${cat.icon}</span>
+        <span class="text-xs font-bold text-gray-700">${cat.name}</span>
+      </div>
+    `).join('');
+  }
+
+  function selectCategory(categoryName) {
+    selectedCategory = categoryName;
+    navigateStep(1);
+    buildCategorySpecificFields();
+    buildCategoryQuestions();
+  }
+
+  function buildCategorySpecificFields() {
+    document.getElementById('spec-category-title').innerText = selectedCategory;
+    const container = document.getElementById('category-specific-fields-container');
+    const config = CATEGORY_CONFIGS[selectedCategory];
+    if (!config || !config.fields) {
+      container.innerHTML = `<p class="text-xs text-gray-400">No specific details required.</p>`;
+      return;
+    }
+    container.innerHTML = config.fields.map(f => {
+      if (f.type === 'select') {
+        return `
+          <div class="flex flex-col">
+            <label class="text-xs font-bold text-gray-600 mb-1.5 uppercase font-mono">${f.label}</label>
+            <select id="spec_${f.id}" class="w-full input-clean" ${f.required ? 'required' : ''}>
+              ${f.options.map(opt => `<option value="${opt}">${opt}</option>`).join('')}
+            </select>
+          </div>
+        `;
+      } else if (f.type === 'textarea') {
+        return `
+          <div class="flex flex-col md:col-span-2">
+            <label class="text-xs font-bold text-gray-600 mb-1.5 uppercase font-mono">${f.label}</label>
+            <textarea id="spec_${f.id}" class="w-full input-clean resize-none" rows="3" placeholder="${f.placeholder || ''}" ${f.required ? 'required' : ''}></textarea>
+          </div>
+        `;
+      } else {
+        return `
+          <div class="flex flex-col">
+            <label class="text-xs font-bold text-gray-600 mb-1.5 uppercase font-mono">${f.label}</label>
+            <input type="${f.type}" id="spec_${f.id}" class="w-full input-clean" placeholder="${f.placeholder || ''}" ${f.required ? 'required' : ''}>
+          </div>
+        `;
+      }
+    }).join('');
+  }
+
+  function buildCategoryQuestions() {
+    const container = document.getElementById('category-specific-questions-container');
+    const config = CATEGORY_CONFIGS[selectedCategory];
+    if (!config || !config.questions) {
+      container.innerHTML = `<p class="text-xs text-gray-400">No ownership questions.</p>`;
+      return;
+    }
+    container.innerHTML = config.questions.map((q, idx) => {
+      if (q.type === 'boolean') {
+        return `
+          <div class="flex flex-col space-y-2">
+            <span class="text-sm font-semibold text-gray-700">${idx+1}. ${q.q}</span>
+            <div class="flex items-center gap-6">
+              <label class="flex items-center gap-2 text-xs font-semibold cursor-pointer">
+                <input type="radio" name="q_${idx}" value="Yes" required class="w-4 h-4 text-blue-600"> Yes
+              </label>
+              <label class="flex items-center gap-2 text-xs font-semibold cursor-pointer">
+                <input type="radio" name="q_${idx}" value="No" required class="w-4 h-4 text-blue-600"> No
+              </label>
+            </div>
+          </div>
+        `;
+      } else {
+        return `
+          <div class="flex flex-col space-y-1.5">
+            <label class="text-sm font-semibold text-gray-700">${idx+1}. ${q.q}</label>
+            <textarea id="q_${idx}_text" rows="2" class="w-full input-clean resize-none" placeholder="${q.placeholder || 'Describe unique feature details'}" required></textarea>
+          </div>
+        `;
+      }
+    }).join('');
+  }
+
+  async function uploadImageHandler(input) {
+    const file = input.files[0];
+    if (!file) return;
+    if (file.size > 5 * 1024 * 1024) {
+      showToast('Maximum image size is 5 MB', 'error');
+      return;
+    }
+    const statusSpan = document.getElementById('upload-status');
+    statusSpan.innerText = 'Uploading...';
+    const formData = new FormData();
+    formData.append('image', file);
+    formData.append('type', 'found');
+    const token = getToken();
+    try {
+      const response = await fetch('/api/upload/image', {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${token}` },
+        body: formData
+      });
+      const res = await response.json();
+      if (response.ok && res.success) {
+        statusSpan.innerText = 'Uploaded: ' + file.name;
+        document.getElementById('uploaded_image_url').value = res.data.url;
+        document.getElementById('image-preview').src = res.data.url;
+        document.getElementById('image-preview-container').classList.remove('hidden');
+        showToast('Image uploaded successfully', 'success');
+      } else {
+        statusSpan.innerText = 'Upload failed';
+        showToast(res.message || 'Upload failed', 'error');
+      }
+    } catch(e) {
+      statusSpan.innerText = 'Upload error';
+      showToast('Image upload failed', 'error');
+    }
+  }
+
+  function navigateStep(direction) {
+    if (direction === 1) {
+      if (currentStep === 1 && !selectedCategory) {
+        showToast('Please select a category first', 'warning');
+        return;
+      }
+      if (currentStep === 2) {
+        const item_name = document.getElementById('c_item_name').value.trim();
+        const color = document.getElementById('c_color').value.trim();
+        const location = document.getElementById('c_location').value;
+        const date = document.getElementById('c_date').value;
+        const description = document.getElementById('c_description').value.trim();
+        if (!item_name || !color || !location || !date || !description) {
+          showToast('Please fill all mandatory common details', 'warning');
+          return;
+        }
+      }
+      if (currentStep === 3) {
+        const config = CATEGORY_CONFIGS[selectedCategory];
+        if (config && config.fields) {
+          for (let f of config.fields) {
+            const input = document.getElementById(`spec_${f.id}`);
+            if (f.required && input && !input.value.trim()) {
+              showToast(`Please enter ${f.label.replace(' *','')}`, 'warning');
+              return;
+            }
+          }
+        }
+      }
+      if (currentStep === 4) {
+        const config = CATEGORY_CONFIGS[selectedCategory];
+        if (config && config.questions) {
+          for (let idx=0; idx < config.questions.length; idx++) {
+            const q = config.questions[idx];
+            if (q.type === 'boolean') {
+              const radios = document.getElementsByName(`q_${idx}`);
+              let checked = false;
+              for (let r of radios) {
+                if (r.checked) checked = true;
+              }
+              if (!checked) {
+                showToast(`Please answer question: ${q.q}`, 'warning');
+                return;
+              }
+            } else {
+              const input = document.getElementById(`q_${idx}_text`);
+              if (input && !input.value.trim()) {
+                showToast(`Please answer question: ${q.q}`, 'warning');
+                return;
+              }
+            }
+          }
+        }
+      }
+    }
+
+    document.getElementById(`step-${currentStep}`).classList.add('hidden');
+    currentStep += direction;
+    document.getElementById(`step-${currentStep}`).classList.remove('hidden');
+    document.getElementById('current-step-indicator').innerText = currentStep;
+    document.getElementById('wizard-progress-bar').style.width = (currentStep * 20) + '%';
+
+    const prevBtn = document.getElementById('prev-btn');
+    const nextBtn = document.getElementById('next-btn');
+    const submitBtn = document.getElementById('submit-report-btn');
+
+    if (currentStep === 1) {
+      prevBtn.classList.add('hidden');
+      nextBtn.classList.add('hidden');
+      submitBtn.classList.add('hidden');
+    } else if (currentStep === 5) {
+      prevBtn.classList.remove('hidden');
+      nextBtn.classList.add('hidden');
+      submitBtn.classList.remove('hidden');
+      buildPreview();
+    } else {
+      prevBtn.classList.remove('hidden');
+      nextBtn.classList.remove('hidden');
+      submitBtn.classList.add('hidden');
+    }
+  }
+
+  function buildPreview() {
+    document.getElementById('prev-category').innerText = selectedCategory;
+    document.getElementById('prev-item-name').innerText = document.getElementById('c_item_name').value;
+    document.getElementById('prev-color').innerText = document.getElementById('c_color').value;
+    document.getElementById('prev-location').innerText = document.getElementById('c_location').value;
+    document.getElementById('prev-date').innerText = document.getElementById('c_date').value;
+    document.getElementById('prev-description').innerText = document.getElementById('c_description').value;
+
+    const imgUrl = document.getElementById('uploaded_image_url').value;
+    if (imgUrl) {
+      document.getElementById('prev-image').src = imgUrl;
+      document.getElementById('prev-image-container').classList.remove('hidden');
+    } else {
+      document.getElementById('prev-image-container').classList.add('hidden');
+    }
+
+    const qaContainer = document.getElementById('prev-qa-container');
+    let html = '';
+    const config = CATEGORY_CONFIGS[selectedCategory];
+    if (config) {
+      if (config.fields) {
+        config.fields.forEach(f => {
+          const val = document.getElementById(`spec_${f.id}`).value;
+          html += `<div><strong>${f.label.replace(' *','')}:</strong> ${val}</div>`;
+        });
+      }
+      if (config.questions) {
+        config.questions.forEach((q, idx) => {
+          let ansVal = '';
+          if (q.type === 'boolean') {
+            const radios = document.getElementsByName(`q_${idx}`);
+            for (let r of radios) {
+              if (r.checked) ansVal = r.value;
+            }
+          } else {
+            ansVal = document.getElementById(`q_${idx}_text`).value;
+          }
+          html += `<div><strong>Question: ${q.q}</strong> <br/> Answer: ${ansVal}</div>`;
+        });
+      }
+    }
+    qaContainer.innerHTML = html;
+  }
+
+  async function submitFoundReport() {
+    const submitBtn = document.getElementById('submit-report-btn');
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = `<div class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>`;
+
+    const item_name = document.getElementById('c_item_name').value.trim();
+    const color = document.getElementById('c_color').value.trim();
+    const location = document.getElementById('c_location').value;
+    const date = document.getElementById('c_date').value;
+    const time_val = document.getElementById('c_time').value;
+    const description = document.getElementById('c_description').value.trim();
+    const image_path = document.getElementById('uploaded_image_url').value || null;
+
+    const additional_details = {};
+    const config = CATEGORY_CONFIGS[selectedCategory];
+    if (config && config.fields) {
+      config.fields.forEach(f => {
+        additional_details[f.id] = document.getElementById(`spec_${f.id}`).value;
+      });
+    }
+
+    const question_answers = [];
+    if (config && config.questions) {
+      config.questions.forEach((q, idx) => {
+        let ansVal = '';
+        if (q.type === 'boolean') {
+          const radios = document.getElementsByName(`q_${idx}`);
+          for (let r of radios) {
+            if (r.checked) ansVal = r.value;
+          }
+        } else {
+          ansVal = document.getElementById(`q_${idx}_text`).value;
+        }
+        question_answers.push({
+          question: q.q,
+          answer: ansVal
+        });
+      });
+    }
+
+    const payload = {
+      item_name,
+      category: selectedCategory,
+      color,
+      location,
+      date,
+      time: time_val || null,
+      description,
+      image_path,
+      additional_details,
+      question_answers
+    };
+
+    const res = await apiFetch('/found/report', {
+      method: 'POST',
+      body: JSON.stringify(payload)
+    });
+
+    submitBtn.disabled = false;
+    submitBtn.innerHTML = `<span>Submit Found Report</span>`;
+
+    if (res && res.ok && res.data && res.data.success) {
+      showToast('Found item reported successfully. AI matching is active in the background.', 'success');
+      setTimeout(() => {
+        window.location.href = '/my-reports';
+      }, 1500);
+    } else {
+      const msg = res && res.data ? res.data.message : 'Submission failed';
+      showToast(msg, 'error');
+    }
+  }
+
+  if (!getToken()) window.location.href = '/login';
+  initCategories();
+</script>
+{% endblock %}

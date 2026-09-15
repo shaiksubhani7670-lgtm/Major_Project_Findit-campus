@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lost Item Poster — FindIt Campus</title>
+  <script src="{{ url_for('static', filename='js/qrcode.min.js') }}"></script>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Segoe UI', Arial, sans-serif; background: #f1f5f9; }
+
+    /* Print controls - hidden when printing */
+    .print-controls {
+      background: #1e293b; padding: 12px 24px; display: flex; align-items: center;
+      justify-content: space-between; position: sticky; top: 0; z-index: 10;
+    }
+    .print-controls .title { color: #fff; font-size: 14px; font-weight: 700; }
+    .print-controls .actions { display: flex; gap: 8px; }
+    .print-controls button {
+      padding: 8px 20px; border-radius: 8px; font-size: 12px; font-weight: 700;
+      cursor: pointer; border: none;
+    }
+    .btn-print { background: #3b82f6; color: #fff; }
+    .btn-print:hover { background: #2563eb; }
+    .btn-back { background: #334155; color: #94a3b8; }
+    .btn-back:hover { background: #475569; }
+
+    /* A4 Poster */
+    .poster-wrap { display: flex; justify-content: center; padding: 24px; }
+    .poster {
+      width: 210mm; min-height: 297mm; background: #fff;
+      box-shadow: 0 8px 40px rgba(0,0,0,0.15); position: relative; overflow: hidden;
+      display: flex; flex-direction: column;
+    }
+
+    /* Header band */
+    .poster-header {
+      background: linear-gradient(135deg, #dc2626, #b91c1c);
+      padding: 24px 32px; text-align: center; position: relative;
+    }
+    .poster-header::after {
+      content: ''; position: absolute; bottom: -16px; left: 0; right: 0; height: 32px;
+      background: #fff; border-radius: 50% 50% 0 0 / 100% 100% 0 0;
+    }
+    .poster-header .label {
+      font-size: 13px; font-weight: 800; letter-spacing: .2em; text-transform: uppercase;
+      color: #fca5a5; display: block; margin-bottom: 6px;
+    }
+    .poster-header h1 {
+      font-size: 40px; font-weight: 900; color: #fff; line-height: 1;
+      text-shadow: 0 2px 8px rgba(0,0,0,0.3);
+    }
+    .poster-header .subtitle {
+      font-size: 14px; color: #fecaca; margin-top: 8px;
+    }
+
+    /* Body */
+    .poster-body { padding: 40px 36px 24px; flex: 1; display: flex; flex-direction: column; gap: 20px; }
+
+    .item-name { font-size: 28px; font-weight: 900; color: #0f172a; text-align: center; letter-spacing: -.5px; }
+    .item-category { text-align: center; font-size: 13px; color: #64748b; font-weight: 600; text-transform: uppercase; letter-spacing: .1em; margin-top: 4px; }
+
+    /* Item image */
+    .item-image-wrap { display: flex; justify-content: center; }
+    .item-image-wrap img { width: 200px; height: 160px; object-fit: cover; border-radius: 12px; border: 3px solid #e2e8f0; }
+    .item-image-placeholder {
+      width: 200px; height: 160px; border-radius: 12px; background: #f8fafc;
+      border: 3px dashed #cbd5e1; display: flex; align-items: center; justify-content: center;
+      color: #94a3b8; font-size: 12px;
+    }
+
+    /* Details grid */
+    .details-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .detail-card { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 14px 16px; }
+    .detail-card .label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; color: #94a3b8; margin-bottom: 4px; }
+    .detail-card .value { font-size: 14px; font-weight: 700; color: #0f172a; }
+
+    /* Description */
+    .description-box { background: #fff7ed; border: 1px solid #fed7aa; border-radius: 10px; padding: 16px; }
+    .description-box .label { font-size: 10px; font-weight: 700; text-transform: uppercase; color: #ea580c; margin-bottom: 6px; }
+    .description-box .text { font-size: 13px; color: #431407; line-height: 1.6; }
+
+    /* Footer with QR */
+    .poster-footer {
+      background: #0f172a; padding: 24px 36px;
+      display: flex; align-items: center; justify-content: space-between; gap: 20px;
+    }
+    .poster-footer .contact-section { flex: 1; }
+    .poster-footer .contact-section h3 { font-size: 14px; font-weight: 800; color: #fff; margin-bottom: 10px; }
+    .poster-footer .contact-row { font-size: 12px; color: #94a3b8; margin-bottom: 4px; }
+    .poster-footer .contact-row strong { color: #f1f5f9; }
+    .poster-footer .qr-section { text-align: center; }
+    .poster-footer .qr-section p { font-size: 9px; color: #64748b; margin-top: 6px; text-align: center; }
+    #qrcode canvas, #qrcode img { border-radius: 6px; }
+    .branding { text-align: center; font-size: 10px; color: #cbd5e1; margin-top: 12px; }
+
+    /* Loading */
+    .loading { text-align: center; padding: 80px 20px; color: #64748b; }
+
+    /* Print styles */
+    @media print {
+      .print-controls { display: none !important; }
+      body { background: #fff; }
+      .poster-wrap { padding: 0; }
+      .poster { box-shadow: none; width: 100%; min-height: auto; }
+      @page { size: A4; margin: 0; }
+    }
+  </style>
+</head>
+<body>
+  <div class="print-controls">
+    <span class="title">🖨️ Lost Item Poster — FindIt Campus</span>
+    <div class="actions">
+      <button class="btn-back" onclick="window.history.back()">← Back</button>
+      <button class="btn-print" onclick="window.print()">🖨️ Print Poster</button>
+    </div>
+  </div>
+
+  <div class="poster-wrap">
+    <div class="poster" id="poster-content">
+      <div class="loading">Loading item details...</div>
+    </div>
+  </div>
+
+  <script>
+    const REPORT_ID = {{ report_id }};
+
+    function getToken() { return localStorage.getItem('findit_token'); }
+    function getCurrentUser() {
+      try { return JSON.parse(localStorage.getItem('findit_user')); } catch { return null; }
+    }
+
+    async function loadPoster() {
+      const token = getToken();
+      if (!token) { window.location.href = '/login'; return; }
+
+      try {
+        const res = await fetch(`/api/lost/${REPORT_ID}`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (!res.ok) { document.getElementById('poster-content').innerHTML = '<div class="loading">Item not found.</div>'; return; }
+        const data = await res.json();
+        const item = data.data;
+
+        renderPoster(item);
+      } catch (e) {
+        document.getElementById('poster-content').innerHTML = `<div class="loading">Failed to load: ${e.message}</div>`;
+      }
+    }
+
+    function renderPoster(item) {
+      const dateStr = item.date ? new Date(item.date).toLocaleDateString('en-IN', { day:'numeric', month:'long', year:'numeric' }) : 'Unknown';
+      const posterURL = `${window.location.origin}/poster/${REPORT_ID}`;
+
+      document.getElementById('poster-content').innerHTML = `
+        <div class="poster-header">
+          <span class="label">⚠️ Missing / Lost</span>
+          <h1>LOST ITEM</h1>
+          <p class="subtitle">If found, please contact immediately — FindIt Campus System</p>
+        </div>
+
+        <div class="poster-body">
+          <div>
+            <div class="item-name">${item.item_name}</div>
+            <div class="item-category">${item.category}</div>
+          </div>
+
+          <div class="item-image-wrap">
+            ${item.image_path
+              ? `<img src="${item.image_path}" alt="${item.item_name}" onerror="this.style.display='none'">`
+              : `<div class="item-image-placeholder">📷 No Photo Available</div>`
+            }
+          </div>
+
+          <div class="details-grid">
+            <div class="detail-card">
+              <div class="label">🎨 Color</div>
+              <div class="value">${item.color}</div>
+            </div>
+            <div class="detail-card">
+              <div class="label">📍 Last Seen Location</div>
+              <div class="value">${item.location}</div>
+            </div>
+            <div class="detail-card">
+              <div class="label">📅 Date Lost</div>
+              <div class="value">${dateStr}</div>
+            </div>
+            <div class="detail-card">
+              <div class="label">🏷️ Status</div>
+              <div class="value" style="color:#dc2626">${item.status}</div>
+            </div>
+          </div>
+
+          ${item.description ? `
+          <div class="description-box">
+            <div class="label">📝 Description</div>
+            <div class="text">${item.description}</div>
+          </div>` : ''}
+        </div>
+
+        <div class="poster-footer">
+          <div class="contact-section">
+            <h3>📞 If You Found This Item</h3>
+            <p class="contact-row">Reported by: <strong>${item.student_name || 'GIST Student'}</strong></p>
+            <p class="contact-row">Roll No: <strong>${item.roll_number || '—'}</strong></p>
+            <p class="contact-row">Visit the FindIt Campus portal and report this as found to be matched automatically via AI. The student will be notified immediately.</p>
+            <p class="contact-row branding" style="margin-top:12px;">FindIt Campus · Geethanjali Institute of Science &amp; Technology · AI-Powered Lost &amp; Found System</p>
+          </div>
+          <div class="qr-section">
+            <div id="qrcode"></div>
+            <p>Scan to view<br>on portal</p>
+          </div>
+        </div>
+      `;
+
+      // Generate QR Code
+      new QRCode(document.getElementById('qrcode'), {
+        text: posterURL, width: 90, height: 90,
+        colorDark: '#fff', colorLight: '#0f172a',
+        correctLevel: QRCode.CorrectLevel.M
+      });
+    }
+
+    loadPoster();
+  </script>
+</body>
+</html>

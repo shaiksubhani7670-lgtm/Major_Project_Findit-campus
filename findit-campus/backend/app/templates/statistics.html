@@ -1,0 +1,127 @@
+{% extends "base.html" %}
+{% block title %}Statistics — FindIt Campus{% endblock %}
+{% block extra_head %}
+<script src="{{ url_for('static', filename='js/chart.umd.min.js') }}"></script>
+{% endblock %}
+{% block content %}
+<div class="min-h-screen bg-slate-50 flex flex-col md:flex-row">
+  <aside class="w-full md:w-64 bg-white border-r border-slate-200 shrink-0 flex flex-col justify-between min-h-screen sticky top-0">
+    <div>
+      <div class="p-5 border-b border-slate-100 flex items-center gap-2.5">
+        <div class="w-8 h-8 rounded-lg bg-blue-600 flex items-center justify-center text-white shrink-0"><i data-lucide="search" class="w-4 h-4"></i></div>
+        <div><span class="font-bold text-base text-slate-900 leading-none block">FindIt Campus</span><span class="text-[10px] text-slate-400 font-semibold block uppercase tracking-wider mt-0.5">GIST Lost &amp; Found</span></div>
+      </div>
+      <nav class="p-3 space-y-1">
+        <a href="/dashboard" class="flex items-center gap-3 px-3.5 py-2.5 text-xs font-medium text-slate-600 rounded-lg hover:bg-slate-100"><i data-lucide="layout-dashboard" class="w-4 h-4"></i> Dashboard</a>
+        <a href="/browse-lost" class="flex items-center gap-3 px-3.5 py-2.5 text-xs font-medium text-slate-600 rounded-lg hover:bg-slate-100"><i data-lucide="search" class="w-4 h-4"></i> Browse Lost Items</a>
+        <a href="/map" class="flex items-center gap-3 px-3.5 py-2.5 text-xs font-medium text-slate-600 rounded-lg hover:bg-slate-100"><i data-lucide="map-pin" class="w-4 h-4"></i> Campus Map</a>
+        <a href="/timeline" class="flex items-center gap-3 px-3.5 py-2.5 text-xs font-medium text-slate-600 rounded-lg hover:bg-slate-100"><i data-lucide="activity" class="w-4 h-4"></i> My Timeline</a>
+        <a href="/statistics" class="flex items-center gap-3 px-3.5 py-2.5 text-xs font-bold text-blue-700 bg-blue-50 rounded-lg"><i data-lucide="bar-chart-2" class="w-4 h-4"></i> Statistics</a>
+        <a href="/leaderboard" class="flex items-center gap-3 px-3.5 py-2.5 text-xs font-medium text-slate-600 rounded-lg hover:bg-slate-100"><i data-lucide="trophy" class="w-4 h-4"></i> Leaderboard</a>
+        <a href="/calendar" class="flex items-center gap-3 px-3.5 py-2.5 text-xs font-medium text-slate-600 rounded-lg hover:bg-slate-100"><i data-lucide="calendar" class="w-4 h-4"></i> Calendar</a>
+        <a href="/notifications" class="flex items-center gap-3 px-3.5 py-2.5 text-xs font-medium text-slate-600 rounded-lg hover:bg-slate-100"><i data-lucide="bell" class="w-4 h-4"></i> Alerts</a>
+        <a href="/profile" class="flex items-center gap-3 px-3.5 py-2.5 text-xs font-medium text-slate-600 rounded-lg hover:bg-slate-100"><i data-lucide="user" class="w-4 h-4"></i> Profile</a>
+      </nav>
+    </div>
+    <div class="p-4 border-t border-slate-100 space-y-2">
+      <div class="flex items-center gap-3 p-2.5 bg-slate-50 rounded-lg border border-slate-200">
+        <div class="w-8 h-8 rounded-full bg-blue-600 text-white font-bold flex items-center justify-center text-xs" id="user-avatar">ST</div>
+        <div class="overflow-hidden"><span class="font-bold text-xs text-slate-900 truncate block" id="user-display-name">Student</span><span class="text-[10px] text-slate-400 truncate block font-mono" id="user-roll-no"></span></div>
+      </div>
+      <button onclick="logout()" class="w-full flex items-center justify-center gap-2 px-3 py-2 text-xs font-semibold text-red-600 bg-red-50 hover:bg-red-100 rounded-lg"><i data-lucide="log-out" class="w-3.5 h-3.5"></i> Logout</button>
+    </div>
+  </aside>
+
+  <main class="flex-1 p-6 md:p-8 space-y-6 max-w-5xl mx-auto w-full">
+    <div>
+      <h1 class="text-2xl font-bold text-slate-900 flex items-center gap-2"><i data-lucide="bar-chart-2" class="w-6 h-6 text-blue-600"></i> Campus Statistics</h1>
+      <p class="text-xs text-slate-500 mt-1">Insights into lost &amp; found activity across campus</p>
+    </div>
+
+    <!-- KPI Cards -->
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-4" id="kpi-cards">
+      <div class="card-flat p-4 text-center"><div class="text-xs text-slate-400 mb-1">Total Lost Reports</div><div class="text-2xl font-bold text-red-600" id="kpi-lost">—</div></div>
+      <div class="card-flat p-4 text-center"><div class="text-xs text-slate-400 mb-1">Total Found Reports</div><div class="text-2xl font-bold text-emerald-600" id="kpi-found">—</div></div>
+      <div class="card-flat p-4 text-center"><div class="text-xs text-slate-400 mb-1">Items Recovered</div><div class="text-2xl font-bold text-blue-600" id="kpi-recovered">—</div></div>
+      <div class="card-flat p-4 text-center"><div class="text-xs text-slate-400 mb-1">Recovery Rate</div><div class="text-2xl font-bold text-yellow-600" id="kpi-rate">—%</div></div>
+    </div>
+
+    <!-- Charts Row 1 -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div class="card-flat p-5">
+        <h2 class="text-sm font-bold text-slate-800 mb-4">📦 Items by Category</h2>
+        <canvas id="categoryChart" height="220"></canvas>
+      </div>
+      <div class="card-flat p-5">
+        <h2 class="text-sm font-bold text-slate-800 mb-4">📍 Top Hotspot Locations</h2>
+        <canvas id="locationChart" height="220"></canvas>
+      </div>
+    </div>
+
+    <!-- Charts Row 2 -->
+    <div class="card-flat p-5">
+      <h2 class="text-sm font-bold text-slate-800 mb-4">📈 Monthly Lost vs Recovered Trend</h2>
+      <canvas id="trendChart" height="120"></canvas>
+    </div>
+  </main>
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+  async function loadStats() {
+    const user = getCurrentUser();
+    if (!user || !getToken()) { window.location.href = '/login'; return; }
+    const sName = user.student_name || user.full_name || user.name || 'Student';
+    document.getElementById('user-display-name').innerText = sName;
+    document.getElementById('user-roll-no').innerText = user.roll_number || user.college_email || '';
+    if (sName && sName !== 'Student') {
+      const parts = sName.split(' ');
+      document.getElementById('user-avatar').innerText = (parts[0][0] + (parts[1] ? parts[1][0] : '')).toUpperCase();
+    }
+
+    const res = await apiFetch('/stats');
+    if (!res || !res.ok) return;
+    const data = res.data.data;
+    const s = data.summary;
+
+    document.getElementById('kpi-lost').innerText = s.total_lost;
+    document.getElementById('kpi-found').innerText = s.total_found;
+    document.getElementById('kpi-recovered').innerText = s.completed;
+    document.getElementById('kpi-rate').innerText = s.recovery_rate + '%';
+
+    // Category Chart (Doughnut)
+    new Chart(document.getElementById('categoryChart'), {
+      type: 'doughnut',
+      data: {
+        labels: data.categories.map(c => c.name),
+        datasets: [{ data: data.categories.map(c => c.count), backgroundColor: ['#3b82f6','#ef4444','#10b981','#f59e0b','#8b5cf6','#06b6d4','#f97316','#ec4899'], borderWidth: 0 }]
+      },
+      options: { plugins: { legend: { position: 'right', labels: { font: { size: 11 } } } }, cutout: '60%' }
+    });
+
+    // Location Chart (Horizontal Bar)
+    new Chart(document.getElementById('locationChart'), {
+      type: 'bar',
+      data: {
+        labels: data.hotspots.map(h => h.location),
+        datasets: [{ label: 'Reports', data: data.hotspots.map(h => h.count), backgroundColor: '#3b82f6', borderRadius: 4 }]
+      },
+      options: { indexAxis: 'y', plugins: { legend: { display: false } }, scales: { x: { beginAtZero: true, ticks: { font: { size: 10 } } }, y: { ticks: { font: { size: 10 } } } } }
+    });
+
+    // Trend Chart (Line)
+    new Chart(document.getElementById('trendChart'), {
+      type: 'line',
+      data: {
+        labels: data.monthly_trend.map(m => m.month),
+        datasets: [
+          { label: 'Lost', data: data.monthly_trend.map(m => m.lost), borderColor: '#ef4444', backgroundColor: 'rgba(239,68,68,0.1)', fill: true, tension: 0.4 },
+          { label: 'Recovered', data: data.monthly_trend.map(m => m.recovered), borderColor: '#10b981', backgroundColor: 'rgba(16,185,129,0.1)', fill: true, tension: 0.4 }
+        ]
+      },
+      options: { plugins: { legend: { position: 'top' } }, scales: { y: { beginAtZero: true } } }
+    });
+  }
+  loadStats();
+</script>
+{% endblock %}

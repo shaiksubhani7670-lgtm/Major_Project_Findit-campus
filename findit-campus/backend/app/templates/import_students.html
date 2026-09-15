@@ -1,0 +1,136 @@
+{% extends "base.html" %}
+{% block title %}Import Students — FindIt Campus{% endblock %}
+{% block content %}
+<div class="min-h-screen bg-slate-50 flex flex-col md:flex-row">
+  <aside class="w-full md:w-64 bg-white border-r border-slate-200 shrink-0 flex flex-col justify-between min-h-screen sticky top-0">
+    <div>
+      <div class="p-5 border-b border-slate-100 flex items-center gap-2.5">
+        <div class="w-8 h-8 rounded-lg bg-blue-600 flex items-center justify-center text-white shrink-0"><i data-lucide="search" class="w-4 h-4"></i></div>
+        <div><span class="font-bold text-base text-slate-900 leading-none block">FindIt Campus</span><span class="text-[10px] text-slate-400 font-semibold block uppercase tracking-wider mt-0.5">GIST Lost &amp; Found</span></div>
+      </div>
+      <nav class="p-3 space-y-1">
+        <a href="/dashboard" class="flex items-center gap-3 px-3.5 py-2.5 text-xs font-medium text-slate-600 rounded-lg hover:bg-slate-100"><i data-lucide="layout-dashboard" class="w-4 h-4"></i> Dashboard</a>
+        <a href="/import-students" class="flex items-center gap-3 px-3.5 py-2.5 text-xs font-bold text-orange-700 bg-orange-50 rounded-lg"><i data-lucide="upload" class="w-4 h-4"></i> Import Students</a>
+      </nav>
+    </div>
+    <div class="p-4 border-t border-slate-100 space-y-2">
+      <div class="flex items-center gap-3 p-2.5 bg-slate-50 rounded-lg border border-slate-200">
+        <div class="w-8 h-8 rounded-full bg-orange-500 text-white font-bold flex items-center justify-center text-xs" id="user-avatar">ST</div>
+        <div class="overflow-hidden"><span class="font-bold text-xs text-slate-900 truncate block" id="user-display-name">Student</span></div>
+      </div>
+      <button onclick="logout()" class="w-full flex items-center justify-center gap-2 px-3 py-2 text-xs font-semibold text-red-600 bg-red-50 hover:bg-red-100 rounded-lg"><i data-lucide="log-out" class="w-3.5 h-3.5"></i> Logout</button>
+    </div>
+  </aside>
+
+  <main class="flex-1 p-6 md:p-8 max-w-2xl mx-auto w-full space-y-6">
+    <div>
+      <h1 class="text-2xl font-bold text-slate-900 flex items-center gap-2"><i data-lucide="upload" class="w-6 h-6 text-orange-600"></i> Import Students</h1>
+      <p class="text-xs text-slate-500 mt-1">Upload a new batch Excel (.xlsx) file to add students to the system</p>
+    </div>
+
+    <!-- Format Info -->
+    <div class="card-flat p-4 bg-blue-50 border-blue-200">
+      <p class="text-xs font-bold text-blue-800 mb-2">📋 Required Excel Format</p>
+      <div class="overflow-x-auto">
+        <table class="text-xs text-blue-700 border-collapse w-full">
+          <thead><tr class="border-b border-blue-200"><th class="text-left py-1 pr-4">Column A</th><th class="text-left py-1 pr-4">Column B</th></tr></thead>
+          <tbody><tr><td class="py-1 pr-4 font-mono">Login (Roll Number)</td><td class="py-1 font-mono">Password (or Names)</td></tr>
+          <tr><td class="py-1 pr-4 font-mono">24RAIT0001</td><td class="py-1 font-mono">password123</td></tr></tbody>
+        </table>
+      </div>
+      <p class="text-[10px] text-blue-600 mt-2">Duplicate roll numbers will be skipped automatically.</p>
+    </div>
+
+    <!-- Upload Box -->
+    <div id="drop-zone" class="card-flat p-8 border-2 border-dashed border-slate-300 text-center hover:border-orange-400 hover:bg-orange-50 transition-colors cursor-pointer"
+      onclick="document.getElementById('file-input').click()"
+      ondragover="event.preventDefault(); this.classList.add('border-orange-400','bg-orange-50')"
+      ondragleave="this.classList.remove('border-orange-400','bg-orange-50')"
+      ondrop="handleDrop(event)">
+      <i data-lucide="file-spreadsheet" class="w-10 h-10 mx-auto text-slate-300 mb-3"></i>
+      <p class="text-sm font-medium text-slate-700">Click or drag &amp; drop your Excel file here</p>
+      <p class="text-xs text-slate-400 mt-1">Only .xlsx files supported · Max 10MB</p>
+      <p id="selected-file-name" class="text-xs font-bold text-orange-600 mt-2"></p>
+    </div>
+    <input type="file" id="file-input" accept=".xlsx" class="hidden" onchange="onFileSelect(this)">
+
+    <button id="import-btn" onclick="importFile()" disabled class="w-full py-3 bg-orange-500 text-white font-bold rounded-xl hover:bg-orange-600 transition-colors disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2">
+      <i data-lucide="upload" class="w-4 h-4"></i> Import Students
+    </button>
+
+    <!-- Result -->
+    <div id="import-result" class="hidden card-flat p-4"></div>
+  </main>
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+  let selectedFile = null;
+
+  function init() {
+    const user = getCurrentUser();
+    if (!user || !getToken()) { window.location.href = '/login'; return; }
+    document.getElementById('user-display-name').innerText = user.student_name || 'Student';
+    if (user.student_name) {
+      const parts = user.student_name.split(' ');
+      document.getElementById('user-avatar').innerText = (parts[0][0] + (parts[1] ? parts[1][0] : '')).toUpperCase();
+    }
+  }
+
+  function handleDrop(e) {
+    e.preventDefault();
+    document.getElementById('drop-zone').classList.remove('border-orange-400','bg-orange-50');
+    const file = e.dataTransfer.files[0];
+    if (file) setFile(file);
+  }
+
+  function onFileSelect(input) {
+    if (input.files[0]) setFile(input.files[0]);
+  }
+
+  function setFile(file) {
+    if (!file.name.endsWith('.xlsx')) { alert('Only .xlsx files are supported'); return; }
+    selectedFile = file;
+    document.getElementById('selected-file-name').innerText = '📄 ' + file.name;
+    document.getElementById('import-btn').disabled = false;
+  }
+
+  async function importFile() {
+    if (!selectedFile) return;
+    const btn = document.getElementById('import-btn');
+    btn.innerHTML = '<span class="animate-spin">⏳</span> Importing...';
+    btn.disabled = true;
+
+    const formData = new FormData();
+    formData.append('file', selectedFile);
+
+    const token = getToken();
+    try {
+      const resp = await fetch('/api/import/students', {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${token}` },
+        body: formData
+      });
+      const data = await resp.json();
+      const resultEl = document.getElementById('import-result');
+      resultEl.classList.remove('hidden');
+      if (data.success) {
+        resultEl.className = 'card-flat p-4 bg-green-50 border border-green-200 text-green-800 text-sm';
+        resultEl.innerHTML = `✅ <strong>Import Successful!</strong><br>Added: ${data.data.added} students · Skipped (already exist): ${data.data.skipped}`;
+      } else {
+        resultEl.className = 'card-flat p-4 bg-red-50 border border-red-200 text-red-800 text-sm';
+        resultEl.innerHTML = `❌ <strong>Import Failed:</strong> ${data.message}`;
+      }
+    } catch (e) {
+      document.getElementById('import-result').classList.remove('hidden');
+      document.getElementById('import-result').className = 'card-flat p-4 bg-red-50 border border-red-200 text-red-800 text-sm';
+      document.getElementById('import-result').innerText = 'Network error. Please try again.';
+    }
+
+    btn.innerHTML = '<i data-lucide="upload" class="w-4 h-4"></i> Import Students';
+    btn.disabled = false;
+    lucide.createIcons();
+  }
+  init();
+</script>
+{% endblock %}

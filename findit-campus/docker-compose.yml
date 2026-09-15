@@ -1,0 +1,95 @@
+services:
+  # ---------- PostgreSQL Database ----------
+  db:
+    image: postgres:16-alpine
+    container_name: findit_db
+    restart: always
+    environment:
+      POSTGRES_USER: findit_user
+      POSTGRES_PASSWORD: findit_password
+      POSTGRES_DB: findit_campus
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./database/schema.sql:/docker-entrypoint-initdb.d/1-schema.sql
+      - ./database/seed.sql:/docker-entrypoint-initdb.d/2-seed.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U findit_user -d findit_campus"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ---------- Redis Broker ----------
+  redis:
+    image: redis:7-alpine
+    container_name: findit_redis
+    restart: always
+    ports:
+      - "6379:6379"
+    volumes:
+      - redisdata:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ---------- Flask API Backend ----------
+  backend:
+    build:
+      context: ./backend
+      dockerfile: ../Dockerfile.backend
+    container_name: findit_backend
+    restart: always
+    ports:
+      - "5000:5000"
+    environment:
+      - FLASK_ENV=development
+      - DATABASE_URL=postgresql://findit_user:findit_password@db:5432/findit_campus
+      - REDIS_URL=redis://redis:6379/0
+      - CELERY_BROKER_URL=redis://redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://redis:6379/1
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  # ---------- Celery Background Worker ----------
+  worker:
+    build:
+      context: ./backend
+      dockerfile: ../Dockerfile.backend
+    container_name: findit_worker
+    restart: always
+    command: celery -A app.tasks.matching_tasks worker --loglevel=info
+    environment:
+      - FLASK_ENV=development
+      - DATABASE_URL=postgresql://findit_user:findit_password@db:5432/findit_campus
+      - REDIS_URL=redis://redis:6379/0
+      - CELERY_BROKER_URL=redis://redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://redis:6379/1
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  # ---------- Next.js Frontend ----------
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: ../Dockerfile.frontend
+    container_name: findit_frontend
+    restart: always
+    ports:
+      - "3000:3000"
+    environment:
+      - NEXT_PUBLIC_API_URL=http://localhost:5000/api
+    depends_on:
+      - backend
+
+volumes:
+  pgdata:
+  redisdata:

@@ -1,0 +1,40 @@
+# ============================================================
+# FindIt Campus — Full ML Requirements (Local / Docker)
+# Expert v3.0 — BGE + SigLIP + BLIP + BM25 + FAISS
+# ============================================================
+# Install ON TOP of requirements.txt for the full pipeline.
+#
+# Usage:
+#   pip install -r requirements.txt
+#   pip install -r requirements-ml.txt
+#
+# Vercel serverless: uses requirements.txt only (ML auto-disabled gracefully)
+# ============================================================
+
+# ---------- BGE Text Embedding (replaces MiniLM) ----------
+# sentence-transformers downloads BGE-small-en-v1.5 automatically
+sentence-transformers>=3.0.0
+
+# ---------- SigLIP + BLIP Image Models ----------
+# SiglipModel requires transformers >= 4.41
+transformers>=4.41.0
+accelerate>=0.27.0
+
+# ---------- PyTorch (CPU build — sufficient for inference) ----------
+# For GPU: replace with: torch>=2.3.0+cu121
+torch>=2.3.0
+
+# ---------- BM25 Keyword Pre-Filter (NEW v3) ----------
+rank-bm25>=0.2.2
+
+# ---------- FAISS Vector Index ----------
+faiss-cpu>=1.8.0
+
+# ---------- Image loading ----------
+Pillow>=10.0.0
+
+# ---------- HTTP for Cloudinary image fetch ----------
+requests>=2.31.0   # likely already in requirements.txt
+
+# ---------- Dev / Test ----------
+pytest>=8.0.0

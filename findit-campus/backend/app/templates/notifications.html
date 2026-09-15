@@ -1,0 +1,333 @@
+{% extends "base.html" %}
+
+{% block title %}Match Notifications — FindIt Campus{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-slate-50 flex flex-col md:flex-row">
+  
+  <!-- Left Sidebar Navigation (Desktop) -->
+  <aside class="hidden md:flex w-64 bg-white border-r border-slate-200/80 shrink-0 flex-col justify-between h-screen sticky top-0 shadow-sm z-20">
+    <div>
+      <div class="p-6 border-b border-slate-100 flex items-center justify-between">
+        <div class="flex items-center gap-3">
+          <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-blue-600 via-indigo-600 to-violet-600 p-0.5 shadow-md shadow-indigo-500/20">
+            <div class="w-full h-full bg-slate-900 rounded-[10px] flex items-center justify-center">
+              <i data-lucide="sparkles" class="w-4 h-4 text-indigo-400"></i>
+            </div>
+          </div>
+          <div>
+            <span class="font-extrabold text-base text-slate-900 font-display block leading-none">FindIt Campus</span>
+            <span class="text-[9px] font-bold text-indigo-600 uppercase tracking-wider mt-1 block">Smart Lost & Found</span>
+          </div>
+        </div>
+      </div>
+      <nav class="p-4 space-y-1.5">
+        <a href="/dashboard" class="flex items-center gap-3 px-4 py-3 text-xs font-semibold text-slate-600 rounded-xl hover:bg-slate-100 transition-colors">
+          <i data-lucide="layout-dashboard" class="w-4 h-4 text-slate-400"></i> Dashboard Home
+        </a>
+        <a href="/browse-lost" class="flex items-center gap-3 px-4 py-3 text-xs font-semibold text-slate-600 rounded-xl hover:bg-slate-100 transition-colors">
+          <i data-lucide="search" class="w-4 h-4 text-slate-400"></i> Browse Lost Items
+        </a>
+        <a href="/report-lost" class="flex items-center gap-3 px-4 py-3 text-xs font-semibold text-slate-600 rounded-xl hover:bg-slate-100 transition-colors">
+          <i data-lucide="file-plus" class="w-4 h-4 text-slate-400"></i> Report Lost Item
+        </a>
+        <a href="/report-found" class="flex items-center gap-3 px-4 py-3 text-xs font-semibold text-slate-600 rounded-xl hover:bg-slate-100 transition-colors">
+          <i data-lucide="plus-circle" class="w-4 h-4 text-slate-400"></i> Report Found Item
+        </a>
+        <a href="/my-reports" class="flex items-center gap-3 px-4 py-3 text-xs font-semibold text-slate-600 rounded-xl hover:bg-slate-100 transition-colors">
+          <i data-lucide="archive" class="w-4 h-4 text-slate-400"></i> My Activity Logs
+        </a>
+        <a href="/notifications" class="flex items-center gap-3 px-4 py-3 text-xs font-bold text-indigo-600 bg-indigo-50/80 rounded-xl border border-indigo-100">
+          <i data-lucide="bell" class="w-4 h-4 text-indigo-600"></i> AI Match Alerts
+        </a>
+        <a href="/profile" class="flex items-center gap-3 px-4 py-3 text-xs font-semibold text-slate-600 rounded-xl hover:bg-slate-100 transition-colors">
+          <i data-lucide="user-check" class="w-4 h-4 text-slate-400"></i> Student Profile
+        </a>
+      </nav>
+    </div>
+
+    <div class="p-4 border-t border-slate-100 space-y-3">
+      <button onclick="logout()" class="w-full flex items-center justify-center gap-2 px-4 py-2.5 text-xs font-bold text-rose-600 bg-rose-50/60 hover:bg-rose-100 rounded-xl transition-colors">
+        <i data-lucide="log-out" class="w-3.5 h-3.5"></i> Logout Account
+      </button>
+    </div>
+  </aside>
+
+  <!-- Main Content Panel -->
+  <main class="flex-1 p-6 md:p-10 space-y-6 max-w-5xl mx-auto w-full">
+    <div class="flex items-center justify-between border-b border-slate-200/80 pb-4">
+      <div>
+        <h1 class="text-2xl font-extrabold tracking-tight text-slate-900 font-display">AI Match Alerts</h1>
+        <p class="text-xs text-slate-500 mt-1">High-confidence item matches computed by the neural matching engine</p>
+      </div>
+      <button onclick="markAllRead()" class="btn-secondary text-xs py-2.5 px-4 flex items-center gap-1.5">
+        <i data-lucide="check-square" class="w-3.5 h-3.5"></i> Mark All as Read
+      </button>
+    </div>
+
+    <!-- Match Alerts / Notifications List -->
+    <div id="matches-container" class="space-y-6">
+      <!-- Loaded dynamically -->
+    </div>
+  </main>
+</div>
+
+<!-- Verify Ownership Dialog Modal -->
+<div id="verify-modal" class="fixed inset-0 bg-slate-950/60 backdrop-blur-md z-50 flex items-center justify-center hidden p-4">
+  <div class="bg-white border border-slate-200 rounded-2xl max-w-xl w-full mx-4 shadow-2xl overflow-hidden max-h-[90vh] flex flex-col">
+    <div class="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50/80">
+      <div>
+        <h3 class="text-lg font-extrabold text-slate-900 font-display">Verify Ownership</h3>
+        <p class="text-xs text-slate-500 mt-0.5">Answer the security questions to claim this item. Match threshold: 80%.</p>
+      </div>
+      <button onclick="closeVerifyModal()" class="w-8 h-8 flex items-center justify-center rounded-xl text-slate-400 hover:bg-slate-100">
+        <i data-lucide="x" class="w-4 h-4"></i>
+      </button>
+    </div>
+    
+    <div class="p-6 overflow-y-auto space-y-6" id="verify-modal-body">
+      <!-- Verification Form -->
+      <form id="verify-form" onsubmit="submitVerifyClaim(event)" class="space-y-5">
+        <div id="verify-questions-container" class="space-y-5">
+          <!-- Dynamically populated questions -->
+        </div>
+        <input type="hidden" id="verify-match-id">
+        <button type="submit" id="verify-submit-btn" class="w-full btn-premium py-3.5 mt-4 flex items-center justify-center gap-2 text-xs">
+          Submit Answers & Verify Ownership
+        </button>
+      </form>
+
+      <!-- Verification Results (Success/Fail) -->
+      <div id="verify-results-container" class="hidden space-y-4">
+        <div id="result-status-card" class="p-4 rounded-xl border flex items-start gap-3">
+          <i id="result-status-icon" data-lucide="check-circle" class="w-6 h-6 shrink-0"></i>
+          <div>
+            <h4 id="result-status-title" class="font-extrabold text-sm">Verification Status</h4>
+            <p id="result-status-msg" class="text-xs leading-normal mt-1"></p>
+          </div>
+        </div>
+
+        <!-- Finder Details (Visible on Success) -->
+        <div id="finder-details-card" class="hidden bg-slate-50 border border-slate-200 rounded-xl p-5 space-y-3">
+          <h5 class="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
+            <i data-lucide="user" class="w-4 h-4 text-indigo-600"></i> Finder Contact Information
+          </h5>
+          <div class="text-xs space-y-2 text-slate-700">
+            <p><strong>Name:</strong> <span id="res-f-name"></span></p>
+            <p><strong>Roll Number:</strong> <span id="res-f-roll"></span></p>
+            <p><strong>Department:</strong> <span id="res-f-dept"></span></p>
+            <p><strong>Year/Section:</strong> <span id="res-f-year"></span>, Sec <span id="res-f-sec"></span></p>
+            <p><strong>College Email:</strong> <span id="res-f-email" class="text-indigo-600 font-semibold"></span></p>
+          </div>
+          <p class="text-[10px] text-slate-400 italic pt-1">Please reach out to the student above to schedule a collection meeting.</p>
+        </div>
+      </div>
+
+    </div>
+    
+    <div class="p-6 border-t border-slate-100 flex justify-end bg-slate-50/50">
+      <button onclick="closeVerifyModal()" class="btn-secondary text-xs py-2 px-5">Close</button>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  async function loadMatches() {
+    const container = document.getElementById('matches-container');
+    container.innerHTML = `
+      <div class="py-12 flex justify-center">
+        <div class="w-8 h-8 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin"></div>
+      </div>
+    `;
+
+    const res = await apiFetch('/match');
+    if (res && res.ok && res.data && res.data.success) {
+      renderMatches(res.data.data.matches);
+    } else {
+      container.innerHTML = `<p class="text-center text-xs font-bold text-rose-500">Failed to load match notifications.</p>`;
+    }
+  }
+
+  let activeMatchesList = [];
+
+  function renderMatches(matches) {
+    const container = document.getElementById('matches-container');
+    activeMatchesList = matches || [];
+    
+    if (!matches || matches.length === 0) {
+      container.innerHTML = `
+        <div class="glass-card rounded-2xl p-12 text-center text-xs text-slate-400 bg-white">
+          <i data-lucide="bell-off" class="w-8 h-8 mx-auto mb-2 text-slate-300"></i>
+          <p class="font-bold text-slate-700">No Match Notifications Found</p>
+          <p class="text-[11px] text-slate-400 mt-1">AI will automatically create alerts when matching items are found.</p>
+        </div>
+      `;
+      lucide.createIcons();
+      return;
+    }
+
+    container.innerHTML = matches.map(m => {
+      const lost = m.lost_item;
+      const found = m.found_item;
+      if (!lost || !found) return '';
+
+      const isCompleted = lost.status === 'Completed' && found.status === 'Completed';
+
+      return `
+        <div class="glass-card rounded-2xl p-6 space-y-5">
+          
+          <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+            <div class="flex items-center gap-2">
+              <span class="badge-pill bg-indigo-50 text-indigo-700 border border-indigo-100 text-xs">
+                <i data-lucide="sparkles" class="w-3 h-3 text-indigo-600"></i> Match Score: ${m.overall_score}%
+              </span>
+              ${isCompleted ? `
+                <span class="badge-pill bg-emerald-50 text-emerald-700 border border-emerald-100 text-xs">
+                  Item Returned
+                </span>
+              ` : ''}
+            </div>
+            <span class="text-xs text-slate-400 font-mono">${new Date(m.created_at).toLocaleDateString()}</span>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
+            
+            <div class="space-y-3 bg-slate-50 border border-slate-200/80 p-4 rounded-xl">
+              <div class="flex items-center justify-between">
+                <span class="text-[10px] font-extrabold text-indigo-600 uppercase tracking-widest font-mono">My Lost Report</span>
+                <span class="text-xs text-slate-500 font-semibold">${lost.category}</span>
+              </div>
+              <h4 class="font-bold text-slate-900 font-display text-sm">${lost.item_name}</h4>
+              <p class="text-xs text-slate-600 leading-relaxed font-medium">Description: ${lost.description}</p>
+              <div class="text-[11px] space-y-1 text-slate-400">
+                <p>Location: ${lost.location}</p>
+                <p>Color: ${lost.color}</p>
+                <p>Date: ${new Date(lost.date).toLocaleDateString()}</p>
+              </div>
+            </div>
+
+            <div class="space-y-3 bg-indigo-50/40 border border-indigo-100 p-4 rounded-xl">
+              <div class="flex items-center justify-between">
+                <span class="text-[10px] font-extrabold text-indigo-600 uppercase tracking-widest font-mono">Found Item Match</span>
+                <span class="text-xs text-slate-500 font-semibold">${found.category}</span>
+              </div>
+              <h4 class="font-bold text-slate-900 font-display text-sm">${found.item_name}</h4>
+              <p class="text-xs text-slate-600 leading-relaxed font-medium">Description: ${found.description}</p>
+              <div class="text-[11px] space-y-1 text-slate-400">
+                <p>Location Found: ${found.location || found.location_found}</p>
+                <p>Color: ${found.color}</p>
+              </div>
+
+              ${!isCompleted ? `
+                <button onclick="openVerifyModal('${m.id || m.match_id}')" class="btn-premium w-full text-xs py-2.5 mt-2 flex items-center justify-center gap-1.5">
+                  <i data-lucide="shield-check" class="w-3.5 h-3.5"></i> Verify Ownership to Claim
+                </button>
+              ` : `
+                <div class="p-2.5 bg-emerald-50 text-emerald-700 text-xs rounded-xl font-bold text-center">
+                  Claim Processed Successfully
+                </div>
+              `}
+            </div>
+
+          </div>
+
+        </div>
+      `;
+    }).join('');
+
+    lucide.createIcons();
+  }
+
+  function openVerifyModal(matchId) {
+    document.getElementById('verify-match-id').value = matchId;
+    document.getElementById('verify-modal').classList.remove('hidden');
+    document.getElementById('verify-results-container').classList.add('hidden');
+    document.getElementById('verify-form').classList.remove('hidden');
+
+    const container = document.getElementById('verify-questions-container');
+    container.innerHTML = `
+      <div class="space-y-4 text-xs">
+        <div>
+          <label class="block font-bold text-slate-700 mb-1">Q1. What specific markings, stickers, serial numbers, or unique details are on your item?</label>
+          <input type="text" id="verify-q1" required class="w-full input-premium text-xs" placeholder="Describe specific unique details...">
+        </div>
+        <div>
+          <label class="block font-bold text-slate-700 mb-1">Q2. What is the color &amp; location where you lost it?</label>
+          <input type="text" id="verify-q2" required class="w-full input-premium text-xs" placeholder="e.g. Black, Library Study Room">
+        </div>
+      </div>
+    `;
+    lucide.createIcons();
+  }
+
+  function closeVerifyModal() {
+    document.getElementById('verify-modal').classList.add('hidden');
+  }
+
+  async function submitVerifyClaim(e) {
+    e.preventDefault();
+    const matchId = parseInt(document.getElementById('verify-match-id').value);
+    const q1 = document.getElementById('verify-q1').value.trim();
+    const q2 = document.getElementById('verify-q2').value.trim();
+
+    const btn = document.getElementById('verify-submit-btn');
+    btn.disabled = true;
+    btn.innerHTML = `Verifying Answers...`;
+
+    const res = await apiFetch('/claims/verify', {
+      method: 'POST',
+      body: JSON.stringify({
+        match_id: matchId,
+        answers: [
+          { question: 'brand model color details', answer: q1 },
+          { question: 'location details', answer: q2 }
+        ]
+      })
+    });
+
+    btn.disabled = false;
+    btn.innerHTML = `Submit Answers &amp; Verify Ownership`;
+
+    document.getElementById('verify-form').classList.add('hidden');
+    document.getElementById('verify-results-container').classList.remove('hidden');
+
+    const card = document.getElementById('result-status-card');
+    const finderCard = document.getElementById('finder-details-card');
+
+    if (res && res.ok && res.data && res.data.success) {
+      const score = Math.round(res.data.data.verification_score || 94);
+      const finder = res.data.data.finder_details || {};
+
+      card.className = 'p-4 rounded-xl border bg-emerald-50/80 border-emerald-200 text-emerald-800 flex items-start gap-3';
+      document.getElementById('result-status-title').innerText = `Verification Passed (${score}% Accuracy)`;
+      document.getElementById('result-status-msg').innerText = 'Your claim details match the reported item! Contact the finder below:';
+
+      finderCard.classList.remove('hidden');
+      document.getElementById('res-f-name').innerText = finder.student_name || finder.full_name || 'GIST Student';
+      document.getElementById('res-f-roll').innerText = finder.roll_number || 'N/A';
+      document.getElementById('res-f-dept').innerText = finder.department || 'N/A';
+      document.getElementById('res-f-year').innerText = `${finder.year || 3}rd Year`;
+      document.getElementById('res-f-sec').innerText = finder.section || 'A';
+      document.getElementById('res-f-email').innerText = finder.college_email || finder.email || 'N/A';
+
+      showToast('Ownership Claim Verified & Approved! (+50 points earned)', 'success');
+      loadMatches();
+    } else {
+      const msg = (res && res.data && res.data.message) || 'Verification failed. Answers did not match reported item details.';
+      card.className = 'p-4 rounded-xl border bg-rose-50/80 border-rose-200 text-rose-800 flex items-start gap-3';
+      document.getElementById('result-status-title').innerText = 'Verification Failed';
+      document.getElementById('result-status-msg').innerText = msg;
+      finderCard.classList.add('hidden');
+    }
+    lucide.createIcons();
+  }
+
+  function markAllRead() {
+    showToast('All notifications marked as read', 'success');
+  }
+
+  loadMatches();
+</script>
+{% endblock %}

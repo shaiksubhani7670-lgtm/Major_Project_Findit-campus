@@ -1,0 +1,552 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard — FindIt Campus{% endblock %}
+
+{% block content %}
+<!-- Mobile Top Header Bar -->
+<div class="md:hidden bg-white border-b border-slate-200 p-4 sticky top-0 z-40 flex items-center justify-between shadow-sm">
+  <div class="flex items-center gap-2.5">
+    <div class="w-8 h-8 rounded-lg bg-blue-600 flex items-center justify-center text-white shrink-0">
+      <i data-lucide="search" class="w-4 h-4"></i>
+    </div>
+    <div>
+      <span class="font-bold text-sm text-slate-900 leading-none block">FindIt Campus</span>
+      <span class="text-[9px] text-slate-400 font-semibold block uppercase tracking-wider mt-0.5">GIST Lost &amp; Found</span>
+    </div>
+  </div>
+  <button onclick="toggleMobileNav()" class="p-2 rounded-lg bg-slate-100 text-slate-700 hover:bg-slate-200 focus:outline-none">
+    <i data-lucide="menu" class="w-5 h-5"></i>
+  </button>
+</div>
+
+<!-- Mobile Navigation Overlay & Drawer -->
+<div id="mobile-nav-overlay" onclick="toggleMobileNav()" class="fixed inset-0 bg-slate-900/60 z-50 hidden transition-opacity md:hidden"></div>
+<div id="mobile-nav-drawer" class="fixed inset-y-0 left-0 w-72 bg-white z-50 -translate-x-full transition-transform duration-300 flex flex-col justify-between p-5 md:hidden shadow-2xl overflow-y-auto">
+  <div>
+    <div class="pb-4 border-b border-slate-100 flex items-center justify-between">
+      <div class="flex items-center gap-2.5">
+        <div class="w-8 h-8 rounded-lg bg-blue-600 flex items-center justify-center text-white shrink-0">
+          <i data-lucide="search" class="w-4 h-4"></i>
+        </div>
+        <span class="font-bold text-base text-slate-900">FindIt Campus</span>
+      </div>
+      <button onclick="toggleMobileNav()" class="p-1.5 rounded-lg text-slate-400 hover:bg-slate-100">
+        <i data-lucide="x" class="w-5 h-5"></i>
+      </button>
+    </div>
+    <nav class="py-4 space-y-1">
+      <a href="/dashboard" class="flex items-center gap-3 px-3.5 py-2.5 text-xs font-bold text-blue-600 bg-blue-50 rounded-lg">
+        <i data-lucide="layout-dashboard" class="w-4 h-4"></i> Dashboard Home
+      </a>
+      <a href="/browse-lost" class="flex items-center gap-3 px-3.5 py-2.5 text-xs font-medium text-slate-600 rounded-lg hover:bg-slate-100">
+        <i data-lucide="search" class="w-4 h-4"></i> Browse Lost Items
+      </a>
+      <a href="/report-lost" class="flex items-center gap-3 px-3.5 py-2.5 text-xs font-medium text-slate-600 rounded-lg hover:bg-slate-100">
+        <i data-lucide="file-plus" class="w-4 h-4"></i> Report Lost Item
+      </a>
+      <a href="/report-found" class="flex items-center gap-3 px-3.5 py-2.5 text-xs font-medium text-slate-600 rounded-lg hover:bg-slate-100">
+        <i data-lucide="plus-circle" class="w-4 h-4"></i> Report Found Item
+      </a>
+      <a href="/my-reports" class="flex items-center gap-3 px-3.5 py-2.5 text-xs font-medium text-slate-600 rounded-lg hover:bg-slate-100">
+        <i data-lucide="archive" class="w-4 h-4"></i> My Activity Logs
+      </a>
+      <a href="/notifications" class="flex items-center gap-3 px-3.5 py-2.5 text-xs font-medium text-slate-600 rounded-lg hover:bg-slate-100">
+        <i data-lucide="bell" class="w-4 h-4"></i> Match Alerts
+      </a>
+      <div class="pt-2 pb-1"><p class="px-3.5 text-[9px] font-bold uppercase tracking-widest text-slate-400">Explore</p></div>
+      <a href="/map" class="flex items-center gap-3 px-3.5 py-2.5 text-xs font-medium text-slate-600 rounded-lg hover:bg-slate-100">
+        <i data-lucide="map-pin" class="w-4 h-4 text-green-500"></i> Campus Map
+      </a>
+      <a href="/timeline" class="flex items-center gap-3 px-3.5 py-2.5 text-xs font-medium text-slate-600 rounded-lg hover:bg-slate-100">
+        <i data-lucide="activity" class="w-4 h-4 text-purple-500"></i> My Timeline
+      </a>
+      <a href="/statistics" class="flex items-center gap-3 px-3.5 py-2.5 text-xs font-medium text-slate-600 rounded-lg hover:bg-slate-100">
+        <i data-lucide="bar-chart-2" class="w-4 h-4 text-blue-500"></i> Statistics
+      </a>
+      <a href="/leaderboard" class="flex items-center gap-3 px-3.5 py-2.5 text-xs font-medium text-slate-600 rounded-lg hover:bg-slate-100">
+        <i data-lucide="trophy" class="w-4 h-4 text-yellow-500"></i> Leaderboard
+      </a>
+      <a href="/calendar" class="flex items-center gap-3 px-3.5 py-2.5 text-xs font-medium text-slate-600 rounded-lg hover:bg-slate-100">
+        <i data-lucide="calendar" class="w-4 h-4 text-indigo-500"></i> Calendar
+      </a>
+      <a href="/import-students" class="flex items-center gap-3 px-3.5 py-2.5 text-xs font-medium text-slate-600 rounded-lg hover:bg-slate-100">
+        <i data-lucide="upload" class="w-4 h-4 text-orange-500"></i> Import Students
+      </a>
+      <a href="/profile" class="flex items-center gap-3 px-3.5 py-2.5 text-xs font-medium text-slate-600 rounded-lg hover:bg-slate-100">
+        <i data-lucide="user" class="w-4 h-4"></i> Profile Settings
+      </a>
+    </nav>
+  </div>
+  <div class="pt-4 border-t border-slate-100">
+    <button onclick="logout()" class="w-full flex items-center justify-center gap-2 px-3 py-2 text-xs font-semibold text-red-600 bg-red-50 hover:bg-red-100 rounded-lg">
+      <i data-lucide="log-out" class="w-3.5 h-3.5"></i> Logout
+    </button>
+  </div>
+</div>
+
+<div class="min-h-screen bg-slate-50 flex flex-col md:flex-row">
+  
+  <!-- Left Sidebar (Desktop) -->
+  <aside class="hidden md:flex w-64 bg-white border-r border-slate-200 shrink-0 flex-col justify-between h-screen sticky top-0">
+    <div>
+      <!-- Brand -->
+      <div class="p-5 border-b border-slate-100 flex items-center gap-2.5">
+        <div class="w-8 h-8 rounded-lg bg-blue-600 flex items-center justify-center text-white shrink-0">
+          <i data-lucide="search" class="w-4 h-4"></i>
+        </div>
+        <div>
+          <span class="font-bold text-base text-slate-900 leading-none block">FindIt Campus</span>
+          <span class="text-[10px] text-slate-400 font-semibold block uppercase tracking-wider mt-0.5">GIST Lost &amp; Found</span>
+        </div>
+      </div>
+
+      <!-- Navigation Links -->
+      <nav class="p-3 space-y-1">
+        <a href="/dashboard" class="flex items-center gap-3 px-3.5 py-2.5 text-xs font-bold text-blue-600 bg-blue-50 rounded-lg">
+          <i data-lucide="layout-dashboard" class="w-4 h-4"></i> Dashboard Home
+        </a>
+        <a href="/browse-lost" class="flex items-center gap-3 px-3.5 py-2.5 text-xs font-medium text-slate-600 rounded-lg hover:bg-slate-100">
+          <i data-lucide="search" class="w-4 h-4"></i> Browse Lost Items
+        </a>
+        <a href="/report-lost" class="flex items-center gap-3 px-3.5 py-2.5 text-xs font-medium text-slate-600 rounded-lg hover:bg-slate-100">
+          <i data-lucide="file-plus" class="w-4 h-4"></i> Report Lost Item
+        </a>
+        <a href="/report-found" class="flex items-center gap-3 px-3.5 py-2.5 text-xs font-medium text-slate-600 rounded-lg hover:bg-slate-100">
+          <i data-lucide="plus-circle" class="w-4 h-4"></i> Report Found Item
+        </a>
+        <a href="/my-reports" class="flex items-center gap-3 px-3.5 py-2.5 text-xs font-medium text-slate-600 rounded-lg hover:bg-slate-100">
+          <i data-lucide="archive" class="w-4 h-4"></i> My Activity Logs
+        </a>
+        <a href="/notifications" class="flex items-center gap-3 px-3.5 py-2.5 text-xs font-medium text-slate-600 rounded-lg hover:bg-slate-100">
+          <i data-lucide="bell" class="w-4 h-4"></i> Match Alerts
+        </a>
+        <div class="pt-2 pb-1"><p class="px-3.5 text-[9px] font-bold uppercase tracking-widest text-slate-400">Explore</p></div>
+        <a href="/map" class="flex items-center gap-3 px-3.5 py-2.5 text-xs font-medium text-slate-600 rounded-lg hover:bg-slate-100">
+          <i data-lucide="map-pin" class="w-4 h-4 text-green-500"></i> Campus Map
+        </a>
+        <a href="/timeline" class="flex items-center gap-3 px-3.5 py-2.5 text-xs font-medium text-slate-600 rounded-lg hover:bg-slate-100">
+          <i data-lucide="activity" class="w-4 h-4 text-purple-500"></i> My Timeline
+        </a>
+        <a href="/statistics" class="flex items-center gap-3 px-3.5 py-2.5 text-xs font-medium text-slate-600 rounded-lg hover:bg-slate-100">
+          <i data-lucide="bar-chart-2" class="w-4 h-4 text-blue-500"></i> Statistics
+        </a>
+        <a href="/leaderboard" class="flex items-center gap-3 px-3.5 py-2.5 text-xs font-medium text-slate-600 rounded-lg hover:bg-slate-100">
+          <i data-lucide="trophy" class="w-4 h-4 text-yellow-500"></i> Leaderboard
+        </a>
+        <a href="/calendar" class="flex items-center gap-3 px-3.5 py-2.5 text-xs font-medium text-slate-600 rounded-lg hover:bg-slate-100">
+          <i data-lucide="calendar" class="w-4 h-4 text-indigo-500"></i> Calendar
+        </a>
+        <a href="/import-students" class="flex items-center gap-3 px-3.5 py-2.5 text-xs font-medium text-slate-600 rounded-lg hover:bg-slate-100">
+          <i data-lucide="upload" class="w-4 h-4 text-orange-500"></i> Import Students
+        </a>
+        <a href="/profile" class="flex items-center gap-3 px-3.5 py-2.5 text-xs font-medium text-slate-600 rounded-lg hover:bg-slate-100">
+          <i data-lucide="user" class="w-4 h-4"></i> Profile Settings
+        </a>
+      </nav>
+    </div>
+
+    <!-- User Profile & Logout -->
+    <div class="p-4 border-t border-slate-100 space-y-2">
+      <div class="flex items-center gap-3 p-2.5 bg-slate-50 rounded-lg border border-slate-200">
+        <div class="w-8 h-8 rounded-full bg-blue-600 text-white font-bold flex items-center justify-center text-xs" id="user-avatar">
+          ST
+        </div>
+        <div class="overflow-hidden">
+          <span class="font-bold text-xs text-slate-900 truncate block" id="user-display-name">Student</span>
+          <span class="text-[10px] text-slate-400 truncate block font-mono" id="user-roll-no">23A91A0501</span>
+        </div>
+      </div>
+      <button onclick="logout()" class="w-full flex items-center justify-center gap-2 px-3 py-2 text-xs font-semibold text-red-600 bg-red-50 hover:bg-red-100 rounded-lg">
+        <i data-lucide="log-out" class="w-3.5 h-3.5"></i> Logout
+      </button>
+    </div>
+  </aside>
+
+  <!-- Main Content Area -->
+  <main class="flex-1 p-6 md:p-8 space-y-6 max-w-5xl mx-auto w-full">
+    
+    <!-- Email Verification Alert Banner -->
+    <div id="email-verify-banner" class="hidden bg-gradient-to-r from-amber-500 via-orange-500 to-amber-600 text-white p-5 rounded-2xl shadow-lg space-y-3">
+      <div class="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
+        <div class="flex items-start gap-3">
+          <div class="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center text-white shrink-0 mt-0.5">
+            <i data-lucide="mail-warning" class="w-6 h-6"></i>
+          </div>
+          <div>
+            <p class="font-extrabold text-base leading-tight">Action Required: Enter Personal Email &amp; Verify ✉️</p>
+            <p class="text-xs text-amber-100 mt-1 leading-relaxed" id="banner-email-text">
+              Please enter your <strong>personal email address</strong> below to receive mandatory instant match notifications from <strong>finditcampus@gmail.com</strong>.
+              <span class="block text-[11px] text-amber-200 mt-0.5">⚠️ Note: Verification emails may arrive in your <strong>Spam / Junk folder</strong>.</span>
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Quick Personal Email Update & Verification Form -->
+      <div class="flex flex-col sm:flex-row gap-2 pt-1">
+        <input type="email" id="banner-personal-email-input" placeholder="Enter your personal email (e.g. name@gmail.com)"
+          class="flex-1 px-4 py-2.5 rounded-xl bg-white/10 border border-white/30 text-white placeholder-amber-200/70 text-xs font-semibold focus:outline-none focus:bg-white/20 focus:border-white transition-all">
+        <button id="banner-verify-btn" onclick="submitBannerEmailUpdate()" class="px-5 py-2.5 bg-white text-amber-900 text-xs font-extrabold rounded-xl hover:bg-amber-50 transition-all shrink-0 shadow-md flex items-center justify-center gap-2">
+          <i data-lucide="send" class="w-3.5 h-3.5 text-amber-700"></i> Update &amp; Send Verification Link
+        </button>
+      </div>
+    </div>
+
+    <!-- Top Welcome Header -->
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
+      <div>
+        <h1 class="text-2xl font-bold text-slate-900">
+          Welcome, <span id="student-name" class="text-blue-600">Student</span> 👋
+        </h1>
+        <p class="text-xs text-slate-500 mt-1">Geethanjali Institute of Science and Technology (GIST) Dashboard</p>
+      </div>
+
+      <div class="flex items-center gap-3 shrink-0">
+        <a href="/report-lost" class="btn-primary text-xs py-2.5 px-4 flex items-center gap-1.5">
+          <i data-lucide="file-plus" class="w-4 h-4"></i> Report Lost
+        </a>
+        <a href="/report-found" class="btn-emerald text-xs py-2.5 px-4 flex items-center gap-1.5">
+          <i data-lucide="plus-circle" class="w-4 h-4"></i> Report Found
+        </a>
+      </div>
+    </div>
+
+    <!-- Stats Cards Grid -->
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div class="card-flat p-5 space-y-1">
+        <div class="flex items-center justify-between text-slate-400">
+          <span class="text-[10px] font-bold uppercase tracking-wider">Lost Reports</span>
+          <i data-lucide="file-text" class="w-4 h-4 text-blue-600"></i>
+        </div>
+        <div id="stat-lost" class="text-2xl font-bold text-slate-900 font-mono">0</div>
+      </div>
+
+      <div class="card-flat p-5 space-y-1">
+        <div class="flex items-center justify-between text-slate-400">
+          <span class="text-[10px] font-bold uppercase tracking-wider">Found Reports</span>
+          <i data-lucide="plus-circle" class="w-4 h-4 text-emerald-600"></i>
+        </div>
+        <div id="stat-found" class="text-2xl font-bold text-slate-900 font-mono">0</div>
+      </div>
+
+      <div class="card-flat p-5 space-y-1">
+        <div class="flex items-center justify-between text-slate-400">
+          <span class="text-[10px] font-bold uppercase tracking-wider">Returned Items</span>
+          <i data-lucide="check-circle" class="w-4 h-4 text-emerald-600"></i>
+        </div>
+        <div id="stat-recovered" class="text-2xl font-bold text-emerald-600 font-mono">0</div>
+      </div>
+
+      <div class="card-flat p-5 space-y-1">
+        <div class="flex items-center justify-between text-slate-400">
+          <span class="text-[10px] font-bold uppercase tracking-wider">Pending Review</span>
+          <i data-lucide="clock" class="w-4 h-4 text-amber-500"></i>
+        </div>
+        <div id="stat-pending" class="text-2xl font-bold text-slate-900 font-mono">0</div>
+      </div>
+    </div>
+
+    <!-- Main Grid: Recent Reports & Match Alerts -->
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+      
+      <!-- Recent Reports (Left) -->
+      <section class="lg:col-span-8 space-y-3">
+        <div class="flex items-center justify-between border-b border-slate-200 pb-2">
+          <h3 class="font-bold text-slate-800 text-sm flex items-center gap-2">
+            <i data-lucide="archive" class="w-4 h-4 text-slate-400"></i> My Recent Reports
+          </h3>
+          <a href="/my-reports" class="text-xs font-bold text-blue-600 hover:underline">View All</a>
+        </div>
+        <div id="recent-reports-list" class="space-y-3">
+          <div class="p-6 text-center bg-white rounded-xl border border-slate-200 text-xs text-slate-400">
+            Loading recent reports...
+          </div>
+        </div>
+      </section>
+
+      <!-- Match Alerts (Right) -->
+      <section class="lg:col-span-4 space-y-3">
+        <div class="flex items-center justify-between border-b border-slate-200 pb-2">
+          <h3 class="font-bold text-slate-800 text-sm flex items-center gap-2">
+            <i data-lucide="bell" class="w-4 h-4 text-slate-400"></i> Match Alerts
+          </h3>
+          <a href="/notifications" class="text-xs font-bold text-blue-600 hover:underline">View All</a>
+        </div>
+        <div id="recent-notifications-list" class="space-y-3">
+          <div class="p-6 text-center bg-white rounded-xl border border-slate-200 text-xs text-slate-400">
+            Checking match alerts...
+          </div>
+        </div>
+      </section>
+
+    </div>
+
+  </main>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  function getImageUrl(item) {
+    if (!item) return null;
+    const path = item.image_path || item.image_url || item.image;
+    if (!path || typeof path !== 'string' || !path.trim()) return null;
+    const clean = path.trim();
+    if (clean.startsWith('http://') || clean.startsWith('https://') || clean.startsWith('data:')) return clean;
+    if (clean.startsWith('/')) return clean;
+    const pathNoPrefix = clean.replace(/^(static\/|uploads\/)+/, '');
+    return `/static/uploads/${pathNoPrefix}`;
+  }
+
+  function extractArray(resData, primaryKey) {
+    if (!resData) return [];
+    if (Array.isArray(resData)) return resData;
+    if (primaryKey && resData[primaryKey] && Array.isArray(resData[primaryKey])) return resData[primaryKey];
+    if (resData.reports && Array.isArray(resData.reports)) return resData.reports;
+    if (resData.items && Array.isArray(resData.items)) return resData.items;
+    if (resData.notifications && Array.isArray(resData.notifications)) return resData.notifications;
+    if (resData.matches && Array.isArray(resData.matches)) return resData.matches;
+    return [];
+  }
+
+  async function loadDashboard() {
+    const user = getCurrentUser();
+    if (!user || !getToken()) {
+      window.location.href = '/login';
+      return;
+    }
+
+    function renderUserInfo(u) {
+      if (!u) return;
+      const sName = u.student_name || u.full_name || u.name || 'Student';
+      document.getElementById('student-name').innerText = sName;
+      document.getElementById('user-display-name').innerText = sName;
+      document.getElementById('user-roll-no').innerText = u.roll_number || u.college_email || u.email || '';
+      if (sName && sName !== 'Student') {
+        const parts = sName.split(' ');
+        const initials = parts.length > 1 ? parts[0][0] + parts[1][0] : parts[0].substring(0, 2);
+        document.getElementById('user-avatar').innerText = initials.toUpperCase();
+      }
+    }
+
+    renderUserInfo(user);
+
+    // Load profile details & statistics
+    try {
+      const profileRes = await apiFetch('/profile');
+      if (profileRes && profileRes.ok && profileRes.data && profileRes.data.data) {
+        const pData = profileRes.data.data;
+        if (pData.student) {
+          localStorage.setItem('user', JSON.stringify(pData.student));
+          renderUserInfo(pData.student);
+        }
+        const stats = pData.statistics || {};
+        document.getElementById('stat-lost').innerText = stats.total_lost_reports || 0;
+        document.getElementById('stat-found').innerText = stats.total_found_reports || 0;
+        document.getElementById('stat-recovered').innerText = stats.items_returned || 0;
+        document.getElementById('stat-pending').innerText = stats.pending_reports || 0;
+      }
+    } catch(e) {
+      console.error("Error loading profile stats:", e);
+    }
+
+    // Load recent reports
+    const reportsContainer = document.getElementById('recent-reports-list');
+    let items = [];
+
+    try {
+      const lostRes = await apiFetch('/lost?status=Searching&limit=5');
+
+      if (lostRes && lostRes.ok && lostRes.data && lostRes.data.data) {
+        const lostList = extractArray(lostRes.data.data, 'reports');
+        items.push(...lostList.map(i => ({ ...i, type: 'LOST' })));
+      }
+    } catch(e) {
+      console.error("Error fetching reports:", e);
+    }
+
+    if (items.length === 0) {
+      reportsContainer.innerHTML = `
+        <div class="p-6 text-center bg-white rounded-xl border border-slate-200 space-y-1">
+          <i data-lucide="inbox" class="w-6 h-6 text-slate-300 mx-auto"></i>
+          <p class="text-xs font-bold text-slate-600">No active reports</p>
+          <p class="text-[11px] text-slate-400">Reports submitted by you or fellow students will appear here.</p>
+        </div>
+      `;
+    } else {
+      items.sort((a, b) => new Date(b.created_at || b.date_lost || b.date_found || b.date || 0) - new Date(a.created_at || a.date_lost || a.date_found || a.date || 0));
+      reportsContainer.innerHTML = items.slice(0, 5).map(item => {
+        const imgUrl = getImageUrl(item);
+        return `
+        <div class="card-flat p-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 hover:border-slate-300 transition-colors overflow-hidden">
+          <div class="flex items-center gap-3 min-w-0 flex-1">
+            ${imgUrl ? `
+              <img src="${imgUrl}" alt="${item.item_name || 'Item'}" class="w-11 h-11 rounded-lg object-cover border border-slate-200 shrink-0 bg-slate-100" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+              <div class="w-11 h-11 rounded-lg ${item.type === 'LOST' ? 'bg-red-50 text-red-700 border border-red-200' : 'bg-emerald-50 text-emerald-700 border border-emerald-200'} flex items-center justify-center font-bold text-xs shrink-0" style="display:none;">
+                <i data-lucide="${item.type === 'LOST' ? 'help-circle' : 'check-circle'}" class="w-5 h-5"></i>
+              </div>
+            ` : `
+              <div class="w-11 h-11 rounded-lg ${item.type === 'LOST' ? 'bg-red-50 text-red-700 border border-red-200' : 'bg-emerald-50 text-emerald-700 border border-emerald-200'} flex items-center justify-center font-bold text-xs shrink-0">
+                <i data-lucide="${item.type === 'LOST' ? 'help-circle' : 'check-circle'}" class="w-5 h-5"></i>
+              </div>
+            `}
+            <div class="min-w-0 flex-1">
+              <div class="flex items-center gap-2 flex-wrap">
+                <span class="px-1.5 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider ${item.type === 'LOST' ? 'bg-red-50 text-red-700 border border-red-200' : 'bg-emerald-50 text-emerald-700 border border-emerald-200'} shrink-0">
+                  ${item.type}
+                </span>
+                <span class="font-bold text-xs text-slate-900 truncate block">${item.item_name || item.title || 'Reported Item'}</span>
+              </div>
+              <span class="text-[11px] text-slate-500 block truncate max-w-[200px] sm:max-w-xs mt-0.5">${item.description || 'No description.'}</span>
+            </div>
+          </div>
+          <div class="flex sm:flex-col items-center sm:items-end justify-between sm:justify-start text-xs sm:text-right shrink-0 pt-2 sm:pt-0 border-t sm:border-t-0 border-slate-100">
+            <span class="text-[11px] font-semibold text-slate-600 block">${item.location_lost || item.location_found || item.location || 'Campus'}</span>
+            <span class="text-[10px] text-slate-400 font-mono">${item.date_lost || item.date_found || item.date || item.created_at ? new Date(item.date_lost || item.date_found || item.date || item.created_at).toLocaleDateString() : ''}</span>
+          </div>
+        </div>
+        `;
+      }).join('');
+    }
+
+    // Load match alerts
+    const notifContainer = document.getElementById('recent-notifications-list');
+    try {
+      const matchRes = await apiFetch('/match');
+      let matches = [];
+      if (matchRes && matchRes.ok && matchRes.data && matchRes.data.data) {
+        matches = extractArray(matchRes.data.data, 'matches');
+      }
+
+      if (matches.length > 0) {
+        notifContainer.innerHTML = matches.slice(0, 4).map(m => {
+          const itemObj = m.lost_item || m.found_item;
+          const imgUrl = getImageUrl(itemObj);
+          return `
+          <div class="p-3 bg-white rounded-xl border border-slate-200 flex items-center gap-3">
+            ${imgUrl ? `
+              <img src="${imgUrl}" alt="Match" class="w-10 h-10 rounded-lg object-cover border border-slate-200 shrink-0 bg-slate-100">
+            ` : ''}
+            <div class="flex-1 overflow-hidden">
+              <div class="flex items-center justify-between">
+                <span class="text-[10px] font-bold text-blue-600 uppercase">MATCH SCORE: ${m.overall_score || 85}%</span>
+                <span class="text-[10px] text-slate-400 font-mono">${new Date(m.created_at || Date.now()).toLocaleDateString()}</span>
+              </div>
+              <p class="text-xs font-semibold text-slate-800 truncate mt-0.5">${m.lost_item ? m.lost_item.item_name : (m.found_item ? m.found_item.item_name : 'Item Match')}</p>
+            </div>
+          </div>
+          `;
+        }).join('');
+      } else {
+        notifContainer.innerHTML = `
+          <div class="p-6 text-center bg-white rounded-xl border border-slate-200 text-xs text-slate-400">
+            No match notifications
+          </div>
+        `;
+      }
+    } catch(e) {
+      console.error("Error fetching match alerts:", e);
+      notifContainer.innerHTML = `
+        <div class="p-6 text-center bg-white rounded-xl border border-slate-200 text-xs text-slate-400">
+          No match notifications
+        </div>
+      `;
+    }
+
+    lucide.createIcons();
+  }
+
+  async function resendVerificationEmail() {
+    const btn = document.getElementById('resend-verify-btn');
+    if (btn) {
+      btn.disabled = true;
+      btn.innerHTML = `<span>Sending...</span>`;
+    }
+    const res = await apiFetch('/auth/send-verification', { method: 'POST' });
+    if (res && res.ok) {
+      showToast(res.data.message || 'Verification email sent from finditcampus@gmail.com!', 'success');
+      if (btn) btn.innerHTML = `✅ Link Sent!`;
+    } else {
+      showToast((res && res.data && res.data.message) || 'Failed to send verification email', 'error');
+      if (btn) {
+        btn.disabled = false;
+        btn.innerHTML = `<i data-lucide="send" class="w-3.5 h-3.5 text-amber-700"></i> Send Verification Link`;
+      }
+    }
+    lucide.createIcons();
+  }
+
+  async function submitBannerEmailUpdate() {
+    const input = document.getElementById('banner-personal-email-input');
+    const email = (input ? input.value : '').trim();
+    if (!email || !email.includes('@')) {
+      showToast('Please enter a valid personal email address (e.g. name@gmail.com)', 'error');
+      return;
+    }
+
+    const btn = document.getElementById('banner-verify-btn');
+    if (btn) {
+      btn.disabled = true;
+      btn.innerHTML = `<span>Sending...</span>`;
+    }
+
+    const res = await apiFetch('/auth/update-email', {
+      method: 'POST',
+      body: JSON.stringify({ email })
+    });
+
+    if (res && res.ok) {
+      showToast('Email updated in database! Verification link sent. Check your Inbox or Spam folder.', 'success');
+      if (res.data && res.data.data) {
+        localStorage.setItem('user', JSON.stringify(res.data.data));
+      }
+      if (btn) btn.innerHTML = `✅ Link Sent! Check Spam/Inbox`;
+    } else {
+      showToast((res && res.data && res.data.message) || 'Failed to update email', 'error');
+      if (btn) {
+        btn.disabled = false;
+        btn.innerHTML = `<i data-lucide="send" class="w-3.5 h-3.5 text-amber-700"></i> Update &amp; Send Verification Link`;
+      }
+    }
+    lucide.createIcons();
+  }
+
+  // Check email verification status on page load
+  async function checkEmailVerificationStatus(user) {
+    if (!user) return;
+    const banner = document.getElementById('email-verify-banner');
+    if (!user.is_email_verified) {
+      banner.classList.remove('hidden');
+      const input = document.getElementById('banner-personal-email-input');
+      if (input && user.college_email) {
+        input.value = user.college_email;
+      }
+    } else {
+      banner.classList.add('hidden');
+    }
+  }
+
+  // Execute verification check after user profile is loaded
+  const _origLoadDashboard = loadDashboard;
+  loadDashboard = async function() {
+    await _origLoadDashboard();
+    const user = getCurrentUser();
+    checkEmailVerificationStatus(user);
+  };
+
+  function toggleMobileNav() {
+    const overlay = document.getElementById('mobile-nav-overlay');
+    const drawer = document.getElementById('mobile-nav-drawer');
+    if (!overlay || !drawer) return;
+    if (drawer.classList.contains('-translate-x-full')) {
+      overlay.classList.remove('hidden');
+      drawer.classList.remove('-translate-x-full');
+    } else {
+      overlay.classList.add('hidden');
+      drawer.classList.add('-translate-x-full');
+    }
+  }
+
+  loadDashboard();
+</script>
+{% endblock %}

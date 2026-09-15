@@ -1,0 +1,182 @@
+{% extends "base.html" %}
+
+{% block title %}My Claims — FindIt Campus{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-slate-50 flex flex-col md:flex-row">
+
+  <!-- Left Sidebar Navigation -->
+  <aside class="hidden md:flex w-64 bg-white border-r border-slate-200/80 shrink-0 flex-col justify-between h-screen sticky top-0 shadow-sm z-20">
+    <div>
+      <div class="p-6 border-b border-slate-100 flex items-center justify-between">
+        <div class="flex items-center gap-3">
+          <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-blue-600 via-indigo-600 to-violet-600 p-0.5 shadow-md shadow-indigo-500/20">
+            <div class="w-full h-full bg-slate-900 rounded-[10px] flex items-center justify-center">
+              <i data-lucide="sparkles" class="w-4 h-4 text-indigo-400"></i>
+            </div>
+          </div>
+          <div>
+            <span class="font-extrabold text-base text-slate-900 font-display block leading-none">FindIt Campus</span>
+            <span class="text-[9px] font-bold text-indigo-600 uppercase tracking-wider mt-1 block">Smart Lost &amp; Found</span>
+          </div>
+        </div>
+      </div>
+      <nav class="p-4 space-y-1.5">
+        <a href="/dashboard" class="flex items-center gap-3 px-4 py-3 text-xs font-semibold text-slate-600 rounded-xl hover:bg-slate-100 transition-colors">
+          <i data-lucide="layout-dashboard" class="w-4 h-4 text-slate-400"></i> Dashboard Home
+        </a>
+        <a href="/browse-lost" class="flex items-center gap-3 px-4 py-3 text-xs font-semibold text-slate-600 rounded-xl hover:bg-slate-100 transition-colors">
+          <i data-lucide="search" class="w-4 h-4 text-slate-400"></i> Browse Lost Items
+        </a>
+        <a href="/report-lost" class="flex items-center gap-3 px-4 py-3 text-xs font-semibold text-slate-600 rounded-xl hover:bg-slate-100 transition-colors">
+          <i data-lucide="file-plus" class="w-4 h-4 text-slate-400"></i> Report Lost Item
+        </a>
+        <a href="/report-found" class="flex items-center gap-3 px-4 py-3 text-xs font-semibold text-slate-600 rounded-xl hover:bg-slate-100 transition-colors">
+          <i data-lucide="plus-circle" class="w-4 h-4 text-slate-400"></i> Report Found Item
+        </a>
+        <a href="/my-reports" class="flex items-center gap-3 px-4 py-3 text-xs font-semibold text-slate-600 rounded-xl hover:bg-slate-100 transition-colors">
+          <i data-lucide="archive" class="w-4 h-4 text-slate-400"></i> My Activity Logs
+        </a>
+        <a href="/matches" class="flex items-center gap-3 px-4 py-3 text-xs font-semibold text-slate-600 rounded-xl hover:bg-slate-100 transition-colors">
+          <i data-lucide="bell" class="w-4 h-4 text-slate-400"></i> AI Match Alerts
+        </a>
+        <a href="/profile" class="flex items-center gap-3 px-4 py-3 text-xs font-semibold text-slate-600 rounded-xl hover:bg-slate-100 transition-colors">
+          <i data-lucide="user-check" class="w-4 h-4 text-slate-400"></i> Student Profile
+        </a>
+      </nav>
+    </div>
+
+    <div class="p-4 border-t border-slate-100 space-y-3">
+      <button onclick="logout()" class="w-full flex items-center justify-center gap-2 px-4 py-2.5 text-xs font-bold text-rose-600 bg-rose-50/60 hover:bg-rose-100 rounded-xl transition-colors">
+        <i data-lucide="log-out" class="w-3.5 h-3.5"></i> Logout Account
+      </button>
+    </div>
+  </aside>
+
+  <!-- Main Content Panel -->
+  <main class="flex-1 p-6 md:p-10 space-y-6 max-w-5xl w-full">
+
+    <!-- Header -->
+    <div class="flex items-center justify-between border-b border-slate-200 pb-4">
+      <div>
+        <h1 class="text-2xl font-extrabold tracking-tight text-slate-900">My Ownership <span class="text-indigo-600">Claims</span></h1>
+        <p class="text-xs text-slate-500 mt-1">Track and manage ownership claims you've submitted for matched items</p>
+      </div>
+    </div>
+
+    <!-- Loading Spinner -->
+    <div id="loading" class="flex justify-center items-center py-20">
+      <div class="w-10 h-10 border-4 border-indigo-500/20 border-t-indigo-500 rounded-full animate-spin"></div>
+    </div>
+
+    <!-- Empty State -->
+    <div id="no-claims-card" class="hidden bg-white border border-slate-200 rounded-2xl p-12 text-center shadow-sm">
+      <i data-lucide="clipboard-list" class="w-12 h-12 mx-auto mb-4 text-indigo-400 opacity-50"></i>
+      <p class="text-base font-bold text-slate-700">No claims logged</p>
+      <p class="text-xs text-slate-400 mt-1">When you claim a matched item from the Match Alerts page, it will appear here.</p>
+    </div>
+
+    <!-- Claims List -->
+    <div id="claims-list" class="hidden space-y-4">
+      <!-- Loaded dynamically -->
+    </div>
+
+  </main>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  async function loadClaims() {
+    const loader = document.getElementById('loading');
+    const noClaims = document.getElementById('no-claims-card');
+    const list = document.getElementById('claims-list');
+
+    loader.classList.remove('hidden');
+    noClaims.classList.add('hidden');
+    list.classList.add('hidden');
+
+    const res = await apiFetch('/claims/');
+    loader.classList.add('hidden');
+
+    if (res && res.ok && res.data && res.data.success) {
+      const claims = res.data.data.claims || [];
+      if (claims.length === 0) {
+        noClaims.classList.remove('hidden');
+      } else {
+        list.innerHTML = '';
+        claims.forEach(c => {
+          const div = document.createElement('div');
+          div.className = 'bg-white border border-slate-200 rounded-2xl p-5 flex flex-col md:flex-row md:items-center justify-between gap-4 shadow-sm hover:shadow-md hover:border-indigo-200 transition-all';
+
+          let statusBadge = '';
+          let statusIcon = '';
+          if (c.status === 'pending') {
+            statusBadge = 'bg-amber-50 text-amber-700 border border-amber-200';
+            statusIcon = '<i data-lucide="clock" class="w-4 h-4 text-amber-500"></i>';
+          } else if (c.status === 'approved') {
+            statusBadge = 'bg-blue-50 text-blue-700 border border-blue-200';
+            statusIcon = '<i data-lucide="check-circle" class="w-4 h-4 text-blue-500"></i>';
+          } else if (c.status === 'rejected') {
+            statusBadge = 'bg-rose-50 text-rose-700 border border-rose-200';
+            statusIcon = '<i data-lucide="x-circle" class="w-4 h-4 text-rose-500"></i>';
+          } else {
+            statusBadge = 'bg-emerald-50 text-emerald-700 border border-emerald-200';
+            statusIcon = '<i data-lucide="gift" class="w-4 h-4 text-emerald-500"></i>';
+          }
+
+          let responseBlock = '';
+          if (c.status === 'rejected' && c.rejection_reason) {
+            responseBlock = `
+              <div class="p-3.5 rounded-xl bg-rose-50 border border-rose-200 text-xs text-rose-700 mt-3 flex items-start gap-2 max-w-xl">
+                <i data-lucide="info" class="w-4 h-4 mt-0.5 shrink-0 text-rose-500"></i>
+                <div>
+                  <strong class="block mb-0.5 font-bold uppercase tracking-wider text-[9px]">Rejection Reason</strong>
+                  <span>${c.rejection_reason}</span>
+                </div>
+              </div>
+            `;
+          } else if (c.status === 'approved' && c.verification_notes) {
+            responseBlock = `
+              <div class="p-3.5 rounded-xl bg-blue-50 border border-blue-200 text-xs text-blue-700 mt-3 flex items-start gap-2 max-w-xl">
+                <i data-lucide="info" class="w-4 h-4 mt-0.5 shrink-0 text-blue-500"></i>
+                <div>
+                  <strong class="block mb-0.5 font-bold uppercase tracking-wider text-[9px]">Verification Notes</strong>
+                  <span>${c.verification_notes}</span>
+                </div>
+              </div>
+            `;
+          }
+
+          div.innerHTML = `
+            <div class="space-y-2 flex-1 text-left">
+              <div class="flex items-center gap-2">
+                ${statusIcon}
+                <span class="text-[10px] text-slate-400 font-bold font-mono">Claim #${c.id}</span>
+                <span class="text-[9px] px-2.5 py-0.5 rounded-full capitalize font-extrabold ${statusBadge}">${c.status}</span>
+              </div>
+              <h4 class="text-base font-bold text-slate-800">
+                Claim for: ${c.lost_item_name || 'Unknown Item'}
+              </h4>
+              <p class="text-sm text-slate-500 mt-1">"${c.claim_description}"</p>
+              ${responseBlock}
+            </div>
+            <div class="text-xs text-slate-400 font-semibold font-mono self-start md:self-center whitespace-nowrap">
+              SUBMITTED: ${new Date(c.created_at).toLocaleDateString()}
+            </div>
+          `;
+          list.appendChild(div);
+        });
+        list.classList.remove('hidden');
+        lucide.createIcons();
+      }
+    } else {
+      noClaims.querySelector('p').innerText = 'Failed to load claims. Please try again.';
+      noClaims.classList.remove('hidden');
+    }
+  }
+
+  if (!getToken()) window.location.href = '/login';
+  loadClaims();
+</script>
+{% endblock %}

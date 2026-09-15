@@ -1,0 +1,112 @@
+[
+  {
+    "type": "lost",
+    "item_name": "HP Laptop",
+    "category": "laptop",
+    "brand": "HP",
+    "primary_color": "Silver",
+    "description": "HP Pavilion 15 laptop with blue sticker on cover",
+    "building": "CSE Block",
+    "floor": "2nd Floor",
+    "lost_date": "2026-07-01"
+  },
+  {
+    "type": "found",
+    "item_name": "Silver HP Laptop",
+    "category": "laptop",
+    "brand": "HP",
+    "detected_color": "Silver",
+    "description": "HP Pavilion laptop found unattended with blue sticker",
+    "building": "CSE Block",
+    "floor": "2nd Floor",
+    "found_date": "2026-07-01"
+  },
+  {
+    "type": "lost",
+    "item_name": "Blue Wildcraft Bag",
+    "category": "bag",
+    "brand": "Wildcraft",
+    "primary_color": "Blue",
+    "description": "Dark blue Wildcraft backpack with red keychain",
+    "building": "Library",
+    "floor": "1st Floor",
+    "lost_date": "2026-07-02"
+  },
+  {
+    "type": "found",
+    "item_name": "Dark Blue Backpack",
+    "category": "bag",
+    "brand": "Wildcraft",
+    "detected_color": "Blue",
+    "description": "Dark blue Wildcraft backpack found in library reading section",
+    "building": "Library",
+    "floor": "1st Floor",
+    "found_date": "2026-07-02"
+  },
+  {
+    "type": "lost",
+    "item_name": "iPhone 15",
+    "category": "mobile",
+    "brand": "Apple",
+    "primary_color": "Black",
+    "description": "iPhone 15 with transparent case and cracked screen protector",
+    "building": "Cafeteria",
+    "floor": "Ground Floor",
+    "lost_date": "2026-07-03"
+  },
+  {
+    "type": "found",
+    "item_name": "Black iPhone",
+    "category": "mobile",
+    "brand": "Apple",
+    "detected_color": "Black",
+    "description": "iPhone with transparent case found near cafeteria billing counter",
+    "building": "Cafeteria",
+    "floor": "Ground Floor",
+    "found_date": "2026-07-03"
+  },
+  {
+    "type": "lost",
+    "item_name": "Leather Wallet",
+    "category": "wallet",
+    "brand": "Woodland",
+    "primary_color": "Brown",
+    "description": "Brown Woodland leather wallet with initials SR embossed",
+    "building": "Admin Block",
+    "floor": "1st Floor",
+    "lost_date": "2026-07-04"
+  },
+  {
+    "type": "found",
+    "item_name": "Brown Wallet",
+    "category": "wallet",
+    "brand": "Woodland",
+    "detected_color": "Brown",
+    "description": "Brown leather wallet found on staircase with college ID inside",
+    "building": "Admin Block",
+    "floor": "1st Floor",
+    "found_date": "2026-07-04"
+  },
+  {
+    "type": "lost",
+    "item_name": "Casio Calculator",
+    "category": "calculator",
+    "brand": "Casio",
+    "primary_color": "Black",
+    "description": "Casio FX-991EX scientific calculator with my name label",
+    "building": "ECE Block",
+    "floor": "3rd Floor",
+    "lost_date": "2026-07-05"
+  },
+  {
+    "type": "lost",
+    "item_name": "Silver Titan Watch",
+    "category": "watch",
+    "brand": "Titan",
+    "primary_color": "Silver",
+    "description": "Silver Titan analog watch with date display, brown leather strap",
+    "building": "Sports Complex",
+    "floor": "Ground Floor",
+    "lost_date": "2026-07-06"
+  }
+]

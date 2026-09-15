@@ -1,0 +1,110 @@
+{% extends "base.html" %}
+
+{% block title %}Sign In — FindIt Campus{% endblock %}
+
+{% block extra_head %}
+<style>
+  #chatbot-bubble, #chatbot-panel {
+    display: none !important;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="min-h-screen flex items-center justify-center bg-slate-50 px-4 py-12">
+  <div class="w-full max-w-[400px] space-y-6">
+    
+    <!-- Title -->
+    <div class="text-center space-y-2">
+      <div class="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-blue-600 text-white mb-1 shadow-sm">
+        <i data-lucide="search" class="w-6 h-6"></i>
+      </div>
+      <h2 class="text-2xl font-bold text-slate-900">FindIt Campus Sign In</h2>
+      <p class="text-xs text-slate-500">Official GIST Lost & Found Management System</p>
+    </div>
+
+    <!-- Alert Box -->
+    <div id="alert-box" class="hidden p-3.5 rounded-lg text-xs font-semibold flex items-center gap-2 border">
+      <i id="alert-icon" data-lucide="alert-circle" class="w-4 h-4 shrink-0"></i>
+      <span id="alert-msg"></span>
+    </div>
+
+    <!-- Form -->
+    <form id="login-form" onsubmit="handleLoginSubmit(event)" class="card-flat p-6 space-y-4">
+      <div>
+        <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Roll Number / Email</label>
+        <input type="text" id="email" required placeholder="e.g. 23A91A0501" class="w-full input-simple text-sm">
+      </div>
+
+      <div>
+        <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Password</label>
+        <input type="password" id="password" required placeholder="••••••••" class="w-full input-simple text-sm">
+      </div>
+
+      <button type="submit" id="submit-btn" class="w-full btn-primary py-2.5 text-sm flex items-center justify-center gap-2">
+        <span>Sign In to Dashboard</span>
+        <i data-lucide="arrow-right" class="w-4 h-4"></i>
+      </button>
+
+      <p class="text-[11px] text-slate-400 text-center pt-2">
+        Default test login: Roll No <code class="text-slate-700 bg-slate-100 px-1 py-0.5 rounded">23A91A0501</code> | Password <code class="text-slate-700 bg-slate-100 px-1 py-0.5 rounded">password123</code>
+      </p>
+    </form>
+
+    <div class="text-center text-xs text-slate-500">
+      <a href="/" class="hover:underline flex items-center justify-center gap-1">
+        <i data-lucide="arrow-left" class="w-3.5 h-3.5"></i> Return to Homepage
+      </a>
+    </div>
+
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  const user = getCurrentUser();
+  if (user && getToken()) {
+    window.location.href = '/dashboard';
+  }
+
+  async function handleLoginSubmit(event) {
+    event.preventDefault();
+    const btn = document.getElementById('submit-btn');
+    const alertBox = document.getElementById('alert-box');
+    const alertMsg = document.getElementById('alert-msg');
+    
+    alertBox.className = 'hidden';
+    btn.disabled = true;
+    btn.innerHTML = `<div class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div> <span>Authenticating...</span>`;
+
+    const email = document.getElementById('email').value.trim();
+    const password = document.getElementById('password').value;
+
+    const res = await apiFetch('/auth/login', {
+      method: 'POST',
+      body: JSON.stringify({ email, password })
+    });
+
+    btn.disabled = false;
+    btn.innerHTML = `<span>Sign In to Dashboard</span> <i data-lucide="arrow-right" class="w-4 h-4"></i>`;
+    lucide.createIcons();
+
+    if (res && res.ok && res.data && res.data.success) {
+      setToken(res.data.data.access_token);
+      localStorage.setItem('user', JSON.stringify(res.data.data.user));
+      
+      alertBox.className = 'p-3.5 rounded-lg text-xs font-semibold flex items-center gap-2 border bg-emerald-50 border-emerald-200 text-emerald-700';
+      alertMsg.innerText = 'Login Successful! Redirecting...';
+      
+      setTimeout(() => {
+        window.location.href = '/dashboard';
+      }, 600);
+    } else {
+      const msg = res && res.data ? res.data.message : 'Invalid Roll Number or Password';
+      alertBox.className = 'p-3.5 rounded-lg text-xs font-semibold flex items-center gap-2 border bg-red-50 border-red-200 text-red-700';
+      alertMsg.innerText = msg;
+    }
+  }
+</script>
+{% endblock %}

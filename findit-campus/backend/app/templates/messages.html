@@ -1,0 +1,163 @@
+{% extends "base.html" %}
+{% block title %}Messages — FindIt Campus{% endblock %}
+{% block content %}
+<div class="min-h-screen bg-slate-50 flex flex-col md:flex-row">
+  <aside class="w-full md:w-64 bg-white border-r border-slate-200 shrink-0 flex flex-col justify-between min-h-screen sticky top-0">
+    <div>
+      <div class="p-5 border-b border-slate-100 flex items-center gap-2.5">
+        <div class="w-8 h-8 rounded-lg bg-blue-600 flex items-center justify-center text-white shrink-0"><i data-lucide="search" class="w-4 h-4"></i></div>
+        <div><span class="font-bold text-base text-slate-900 leading-none block">FindIt Campus</span><span class="text-[10px] text-slate-400 font-semibold block uppercase tracking-wider mt-0.5">GIST Lost &amp; Found</span></div>
+      </div>
+      <nav class="p-3 space-y-1">
+        <a href="/dashboard" class="flex items-center gap-3 px-3.5 py-2.5 text-xs font-medium text-slate-600 rounded-lg hover:bg-slate-100"><i data-lucide="layout-dashboard" class="w-4 h-4"></i> Dashboard</a>
+        <a href="/notifications" class="flex items-center gap-3 px-3.5 py-2.5 text-xs font-medium text-slate-600 rounded-lg hover:bg-slate-100"><i data-lucide="bell" class="w-4 h-4"></i> Match Alerts</a>
+        <a href="/timeline" class="flex items-center gap-3 px-3.5 py-2.5 text-xs font-medium text-slate-600 rounded-lg hover:bg-slate-100"><i data-lucide="activity" class="w-4 h-4"></i> My Timeline</a>
+      </nav>
+    </div>
+    <div class="p-4 border-t border-slate-100 space-y-2">
+      <div class="flex items-center gap-3 p-2.5 bg-slate-50 rounded-lg border border-slate-200">
+        <div class="w-8 h-8 rounded-full bg-blue-600 text-white font-bold flex items-center justify-center text-xs" id="user-avatar">ST</div>
+        <div class="overflow-hidden"><span class="font-bold text-xs text-slate-900 truncate block" id="user-display-name">Student</span></div>
+      </div>
+      <button onclick="logout()" class="w-full flex items-center justify-center gap-2 px-3 py-2 text-xs font-semibold text-red-600 bg-red-50 hover:bg-red-100 rounded-lg"><i data-lucide="log-out" class="w-3.5 h-3.5"></i> Logout</button>
+    </div>
+  </aside>
+
+  <main class="flex-1 flex flex-col" style="height:100vh">
+    <!-- Header -->
+    <div class="bg-white border-b border-slate-200 px-6 py-4 flex items-center justify-between shrink-0">
+      <div>
+        <h1 class="text-lg font-bold text-slate-900 flex items-center gap-2"><i data-lucide="message-circle" class="w-5 h-5 text-blue-600"></i> Secure Chat</h1>
+        <p class="text-xs text-slate-500" id="chat-subtitle">Match #{{ match_id }}</p>
+      </div>
+      <a href="/notifications" class="text-xs text-blue-600 hover:underline flex items-center gap-1"><i data-lucide="arrow-left" class="w-3 h-3"></i> Back to Matches</a>
+    </div>
+
+    <!-- Match info bar -->
+    <div id="match-info" class="bg-blue-50 border-b border-blue-100 px-6 py-3 text-xs text-blue-700 hidden">
+      <span id="match-info-text"></span>
+    </div>
+
+    <!-- Messages area -->
+    <div id="messages-list" class="flex-1 overflow-y-auto p-6 space-y-3" style="min-height:0">
+      <div class="text-center text-xs text-slate-400 mt-10">Loading conversation...</div>
+    </div>
+
+    <!-- Message input -->
+    <div class="bg-white border-t border-slate-200 px-6 py-4 flex gap-3 items-end shrink-0">
+      <textarea id="msg-input" rows="1" placeholder="Type a message... (Enter to send, Shift+Enter for newline)"
+        class="flex-1 border border-slate-200 rounded-xl px-4 py-2.5 text-sm resize-none focus:outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-50"
+        style="min-height:42px;max-height:120px;" oninput="autoResize(this)" onkeydown="handleKeydown(event)"></textarea>
+      <button id="send-btn" onclick="sendMessage()" class="px-4 py-2.5 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors flex items-center gap-1.5 text-sm font-medium">
+        <i data-lucide="send" class="w-4 h-4"></i>
+      </button>
+    </div>
+  </main>
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+  const MATCH_ID = {{ match_id }};
+  let myStudentId = null;
+  let pollInterval = null;
+
+  function autoResize(el) {
+    el.style.height = 'auto';
+    el.style.height = Math.min(el.scrollHeight, 120) + 'px';
+  }
+
+  function handleKeydown(e) {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      sendMessage();
+    }
+  }
+
+  function scrollToBottom() {
+    const el = document.getElementById('messages-list');
+    el.scrollTop = el.scrollHeight;
+  }
+
+  function renderMessages(messages, lostItem, foundItem) {
+    const container = document.getElementById('messages-list');
+    if (!messages.length) {
+      container.innerHTML = `<div class="text-center text-xs text-slate-400 mt-10">
+        <i data-lucide="message-circle" class="w-8 h-8 mx-auto mb-2 opacity-30"></i><br>
+        No messages yet. Start the conversation!
+      </div>`;
+      lucide.createIcons();
+      return;
+    }
+    container.innerHTML = messages.map(msg => {
+      const isMe = msg.sender_id === myStudentId;
+      const dt = new Date(msg.created_at);
+      const timeStr = dt.toLocaleTimeString('en-IN', { hour:'2-digit', minute:'2-digit' });
+      return `
+      <div class="flex ${isMe ? 'justify-end' : 'justify-start'}">
+        <div class="max-w-xs lg:max-w-md">
+          ${!isMe ? `<p class="text-[10px] font-bold text-slate-500 mb-1 ml-1">${msg.sender_name}</p>` : ''}
+          <div class="px-4 py-2.5 rounded-2xl text-sm leading-relaxed ${isMe
+            ? 'bg-blue-600 text-white rounded-br-sm'
+            : 'bg-white border border-slate-200 text-slate-800 rounded-bl-sm'
+          }">
+            ${msg.content.replace(/\n/g, '<br>')}
+          </div>
+          <p class="text-[10px] text-slate-400 mt-1 ${isMe ? 'text-right mr-1' : 'ml-1'}">${timeStr}</p>
+        </div>
+      </div>`;
+    }).join('');
+    scrollToBottom();
+  }
+
+  async function loadMessages(silent = false) {
+    const res = await apiFetch(`/messages/${MATCH_ID}`);
+    if (!res || !res.ok) {
+      if (!silent) document.getElementById('messages-list').innerHTML = `<div class="text-center text-xs text-red-400 mt-10">Failed to load messages.</div>`;
+      return;
+    }
+    const { messages, lost_item, found_item } = res.data.data;
+    renderMessages(messages, lost_item, found_item);
+
+    if (lost_item && found_item) {
+      document.getElementById('chat-subtitle').innerText = `${lost_item.item_name} ↔ ${found_item.item_name} (Match #${MATCH_ID})`;
+      const infoBar = document.getElementById('match-info');
+      infoBar.classList.remove('hidden');
+      document.getElementById('match-info-text').innerText = `About: "${lost_item.item_name}" (Lost) matched with "${found_item.item_name}" (Found at ${found_item.location})`;
+    }
+  }
+
+  async function sendMessage() {
+    const input = document.getElementById('msg-input');
+    const content = input.value.trim();
+    if (!content) return;
+
+    const btn = document.getElementById('send-btn');
+    btn.disabled = true;
+    input.value = '';
+    input.style.height = '42px';
+
+    const res = await apiFetch(`/messages/${MATCH_ID}`, { method: 'POST', body: JSON.stringify({ content }) });
+    btn.disabled = false;
+    if (res && res.ok) await loadMessages(true);
+    else alert('Failed to send message. Please try again.');
+  }
+
+  async function init() {
+    const user = getCurrentUser();
+    if (!user || !getToken()) { window.location.href = '/login'; return; }
+    document.getElementById('user-display-name').innerText = user.student_name || 'Student';
+    if (user.student_name) {
+      const parts = user.student_name.split(' ');
+      document.getElementById('user-avatar').innerText = (parts[0][0] + (parts[1] ? parts[1][0] : '')).toUpperCase();
+    }
+    myStudentId = user.student_id;
+
+    await loadMessages();
+    // Poll every 6 seconds for new messages
+    pollInterval = setInterval(() => loadMessages(true), 6000);
+  }
+
+  window.addEventListener('beforeunload', () => { if (pollInterval) clearInterval(pollInterval); });
+  init();
+</script>
+{% endblock %}

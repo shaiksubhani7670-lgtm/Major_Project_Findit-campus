@@ -1,0 +1,14 @@
+# Vercel deployment ignore file
+# Keep serverless bundle small (< 50MB)
+findit_ml/
+*.xlsx
+*.pt
+*.bin
+*.onnx
+seed_neon.py
+updated features.md
+prompt.md
+run.bat
+findit-campus/docs/
+findit-campus/ml/tests/
+findit-campus/.pytest_cache/

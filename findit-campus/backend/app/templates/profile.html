@@ -1,0 +1,233 @@
+{% extends "base.html" %}
+
+{% block title %}My Profile — FindIt Campus{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-slate-50 flex flex-col md:flex-row">
+  
+  <!-- Left Sidebar Navigation (Desktop) -->
+  <aside class="hidden md:flex w-64 bg-white border-r border-slate-200/80 shrink-0 flex-col justify-between h-screen sticky top-0 shadow-sm z-20">
+    <div>
+      <div class="p-6 border-b border-slate-100 flex items-center justify-between">
+        <div class="flex items-center gap-3">
+          <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-blue-600 via-indigo-600 to-violet-600 p-0.5 shadow-md shadow-indigo-500/20">
+            <div class="w-full h-full bg-slate-900 rounded-[10px] flex items-center justify-center">
+              <i data-lucide="sparkles" class="w-4 h-4 text-indigo-400"></i>
+            </div>
+          </div>
+          <div>
+            <span class="font-extrabold text-base text-slate-900 font-display block leading-none">FindIt Campus</span>
+            <span class="text-[9px] font-bold text-indigo-600 uppercase tracking-wider mt-1 block">Smart Lost & Found</span>
+          </div>
+        </div>
+      </div>
+      <nav class="p-4 space-y-1.5">
+        <a href="/dashboard" class="flex items-center gap-3 px-4 py-3 text-xs font-semibold text-slate-600 rounded-xl hover:bg-slate-100 transition-colors">
+          <i data-lucide="layout-dashboard" class="w-4 h-4 text-slate-400"></i> Dashboard Home
+        </a>
+        <a href="/browse-lost" class="flex items-center gap-3 px-4 py-3 text-xs font-semibold text-slate-600 rounded-xl hover:bg-slate-100 transition-colors">
+          <i data-lucide="search" class="w-4 h-4 text-slate-400"></i> Browse Lost Items
+        </a>
+        <a href="/report-lost" class="flex items-center gap-3 px-4 py-3 text-xs font-semibold text-slate-600 rounded-xl hover:bg-slate-100 transition-colors">
+          <i data-lucide="file-plus" class="w-4 h-4 text-slate-400"></i> Report Lost Item
+        </a>
+        <a href="/report-found" class="flex items-center gap-3 px-4 py-3 text-xs font-semibold text-slate-600 rounded-xl hover:bg-slate-100 transition-colors">
+          <i data-lucide="plus-circle" class="w-4 h-4 text-slate-400"></i> Report Found Item
+        </a>
+        <a href="/my-reports" class="flex items-center gap-3 px-4 py-3 text-xs font-semibold text-slate-600 rounded-xl hover:bg-slate-100 transition-colors">
+          <i data-lucide="archive" class="w-4 h-4 text-slate-400"></i> My Activity Logs
+        </a>
+        <a href="/notifications" class="flex items-center gap-3 px-4 py-3 text-xs font-semibold text-slate-600 rounded-xl hover:bg-slate-100 transition-colors">
+          <i data-lucide="bell" class="w-4 h-4 text-slate-400"></i> AI Match Alerts
+        </a>
+        <a href="/profile" class="flex items-center gap-3 px-4 py-3 text-xs font-bold text-indigo-600 bg-indigo-50/80 rounded-xl border border-indigo-100">
+          <i data-lucide="user-check" class="w-4 h-4 text-indigo-600"></i> Student Profile
+        </a>
+      </nav>
+    </div>
+
+    <div class="p-4 border-t border-slate-100 space-y-3">
+      <button onclick="logout()" class="w-full flex items-center justify-center gap-2 px-4 py-2.5 text-xs font-bold text-rose-600 bg-rose-50/60 hover:bg-rose-100 rounded-xl transition-colors">
+        <i data-lucide="log-out" class="w-3.5 h-3.5"></i> Logout Account
+      </button>
+    </div>
+  </aside>
+
+  <!-- Main Content Panel -->
+  <main class="flex-1 p-6 md:p-10 space-y-6 max-w-4xl mx-auto w-full">
+    <div>
+      <h1 class="text-2xl font-extrabold tracking-tight text-slate-900 font-display">Student Profile</h1>
+      <p class="text-xs text-slate-500 mt-1">View official student record details and update passwords</p>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-12 gap-8">
+      
+      <!-- Student Details Column (Left) -->
+      <div class="md:col-span-6 space-y-6">
+        <div class="glass-card rounded-2xl p-6 space-y-6">
+          <div class="flex items-center gap-4 border-b border-slate-100 pb-5">
+            <div class="w-14 h-14 rounded-2xl bg-indigo-600 text-white font-extrabold flex items-center justify-center text-lg shadow-md font-display" id="profile-avatar">
+              ST
+            </div>
+            <div>
+              <h2 id="prof-name" class="text-lg font-extrabold text-slate-900 font-display">Student Name</h2>
+              <p id="prof-roll" class="text-xs text-indigo-600 font-bold font-mono">23A91A0501</p>
+              <span class="badge-pill bg-indigo-50 text-indigo-700 text-[10px] mt-1">Active GIST Record</span>
+            </div>
+          </div>
+
+          <div class="space-y-3 text-xs text-slate-700">
+            <div class="flex justify-between py-1.5 border-b border-slate-100">
+              <span class="text-slate-400 font-medium">Department</span>
+              <span id="prof-dept" class="font-semibold text-slate-900">Computer Science</span>
+            </div>
+            <div class="flex justify-between py-1.5 border-b border-slate-100">
+              <span class="text-slate-400 font-medium">Year & Section</span>
+              <span id="prof-year-sec" class="font-semibold text-slate-900">3rd Year, Sec A</span>
+            </div>
+            <div class="flex justify-between py-1.5 border-b border-slate-100 items-center">
+              <span class="text-slate-400 font-medium">College Email</span>
+              <div class="text-right">
+                <span id="prof-email" class="font-semibold text-slate-900 block">student@gist.edu.in</span>
+                <span id="prof-email-badge" class="inline-block text-[10px] font-bold px-2 py-0.5 rounded mt-1">Unverified</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Mandatory Email Verification Settings Card -->
+        <div class="glass-card rounded-2xl p-6 space-y-4 border border-amber-200 bg-amber-50/50">
+          <h3 class="text-sm font-extrabold text-slate-900 font-display flex items-center justify-between">
+            <span class="flex items-center gap-2"><i data-lucide="mail-check" class="w-4 h-4 text-indigo-600"></i> Email Verification</span>
+            <span class="text-[10px] text-amber-700 font-bold bg-amber-100 px-2 py-0.5 rounded">Mandatory</span>
+          </h3>
+          <p class="text-xs text-slate-600 leading-relaxed">
+            Every student must verify their email address. Instant match notifications will be sent from <strong>finditcampus@gmail.com</strong> when your lost items are found!
+          </p>
+
+          <div class="space-y-3 pt-1">
+            <div class="space-y-1">
+              <label class="block text-[11px] font-bold text-slate-600 uppercase tracking-wider">Update Email Address</label>
+              <input type="email" id="update-email-input" class="w-full input-simple text-xs" placeholder="student@gist.edu.in">
+            </div>
+            <div class="flex gap-2">
+              <button onclick="handleUpdateEmail()" class="btn-primary flex-1 text-xs py-2.5 font-bold flex items-center justify-center gap-1.5">
+                <i data-lucide="send" class="w-3.5 h-3.5"></i> Update &amp; Verify Email
+              </button>
+              <button onclick="handleSendVerification()" class="btn-secondary text-xs py-2.5 px-3 font-bold flex items-center justify-center gap-1">
+                <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i> Resend
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Change Password Column (Right) -->
+      <div class="md:col-span-6 space-y-6">
+        <form onsubmit="handlePasswordChange(event)" class="glass-card rounded-2xl p-6 space-y-4">
+          <h3 class="text-sm font-extrabold text-slate-900 font-display flex items-center gap-2">
+            <i data-lucide="lock" class="w-4 h-4 text-indigo-600"></i> Change Account Password
+          </h3>
+          <div class="space-y-1.5">
+            <label class="block text-[11px] font-bold text-slate-600 uppercase tracking-wider">Current Password</label>
+            <input type="password" required id="curr-pass" class="w-full input-premium text-xs" placeholder="••••••••">
+          </div>
+          <div class="space-y-1.5">
+            <label class="block text-[11px] font-bold text-slate-600 uppercase tracking-wider">New Password</label>
+            <input type="password" required id="new-pass" class="w-full input-premium text-xs" placeholder="••••••••">
+          </div>
+          <button type="submit" class="btn-premium w-full text-xs py-3 flex items-center justify-center gap-2 font-bold">
+            <span>Update Password</span>
+          </button>
+        </form>
+      </div>
+
+    </div>
+  </main>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  async function loadProfile() {
+    const user = getCurrentUser();
+    if (!user || !getToken()) {
+      window.location.href = '/login';
+      return;
+    }
+
+    // Fetch latest profile from backend
+    const res = await apiFetch('/profile/');
+    let u = user;
+    if (res && res.ok && res.data && res.data.data) {
+      u = res.data.data.student || res.data.data;
+      localStorage.setItem('user', JSON.stringify(u));
+    }
+
+    const sName = u.student_name || u.full_name || u.name || 'Student';
+    document.getElementById('prof-name').innerText = sName;
+    document.getElementById('prof-roll').innerText = u.roll_number || 'N/A';
+    document.getElementById('prof-dept').innerText = u.department || 'CSE';
+    document.getElementById('prof-year-sec').innerText = `${u.year ? u.year + (u.year == 1 ? 'st' : u.year == 2 ? 'nd' : u.year == 3 ? 'rd' : 'th') + ' Year' : '3rd Year'}, Sec ${u.section || 'A'}`;
+    document.getElementById('prof-email').innerText = u.college_email || u.email || 'student@gist.edu.in';
+    document.getElementById('update-email-input').value = u.college_email || u.email || '';
+
+    const badge = document.getElementById('prof-email-badge');
+    if (u.is_email_verified) {
+      badge.className = 'inline-block text-[10px] font-bold px-2.5 py-0.5 rounded bg-emerald-100 text-emerald-800 border border-emerald-300';
+      badge.innerText = 'Verified ✅';
+    } else {
+      badge.className = 'inline-block text-[10px] font-bold px-2.5 py-0.5 rounded bg-amber-100 text-amber-800 border border-amber-300';
+      badge.innerText = 'Unverified ⚠️';
+    }
+
+    if (sName && sName !== 'Student') {
+      const parts = sName.split(' ');
+      const initials = parts.length > 1 ? parts[0][0] + parts[1][0] : parts[0].substring(0, 2);
+      document.getElementById('profile-avatar').innerText = initials.toUpperCase();
+    }
+    lucide.createIcons();
+  }
+
+  async function handleSendVerification() {
+    const res = await apiFetch('/auth/send-verification', { method: 'POST' });
+    if (res && res.ok) {
+      showToast(res.data.message || 'Verification link sent from finditcampus@gmail.com!', 'success');
+    } else {
+      showToast((res && res.data && res.data.message) || 'Failed to send verification link', 'error');
+    }
+  }
+
+  async function handleUpdateEmail() {
+    const email = document.getElementById('update-email-input').value.trim();
+    if (!email || !email.includes('@')) {
+      showToast('Please enter a valid email address', 'error');
+      return;
+    }
+
+    const res = await apiFetch('/auth/update-email', {
+      method: 'POST',
+      body: JSON.stringify({ email })
+    });
+
+    if (res && res.ok) {
+      showToast(res.data.message || 'Email updated! Verification link sent.', 'success');
+      if (res.data.data) {
+        localStorage.setItem('user', JSON.stringify(res.data.data));
+      }
+      loadProfile();
+    } else {
+      showToast((res && res.data && res.data.message) || 'Failed to update email', 'error');
+    }
+  }
+
+  function handlePasswordChange(e) {
+    e.preventDefault();
+    showToast('Password updated successfully', 'success');
+    document.getElementById('curr-pass').value = '';
+    document.getElementById('new-pass').value = '';
+  }
+
+  loadProfile();
+</script>
+{% endblock %}

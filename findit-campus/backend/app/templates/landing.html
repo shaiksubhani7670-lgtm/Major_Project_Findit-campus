@@ -1,0 +1,108 @@
+{% extends "base.html" %}
+
+{% block title %}FindIt Campus — Smart Lost & Found{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-slate-50 flex flex-col justify-between">
+  
+  <!-- Navigation Header -->
+  <header class="bg-white border-b border-slate-200">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <div class="w-8 h-8 rounded-lg bg-blue-600 flex items-center justify-center text-white">
+          <i data-lucide="search" class="w-4 h-4"></i>
+        </div>
+        <div>
+          <span class="font-bold text-base text-slate-900 leading-none block">FindIt Campus</span>
+          <span class="text-[10px] text-slate-400 font-semibold block tracking-wider uppercase">GIST Lost & Found</span>
+        </div>
+      </div>
+      
+      <div class="flex items-center gap-3">
+        <a href="/login" class="btn-primary text-xs py-2 px-4">Student Login</a>
+      </div>
+    </div>
+  </header>
+
+  <!-- Hero Section -->
+  <main class="flex-1 max-w-4xl mx-auto px-4 py-16 flex flex-col items-center justify-center text-center space-y-8">
+    
+    <div class="space-y-4">
+      <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-50 border border-blue-200 text-xs font-semibold text-blue-700">
+        <i data-lucide="sparkles" class="w-3.5 h-3.5"></i> AI-Powered Campus Lost & Found System
+      </span>
+      
+      <h1 class="text-3xl sm:text-5xl font-extrabold text-slate-900 tracking-tight leading-tight">
+        Recover Lost Belongings on Campus <br>
+        <span class="text-blue-600">Quickly & Autonomously.</span>
+      </h1>
+      
+      <p class="text-sm sm:text-base text-slate-600 max-w-2xl mx-auto leading-relaxed">
+        Report missing items, compare descriptions using AI image & text matching, and safely verify ownership online.
+      </p>
+    </div>
+
+    <!-- Action Buttons -->
+    <div class="flex flex-wrap justify-center gap-3">
+      <a href="/login" class="btn-primary text-sm py-2.5 px-6 flex items-center gap-2">
+        <i data-lucide="log-in" class="w-4 h-4"></i> Login to Dashboard
+      </a>
+      <a href="/login?redirect=/report-found" class="btn-emerald text-sm py-2.5 px-6 flex items-center gap-2">
+        <i data-lucide="plus-circle" class="w-4 h-4"></i> Report Found Item
+      </a>
+    </div>
+
+    <!-- Statistics Panel -->
+    <div class="w-full max-w-3xl grid grid-cols-3 gap-4 bg-white border border-slate-200 rounded-xl p-6 shadow-sm">
+      <div class="text-center">
+        <div id="stat-lost" class="text-2xl sm:text-3xl font-extrabold text-slate-900 font-mono">148</div>
+        <div class="text-[10px] text-slate-400 font-bold uppercase tracking-wider mt-1">Lost Items Reported</div>
+      </div>
+      <div class="text-center border-x border-slate-100">
+        <div id="stat-found" class="text-2xl sm:text-3xl font-extrabold text-slate-900 font-mono">112</div>
+        <div class="text-[10px] text-slate-400 font-bold uppercase tracking-wider mt-1">Found Items Submitted</div>
+      </div>
+      <div class="text-center">
+        <div id="stat-recovered" class="text-2xl sm:text-3xl font-extrabold text-emerald-600 font-mono">87</div>
+        <div class="text-[10px] text-slate-400 font-bold uppercase tracking-wider mt-1">Returned to Owner</div>
+      </div>
+    </div>
+
+    <!-- Simple Feature Grid -->
+    <div class="w-full max-w-3xl grid grid-cols-1 md:grid-cols-3 gap-4 text-left pt-4">
+      <div class="card-flat p-5 space-y-2">
+        <div class="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center">
+          <i data-lucide="camera" class="w-4 h-4"></i>
+        </div>
+        <h3 class="font-bold text-slate-900 text-sm">Image Detection</h3>
+        <p class="text-xs text-slate-500 leading-relaxed">AI model classifies category, color, and object details from uploaded photos.</p>
+      </div>
+
+      <div class="card-flat p-5 space-y-2">
+        <div class="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center">
+          <i data-lucide="search" class="w-4 h-4"></i>
+        </div>
+        <h3 class="font-bold text-slate-900 text-sm">Smart Text Match</h3>
+        <p class="text-xs text-slate-500 leading-relaxed">NLP vector matching compares item descriptions to calculate similarity scores.</p>
+      </div>
+
+      <div class="card-flat p-5 space-y-2">
+        <div class="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center">
+          <i data-lucide="shield-check" class="w-4 h-4"></i>
+        </div>
+        <h3 class="font-bold text-slate-900 text-sm">Ownership Proof</h3>
+        <p class="text-xs text-slate-500 leading-relaxed">Multi-question verification ensures items are returned only to true owners.</p>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- Simple Footer -->
+  <footer class="bg-white border-t border-slate-200 py-6 text-center text-xs text-slate-500 space-y-1">
+    <p class="font-semibold text-slate-700">FindIt Campus — Smart Lost & Found System</p>
+    <p>Geethanjali Institute of Science and Technology (GIST)</p>
+    <p class="text-[11px] text-slate-400 pt-1">&copy; 2026 FindIt Campus. All rights reserved.</p>
+  </footer>
+
+</div>
+{% endblock %}

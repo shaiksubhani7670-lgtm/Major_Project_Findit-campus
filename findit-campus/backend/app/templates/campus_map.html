@@ -1,0 +1,132 @@
+{% extends "base.html" %}
+{% block title %}Campus Map — FindIt Campus{% endblock %}
+{% block extra_head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/leaflet.css') }}"/>
+<script src="{{ url_for('static', filename='js/leaflet.js') }}"></script>
+<style>
+  #map { height: calc(100vh - 180px); border-radius: 12px; }
+  .leaflet-popup-content-wrapper { border-radius: 10px; box-shadow: 0 4px 20px rgba(0,0,0,0.15); }
+  .item-popup { font-family: Inter, sans-serif; min-width: 200px; }
+  .item-popup h3 { font-size:14px; font-weight:700; margin:0 0 4px 0; color:#1e293b; }
+  .item-popup .cat { font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.05em; color:#2563eb; margin-bottom:6px; }
+  .item-popup p { font-size:11px; color:#64748b; margin:2px 0; }
+  .item-popup .badge { display:inline-block; padding:2px 8px; border-radius:12px; font-size:10px; font-weight:700; background:#fef9c3; color:#854d0e; margin-top:6px; }
+</style>
+{% endblock %}
+{% block content %}
+<div class="min-h-screen bg-slate-50 flex flex-col md:flex-row">
+  <aside class="w-full md:w-64 bg-white border-r border-slate-200 shrink-0 flex flex-col justify-between min-h-screen sticky top-0">
+    <div>
+      <div class="p-5 border-b border-slate-100 flex items-center gap-2.5">
+        <div class="w-8 h-8 rounded-lg bg-blue-600 flex items-center justify-center text-white shrink-0"><i data-lucide="search" class="w-4 h-4"></i></div>
+        <div><span class="font-bold text-base text-slate-900 leading-none block">FindIt Campus</span><span class="text-[10px] text-slate-400 font-semibold block uppercase tracking-wider mt-0.5">GIST Lost &amp; Found</span></div>
+      </div>
+      <nav class="p-3 space-y-1">
+        <a href="/dashboard" class="flex items-center gap-3 px-3.5 py-2.5 text-xs font-medium text-slate-600 rounded-lg hover:bg-slate-100"><i data-lucide="layout-dashboard" class="w-4 h-4"></i> Dashboard</a>
+        <a href="/browse-lost" class="flex items-center gap-3 px-3.5 py-2.5 text-xs font-medium text-slate-600 rounded-lg hover:bg-slate-100"><i data-lucide="search" class="w-4 h-4"></i> Browse Lost Items</a>
+        <a href="/map" class="flex items-center gap-3 px-3.5 py-2.5 text-xs font-bold text-green-700 bg-green-50 rounded-lg"><i data-lucide="map-pin" class="w-4 h-4"></i> Campus Map</a>
+        <a href="/timeline" class="flex items-center gap-3 px-3.5 py-2.5 text-xs font-medium text-slate-600 rounded-lg hover:bg-slate-100"><i data-lucide="activity" class="w-4 h-4"></i> My Timeline</a>
+        <a href="/statistics" class="flex items-center gap-3 px-3.5 py-2.5 text-xs font-medium text-slate-600 rounded-lg hover:bg-slate-100"><i data-lucide="bar-chart-2" class="w-4 h-4"></i> Statistics</a>
+        <a href="/leaderboard" class="flex items-center gap-3 px-3.5 py-2.5 text-xs font-medium text-slate-600 rounded-lg hover:bg-slate-100"><i data-lucide="trophy" class="w-4 h-4"></i> Leaderboard</a>
+        <a href="/notifications" class="flex items-center gap-3 px-3.5 py-2.5 text-xs font-medium text-slate-600 rounded-lg hover:bg-slate-100"><i data-lucide="bell" class="w-4 h-4"></i> Alerts</a>
+        <a href="/profile" class="flex items-center gap-3 px-3.5 py-2.5 text-xs font-medium text-slate-600 rounded-lg hover:bg-slate-100"><i data-lucide="user" class="w-4 h-4"></i> Profile</a>
+      </nav>
+    </div>
+    <div class="p-4 border-t border-slate-100 space-y-2">
+      <div class="flex items-center gap-3 p-2.5 bg-slate-50 rounded-lg border border-slate-200">
+        <div class="w-8 h-8 rounded-full bg-green-600 text-white font-bold flex items-center justify-center text-xs" id="user-avatar">ST</div>
+        <div class="overflow-hidden"><span class="font-bold text-xs text-slate-900 truncate block" id="user-display-name">Student</span><span class="text-[10px] text-slate-400 truncate block font-mono" id="user-roll-no"></span></div>
+      </div>
+      <button onclick="logout()" class="w-full flex items-center justify-center gap-2 px-3 py-2 text-xs font-semibold text-red-600 bg-red-50 hover:bg-red-100 rounded-lg"><i data-lucide="log-out" class="w-3.5 h-3.5"></i> Logout</button>
+    </div>
+  </aside>
+
+  <main class="flex-1 p-6 space-y-4 w-full">
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+      <div>
+        <h1 class="text-2xl font-bold text-slate-900 flex items-center gap-2"><i data-lucide="map-pin" class="w-6 h-6 text-green-600"></i> Campus Map</h1>
+        <p class="text-xs text-slate-500 mt-0.5">Interactive map of active lost item reports across GIST campus</p>
+      </div>
+      <div class="flex items-center gap-2">
+        <select id="cat-filter" class="input-simple text-xs py-1.5" onchange="applyFilter()">
+          <option value="">All Categories</option>
+          <option>Laptop</option><option>Mobile</option><option>Bag</option><option>Wallet</option>
+          <option>Keys</option><option>Earphones</option><option>Watch</option><option>ID Card</option>
+        </select>
+        <span id="item-count" class="text-xs text-slate-400 whitespace-nowrap">0 items</span>
+      </div>
+    </div>
+    <div id="map"></div>
+  </main>
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+  let map, allMarkers = [];
+  const CAT_COLORS = {
+    'Laptop':'#3b82f6','Mobile':'#ef4444','Bag':'#f59e0b','Wallet':'#10b981',
+    'Keys':'#8b5cf6','Earphones':'#06b6d4','Watch':'#f97316','ID Card':'#ec4899',
+    'default':'#64748b'
+  };
+
+  async function initMap() {
+    const user = getCurrentUser();
+    if (!user || !getToken()) { window.location.href = '/login'; return; }
+    document.getElementById('user-display-name').innerText = user.student_name || 'Student';
+    document.getElementById('user-roll-no').innerText = user.roll_number || '';
+    if (user.student_name) {
+      const parts = user.student_name.split(' ');
+      document.getElementById('user-avatar').innerText = (parts[0][0] + (parts[1] ? parts[1][0] : '')).toUpperCase();
+    }
+
+    map = L.map('map').setView([17.4148, 78.4750], 17);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '© OpenStreetMap contributors', maxZoom: 19
+    }).addTo(map);
+
+    await loadItems();
+  }
+
+  async function loadItems(category = '') {
+    const url = '/map/lost-items' + (category ? `?category=${encodeURIComponent(category)}` : '');
+    const res = await apiFetch(url);
+    if (!res || !res.ok) return;
+
+    allMarkers.forEach(m => map.removeLayer(m));
+    allMarkers = [];
+
+    const items = res.data.data.items;
+    document.getElementById('item-count').innerText = `${items.length} item${items.length !== 1 ? 's' : ''}`;
+
+    items.forEach(item => {
+      const color = CAT_COLORS[item.category] || CAT_COLORS['default'];
+      const icon = L.divIcon({
+        html: `<div style="width:28px;height:28px;border-radius:50%;background:${color};border:2px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,0.3);display:flex;align-items:center;justify-content:center;">
+          <span style="font-size:12px;">📍</span></div>`,
+        iconSize: [28, 28], iconAnchor: [14, 14], className: ''
+      });
+
+      const dateStr = item.date ? new Date(item.date).toLocaleDateString() : '';
+      const marker = L.marker([item.lat, item.lng], { icon })
+        .bindPopup(`<div class="item-popup">
+          <div class="cat">${item.category}</div>
+          <h3>${item.item_name}</h3>
+          <p>🎨 Color: ${item.color}</p>
+          <p>📍 ${item.location}</p>
+          <p>👤 ${item.student_name}</p>
+          ${dateStr ? `<p>📅 ${dateStr}</p>` : ''}
+          <p style="margin-top:6px;">${item.description}</p>
+          <span class="badge">${item.status}</span>
+        </div>`, { maxWidth: 260 })
+        .addTo(map);
+      allMarkers.push(marker);
+    });
+  }
+
+  function applyFilter() {
+    loadItems(document.getElementById('cat-filter').value);
+  }
+
+  initMap();
+</script>
+{% endblock %}

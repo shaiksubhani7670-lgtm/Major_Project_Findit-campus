@@ -1,0 +1,108 @@
+{% extends "base.html" %}
+{% block title %}Leaderboard — FindIt Campus{% endblock %}
+{% block content %}
+<div class="min-h-screen bg-slate-50 flex flex-col md:flex-row">
+
+  <!-- Sidebar -->
+  {% include 'partials/sidebar.html' ignore missing %}
+  <aside class="w-full md:w-64 bg-white border-r border-slate-200 shrink-0 flex flex-col justify-between min-h-screen sticky top-0">
+    <div>
+      <div class="p-5 border-b border-slate-100 flex items-center gap-2.5">
+        <div class="w-8 h-8 rounded-lg bg-blue-600 flex items-center justify-center text-white shrink-0"><i data-lucide="search" class="w-4 h-4"></i></div>
+        <div><span class="font-bold text-base text-slate-900 leading-none block">FindIt Campus</span><span class="text-[10px] text-slate-400 font-semibold block uppercase tracking-wider mt-0.5">GIST Lost &amp; Found</span></div>
+      </div>
+      <nav class="p-3 space-y-1">
+        <a href="/dashboard" class="flex items-center gap-3 px-3.5 py-2.5 text-xs font-medium text-slate-600 rounded-lg hover:bg-slate-100"><i data-lucide="layout-dashboard" class="w-4 h-4"></i> Dashboard</a>
+        <a href="/browse-lost" class="flex items-center gap-3 px-3.5 py-2.5 text-xs font-medium text-slate-600 rounded-lg hover:bg-slate-100"><i data-lucide="search" class="w-4 h-4"></i> Browse Lost Items</a>
+        <a href="/report-lost" class="flex items-center gap-3 px-3.5 py-2.5 text-xs font-medium text-slate-600 rounded-lg hover:bg-slate-100"><i data-lucide="file-plus" class="w-4 h-4"></i> Report Lost</a>
+        <a href="/report-found" class="flex items-center gap-3 px-3.5 py-2.5 text-xs font-medium text-slate-600 rounded-lg hover:bg-slate-100"><i data-lucide="plus-circle" class="w-4 h-4"></i> Report Found</a>
+        <a href="/map" class="flex items-center gap-3 px-3.5 py-2.5 text-xs font-medium text-slate-600 rounded-lg hover:bg-slate-100"><i data-lucide="map-pin" class="w-4 h-4"></i> Campus Map</a>
+        <a href="/timeline" class="flex items-center gap-3 px-3.5 py-2.5 text-xs font-medium text-slate-600 rounded-lg hover:bg-slate-100"><i data-lucide="activity" class="w-4 h-4"></i> My Timeline</a>
+        <a href="/statistics" class="flex items-center gap-3 px-3.5 py-2.5 text-xs font-medium text-slate-600 rounded-lg hover:bg-slate-100"><i data-lucide="bar-chart-2" class="w-4 h-4"></i> Statistics</a>
+        <a href="/leaderboard" class="flex items-center gap-3 px-3.5 py-2.5 text-xs font-bold text-yellow-700 bg-yellow-50 rounded-lg"><i data-lucide="trophy" class="w-4 h-4 text-yellow-500"></i> Leaderboard</a>
+        <a href="/calendar" class="flex items-center gap-3 px-3.5 py-2.5 text-xs font-medium text-slate-600 rounded-lg hover:bg-slate-100"><i data-lucide="calendar" class="w-4 h-4"></i> Calendar</a>
+        <a href="/notifications" class="flex items-center gap-3 px-3.5 py-2.5 text-xs font-medium text-slate-600 rounded-lg hover:bg-slate-100"><i data-lucide="bell" class="w-4 h-4"></i> Match Alerts</a>
+        <a href="/profile" class="flex items-center gap-3 px-3.5 py-2.5 text-xs font-medium text-slate-600 rounded-lg hover:bg-slate-100"><i data-lucide="user" class="w-4 h-4"></i> Profile</a>
+      </nav>
+    </div>
+    <div class="p-4 border-t border-slate-100 space-y-2">
+      <div class="flex items-center gap-3 p-2.5 bg-slate-50 rounded-lg border border-slate-200">
+        <div class="w-8 h-8 rounded-full bg-yellow-500 text-white font-bold flex items-center justify-center text-xs" id="user-avatar">ST</div>
+        <div class="overflow-hidden"><span class="font-bold text-xs text-slate-900 truncate block" id="user-display-name">Student</span><span class="text-[10px] text-slate-400 truncate block font-mono" id="user-roll-no"></span></div>
+      </div>
+      <button onclick="logout()" class="w-full flex items-center justify-center gap-2 px-3 py-2 text-xs font-semibold text-red-600 bg-red-50 hover:bg-red-100 rounded-lg"><i data-lucide="log-out" class="w-3.5 h-3.5"></i> Logout</button>
+    </div>
+  </aside>
+
+  <main class="flex-1 p-6 md:p-8 max-w-4xl mx-auto w-full space-y-6">
+    <div>
+      <h1 class="text-2xl font-bold text-slate-900 flex items-center gap-2"><i data-lucide="trophy" class="w-6 h-6 text-yellow-500"></i> Points Leaderboard</h1>
+      <p class="text-xs text-slate-500 mt-1">Top students who've helped the FindIt Campus community 🏆</p>
+    </div>
+
+    <!-- Points Info -->
+    <div class="grid grid-cols-3 gap-4">
+      <div class="card-flat p-4 text-center"><div class="text-2xl font-bold text-blue-600">+5</div><div class="text-xs text-slate-500 mt-1">Report Lost</div></div>
+      <div class="card-flat p-4 text-center"><div class="text-2xl font-bold text-emerald-600">+10</div><div class="text-xs text-slate-500 mt-1">Report Found</div></div>
+      <div class="card-flat p-4 text-center"><div class="text-2xl font-bold text-yellow-600">+50</div><div class="text-xs text-slate-500 mt-1">Claim Approved</div></div>
+    </div>
+
+    <!-- My Rank -->
+    <div id="my-rank-card" class="hidden card-flat p-4 border-l-4 border-yellow-400 flex items-center justify-between">
+      <div><span class="text-xs text-slate-500">Your Rank</span><div class="text-xl font-bold text-slate-900" id="my-rank-text">#—</div></div>
+      <div class="text-right"><span class="text-xs text-slate-500">Your Points</span><div class="text-xl font-bold text-yellow-600" id="my-points-text">0 pts</div></div>
+    </div>
+
+    <!-- Leaderboard Table -->
+    <div class="card-flat overflow-hidden">
+      <div id="leaderboard-list" class="divide-y divide-slate-100">
+        <div class="p-8 text-center text-slate-400 text-xs">Loading leaderboard...</div>
+      </div>
+    </div>
+  </main>
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+  async function loadLeaderboard() {
+    const user = getCurrentUser();
+    if (!user || !getToken()) { window.location.href = '/login'; return; }
+    const sName = user.student_name || user.full_name || user.name || 'Student';
+    document.getElementById('user-display-name').innerText = sName;
+    document.getElementById('user-roll-no').innerText = user.roll_number || user.college_email || '';
+    if (sName && sName !== 'Student') {
+      const parts = sName.split(' ');
+      document.getElementById('user-avatar').innerText = (parts[0][0] + (parts[1] ? parts[1][0] : '')).toUpperCase();
+    }
+
+    const res = await apiFetch('/leaderboard');
+    if (!res || !res.ok) { document.getElementById('leaderboard-list').innerHTML = '<div class="p-8 text-center text-red-400 text-xs">Failed to load leaderboard</div>'; return; }
+
+    const { leaderboard, my_rank, my_points } = res.data.data;
+    
+    document.getElementById('my-rank-card').classList.remove('hidden');
+    document.getElementById('my-rank-text').innerText = my_rank ? `#${my_rank}` : 'Unranked';
+    document.getElementById('my-points-text').innerText = `${my_points || 0} pts`;
+
+    const medals = ['🥇', '🥈', '🥉'];
+    document.getElementById('leaderboard-list').innerHTML = leaderboard.map(s => `
+      <div class="flex items-center gap-4 px-5 py-3.5 ${s.is_me ? 'bg-yellow-50 border-l-4 border-yellow-400' : 'hover:bg-slate-50'} transition-colors">
+        <div class="w-8 text-center font-bold text-sm ${s.rank <= 3 ? 'text-xl' : 'text-slate-500'}">
+          ${s.rank <= 3 ? medals[s.rank-1] : `#${s.rank}`}
+        </div>
+        <div class="w-8 h-8 rounded-full ${s.is_me ? 'bg-yellow-500' : 'bg-blue-600'} text-white flex items-center justify-center text-xs font-bold shrink-0">
+          ${s.student_name.split(' ').map(p => p[0]).slice(0,2).join('').toUpperCase()}
+        </div>
+        <div class="flex-1 min-w-0">
+          <div class="font-semibold text-sm text-slate-900 truncate">${s.student_name} ${s.is_me ? '<span class="text-xs text-yellow-600 font-normal">(You)</span>' : ''}</div>
+          <div class="text-xs text-slate-400">${s.department} · ${s.roll_number}</div>
+        </div>
+        <div class="text-right shrink-0">
+          <div class="font-bold text-sm ${s.rank === 1 ? 'text-yellow-600' : s.rank === 2 ? 'text-slate-500' : s.rank === 3 ? 'text-amber-600' : 'text-blue-600'}">${s.points} pts</div>
+        </div>
+      </div>
+    `).join('');
+  }
+  loadLeaderboard();
+</script>
+{% endblock %}
