@@ -289,7 +289,10 @@
 <script>
   function getImageUrl(item) {
     if (!item) return null;
-    const path = item.image_path || item.image_url || item.image;
+    let path = item.image_path || item.image_url || item.image;
+    if (!path && Array.isArray(item.image_paths) && item.image_paths.length > 0) {
+      path = item.image_paths[0];
+    }
     if (!path || typeof path !== 'string' || !path.trim()) return null;
     const clean = path.trim();
     if (clean.startsWith('http://') || clean.startsWith('https://') || clean.startsWith('data:')) return clean;
@@ -297,6 +300,7 @@
     const pathNoPrefix = clean.replace(/^(static\/|uploads\/)+/, '');
     return `/static/uploads/${pathNoPrefix}`;
   }
+
 
   function extractArray(resData, primaryKey) {
     if (!resData) return [];
@@ -420,17 +424,27 @@
       }
 
       if (matches.length > 0) {
+        // Order match alerts based on date and time (newest first)
+        matches.sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0));
+
         if (document.getElementById('stat-matches')) {
           document.getElementById('stat-matches').innerText = matches.length;
         }
         notifContainer.innerHTML = matches.slice(0, 4).map(m => {
-          const itemObj = m.lost_item || m.found_item;
+          const itemObj = (m.lost_item && (m.lost_item.image_path || m.lost_item.image_url)) ? m.lost_item : (m.found_item || m.lost_item);
           const imgUrl = getImageUrl(itemObj);
           return `
           <div class="p-3 bg-white rounded-xl border border-slate-200 flex items-center gap-3">
             ${imgUrl ? `
-              <img src="${imgUrl}" alt="Match" class="w-10 h-10 rounded-lg object-cover border border-slate-200 shrink-0 bg-slate-100">
-            ` : ''}
+              <img src="${imgUrl}" alt="${itemObj ? (itemObj.item_name || 'Match') : 'Match'}" class="w-10 h-10 rounded-lg object-cover border border-slate-200 shrink-0 bg-slate-100" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+              <div class="w-10 h-10 rounded-lg bg-indigo-50 text-indigo-700 border border-indigo-200 flex items-center justify-center font-bold text-xs shrink-0" style="display:none;">
+                <i data-lucide="sparkles" class="w-4 h-4 text-indigo-600"></i>
+              </div>
+            ` : `
+              <div class="w-10 h-10 rounded-lg bg-indigo-50 text-indigo-700 border border-indigo-200 flex items-center justify-center font-bold text-xs shrink-0">
+                <i data-lucide="sparkles" class="w-4 h-4 text-indigo-600"></i>
+              </div>
+            `}
             <div class="flex-1 overflow-hidden">
               <div class="flex items-center justify-between">
                 <span class="text-[10px] font-bold text-blue-600 uppercase">MATCH SCORE: ${m.overall_score || 85}%</span>
@@ -442,6 +456,7 @@
           `;
         }).join('');
       } else {
+
         notifContainer.innerHTML = `
           <div class="p-6 text-center bg-white rounded-xl border border-slate-200 text-xs text-slate-400">
             No match notifications

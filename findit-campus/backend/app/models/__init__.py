@@ -6,6 +6,7 @@ from app.models.question_answer import QuestionAnswer
 from app.models.match import Match
 from app.models.claim import Claim
 from app.models.notification import Notification
+from app.models.uploaded_image import UploadedImage
 
 __all__ = [
     'Student',
@@ -16,4 +17,6 @@ __all__ = [
     'Match',
     'Claim',
     'Notification',
+    'UploadedImage',
 ]
+

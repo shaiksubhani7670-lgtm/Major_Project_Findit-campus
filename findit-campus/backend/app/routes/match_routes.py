@@ -74,7 +74,7 @@ def list_matches():
 
     query = Match.query.filter(db.or_(*conditions))
 
-    matches = query.order_by(Match.overall_score.desc()).all()
+    matches = query.order_by(Match.created_at.desc(), Match.match_id.desc()).all()
     matches_data = []
 
     for m in matches:

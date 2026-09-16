@@ -256,7 +256,10 @@
 
   function getImageUrl(item) {
     if (!item) return null;
-    const path = item.image_path || item.image_url || item.image;
+    let path = item.image_path || item.image_url || item.image;
+    if (!path && Array.isArray(item.image_paths) && item.image_paths.length > 0) {
+      path = item.image_paths[0];
+    }
     if (!path || typeof path !== 'string' || !path.trim()) return null;
     const clean = path.trim();
     if (clean.startsWith('http://') || clean.startsWith('https://') || clean.startsWith('data:')) return clean;
@@ -264,6 +267,7 @@
     const pathNoPrefix = clean.replace(/^(static\/|uploads\/)+/, '');
     return `/static/uploads/${pathNoPrefix}`;
   }
+
 
   function renderGrid() {
     const grid = document.getElementById('items-grid');

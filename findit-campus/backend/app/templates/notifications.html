@@ -150,13 +150,27 @@
     }
   }
 
+  function getImageUrl(item) {
+    if (!item) return null;
+    let path = item.image_path || item.image_url || item.image;
+    if (!path && Array.isArray(item.image_paths) && item.image_paths.length > 0) {
+      path = item.image_paths[0];
+    }
+    if (!path || typeof path !== 'string' || !path.trim()) return null;
+    const clean = path.trim();
+    if (clean.startsWith('http://') || clean.startsWith('https://') || clean.startsWith('data:')) return clean;
+    if (clean.startsWith('/')) return clean;
+    const pathNoPrefix = clean.replace(/^(static\/|uploads\/)+/, '');
+    return `/static/uploads/${pathNoPrefix}`;
+  }
+
   let activeMatchesList = [];
 
   function renderMatches(matches) {
     const container = document.getElementById('matches-container');
     activeMatchesList = matches || [];
     
-    if (!matches || matches.length === 0) {
+    if (!activeMatchesList || activeMatchesList.length === 0) {
       container.innerHTML = `
         <div class="glass-card rounded-2xl p-12 text-center text-xs text-slate-400 bg-white">
           <i data-lucide="bell-off" class="w-8 h-8 mx-auto mb-2 text-slate-300"></i>
@@ -168,12 +182,17 @@
       return;
     }
 
-    container.innerHTML = matches.map(m => {
+    // Sort based on date and time (newest first)
+    activeMatchesList.sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0));
+
+    container.innerHTML = activeMatchesList.map(m => {
       const lost = m.lost_item;
       const found = m.found_item;
       if (!lost || !found) return '';
 
       const isCompleted = lost.status === 'Completed' && found.status === 'Completed';
+      const lostImg = getImageUrl(lost);
+      const foundImg = getImageUrl(found);
 
       return `
         <div class="glass-card rounded-2xl p-6 space-y-5">
@@ -199,8 +218,15 @@
                 <span class="text-[10px] font-extrabold text-indigo-600 uppercase tracking-widest font-mono">My Lost Report</span>
                 <span class="text-xs text-slate-500 font-semibold">${lost.category}</span>
               </div>
-              <h4 class="font-bold text-slate-900 font-display text-sm">${lost.item_name}</h4>
-              <p class="text-xs text-slate-600 leading-relaxed font-medium">Description: ${lost.description}</p>
+              <div class="flex items-start gap-3">
+                ${lostImg ? `
+                  <img src="${lostImg}" alt="${lost.item_name}" class="w-12 h-12 rounded-xl object-cover border border-slate-200 bg-white shrink-0 shadow-sm" onerror="this.style.display='none';">
+                ` : ''}
+                <div class="min-w-0 flex-1">
+                  <h4 class="font-bold text-slate-900 font-display text-sm truncate">${lost.item_name}</h4>
+                  <p class="text-xs text-slate-600 leading-relaxed font-medium mt-0.5">Description: ${lost.description}</p>
+                </div>
+              </div>
               <div class="text-[11px] space-y-1 text-slate-400">
                 <p>Location: ${lost.location}</p>
                 <p>Color: ${lost.color}</p>
@@ -213,8 +239,15 @@
                 <span class="text-[10px] font-extrabold text-indigo-600 uppercase tracking-widest font-mono">Found Item Match</span>
                 <span class="text-xs text-slate-500 font-semibold">${found.category}</span>
               </div>
-              <h4 class="font-bold text-slate-900 font-display text-sm">${found.item_name}</h4>
-              <p class="text-xs text-slate-600 leading-relaxed font-medium">Description: ${found.description}</p>
+              <div class="flex items-start gap-3">
+                ${foundImg ? `
+                  <img src="${foundImg}" alt="${found.item_name}" class="w-12 h-12 rounded-xl object-cover border border-indigo-200 bg-white shrink-0 shadow-sm" onerror="this.style.display='none';">
+                ` : ''}
+                <div class="min-w-0 flex-1">
+                  <h4 class="font-bold text-slate-900 font-display text-sm truncate">${found.item_name}</h4>
+                  <p class="text-xs text-slate-600 leading-relaxed font-medium mt-0.5">Description: ${found.description}</p>
+                </div>
+              </div>
               <div class="text-[11px] space-y-1 text-slate-400">
                 <p>Location Found: ${found.location || found.location_found}</p>
                 <p>Color: ${found.color}</p>
@@ -236,6 +269,7 @@
         </div>
       `;
     }).join('');
+
 
     lucide.createIcons();
   }

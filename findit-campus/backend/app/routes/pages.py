@@ -98,12 +98,8 @@ def verify_email_page():
 
 @pages_bp.route('/static/uploads/<report_type>/<filename>')
 def serve_static_upload(report_type, filename):
-    tmp_path = os.path.join('/tmp', 'uploads', report_type, filename)
-    if os.path.exists(tmp_path):
-        return send_from_directory(os.path.dirname(tmp_path), filename)
-    static_path = os.path.join(current_app.root_path, 'static', 'uploads', report_type)
-    if os.path.exists(os.path.join(static_path, filename)):
-        return send_from_directory(static_path, filename)
-    return "File not found", 404
+    from app.routes.upload import serve_uploaded_file_by_path
+    return serve_uploaded_file_by_path(f"{report_type}/{filename}")
+
 
 

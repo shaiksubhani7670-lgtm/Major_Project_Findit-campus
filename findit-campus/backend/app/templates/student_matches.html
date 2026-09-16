@@ -139,13 +139,14 @@
     const res = await apiFetch('/match');
     loader.classList.add('hidden');
 
-    if (res && res.ok && res.data && res.data.success) {
       const matches = res.data.data.matches || [];
+      matches.sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0));
       if (matches.length === 0) {
         noMatches.classList.remove('hidden');
       } else {
         grid.innerHTML = '';
         matches.forEach(m => {
+
           const card = document.createElement('div');
           card.className = 'bg-white border border-slate-200 rounded-2xl p-6 flex flex-col justify-between shadow-sm hover:shadow-md hover:border-indigo-200 transition-all';
 

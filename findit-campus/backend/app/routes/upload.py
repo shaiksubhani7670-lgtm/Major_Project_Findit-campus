@@ -64,7 +64,9 @@ def _upload_to_cloudinary(file, report_type):
     )
     return result['secure_url'], result['public_id']
 
-from flask import send_from_directory
+import io
+from PIL import Image
+from flask import send_from_directory, Response
 
 def _get_upload_dir(report_type):
     """Get or create separate directory for lost/found uploads inside static folder."""
@@ -88,29 +90,91 @@ def _get_upload_dir(report_type):
         return tmp_dir
 
 def _save_file_local(file, report_type):
-    """Save a single file locally, return (url, filename) or raise."""
+    """Save a single file locally and to database for serverless persistence."""
     upload_dir = _get_upload_dir(report_type)
     ext = file.filename.rsplit('.', 1)[1].lower() if '.' in file.filename else 'jpg'
     unique_name = f"{uuid.uuid4().hex}.{ext}"
     filepath = os.path.join(upload_dir, unique_name)
+    
+    file_bytes = file.read()
+    file.seek(0)
+    
+    # Optimize image using Pillow to keep size compact
+    content_type = 'image/jpeg' if ext in ['jpg', 'jpeg'] else f'image/{ext}'
+    image_bytes = file_bytes
     try:
-        file.save(filepath)
+        with Image.open(io.BytesIO(file_bytes)) as pil_img:
+            pil_img = pil_img.convert('RGB')
+            pil_img.thumbnail((800, 800), Image.Resampling.LANCZOS)
+            buf = io.BytesIO()
+            pil_img.save(buf, format='JPEG', quality=85)
+            image_bytes = buf.getvalue()
+            content_type = 'image/jpeg'
+    except Exception as opt_err:
+        print(f"[Upload] Optimization notice: {opt_err}")
+
+    # 1. Save to database (persists across all Vercel instances)
+    try:
+        from app import db
+        from app.models.uploaded_image import UploadedImage
+        db_img = UploadedImage(
+            filename=unique_name,
+            report_type=report_type,
+            content_type=content_type,
+            image_data=image_bytes
+        )
+        db.session.merge(db_img)
+        db.session.commit()
+    except Exception as db_err:
+        print(f"[Upload] DB image save error: {db_err}")
+
+    # 2. Also save to disk/tmp if writable
+    try:
+        with open(filepath, 'wb') as f:
+            f.write(image_bytes)
     except (OSError, PermissionError):
-        tmp_dir = os.path.join('/tmp', 'uploads', report_type)
-        os.makedirs(tmp_dir, exist_ok=True)
-        filepath = os.path.join(tmp_dir, unique_name)
-        file.save(filepath)
+        try:
+            tmp_dir = os.path.join('/tmp', 'uploads', report_type)
+            os.makedirs(tmp_dir, exist_ok=True)
+            with open(os.path.join(tmp_dir, unique_name), 'wb') as f:
+                f.write(image_bytes)
+        except Exception:
+            pass
 
     url = f"/static/uploads/{report_type}/{unique_name}"
     return url, unique_name
 
-@upload_bp.route('/file/<report_type>/<filename>')
-def serve_tmp_file(report_type, filename):
-    tmp_path = os.path.join('/tmp', 'uploads', report_type, filename)
-    if os.path.exists(tmp_path):
-        return send_from_directory(os.path.dirname(tmp_path), filename)
-    static_path = os.path.join(current_app.root_path, 'static', 'uploads', report_type)
-    return send_from_directory(static_path, filename)
+def serve_uploaded_file_by_path(path):
+    """Serve an uploaded file from disk or database fallback."""
+    # Check static uploads folder
+    static_base = os.path.join(current_app.root_path, 'static', 'uploads')
+    disk_path = os.path.join(static_base, path)
+    if os.path.exists(disk_path) and os.path.isfile(disk_path):
+        return send_from_directory(static_base, path)
+
+    # Check /tmp/uploads
+    tmp_path = os.path.join('/tmp', 'uploads', path)
+    if os.path.exists(tmp_path) and os.path.isfile(tmp_path):
+        return send_from_directory(os.path.dirname(tmp_path), os.path.basename(tmp_path))
+
+    # Query from database table
+    filename = os.path.basename(path)
+    try:
+        from app.models.uploaded_image import UploadedImage
+        img = UploadedImage.query.get(filename)
+        if img and img.image_data:
+            raw_data = bytes(img.image_data)
+            resp = Response(raw_data, mimetype=img.content_type or 'image/jpeg')
+            resp.headers['Cache-Control'] = 'public, max-age=86400'
+            return resp
+    except Exception as db_err:
+        print(f"[Upload] DB image fetch error for {filename}: {db_err}")
+
+    return jsonify({'error': 'Image not found'}), 404
+
+@upload_bp.route('/file/<path:filename>')
+def serve_tmp_file(filename):
+    return serve_uploaded_file_by_path(filename)
 
 def _save_file(file, report_type):
     """
@@ -126,6 +190,7 @@ def _save_file(file, report_type):
 
 
 @upload_bp.route('/image', methods=['POST'])
+
 @jwt_required()
 def upload_image():
     """
