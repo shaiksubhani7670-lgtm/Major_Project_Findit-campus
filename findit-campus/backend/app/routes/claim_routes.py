@@ -177,26 +177,41 @@ def verify_claim():
                 db.session.commit()
         except Exception:
             pass
-        
-        # Send claim approved email (async)
+
+        # Two-way contact exchange: fetch both parties
         try:
-            finder = Student.query.get(found.student_id)
-            finder_details_for_email = {
-                'student_name': finder.student_name if finder else 'N/A',
-                'roll_number': finder.roll_number if finder else 'N/A',
-                'department': finder.department if finder else 'N/A',
-                'college_email': finder.college_email if finder else 'N/A'
-            }
             claimant_student = Student.query.get(student_id)
+            finder_student = Student.query.get(found.student_id)
+
+            claimant_details = {
+                'student_name': claimant_student.student_name if claimant_student else 'N/A',
+                'roll_number': claimant_student.roll_number if claimant_student else 'N/A',
+                'department': claimant_student.department if claimant_student else 'N/A',
+                'college_email': claimant_student.college_email if claimant_student else 'N/A',
+                'phone_number': claimant_student.phone_number or 'Not provided' if claimant_student else 'N/A'
+            }
+            finder_details_for_email = {
+                'student_name': finder_student.student_name if finder_student else 'N/A',
+                'roll_number': finder_student.roll_number if finder_student else 'N/A',
+                'department': finder_student.department if finder_student else 'N/A',
+                'college_email': finder_student.college_email if finder_student else 'N/A',
+                'phone_number': finder_student.phone_number or 'Not provided' if finder_student else 'N/A'
+            }
+
+            from app.services.email_service import send_claim_approved_email, send_claim_approved_to_finder_email
+            # Claimant (lost user) receives finder's contact details
             if claimant_student:
-                from app.services.email_service import send_claim_approved_email
                 send_claim_approved_email(claimant_student, finder_details_for_email)
-        except Exception:
-            pass
-        
-        # Get finder student details to reveal
+            # Finder receives claimant's (lost user's) contact details
+            if finder_student:
+                send_claim_approved_to_finder_email(finder_student, claimant_details)
+        except Exception as e:
+            print(f"[ClaimRoutes] Warning: Could not send contact exchange emails: {e}")
+
+        # Re-fetch for response (in case of variable scope issues)
         finder = Student.query.get(found.student_id)
-        
+        claimant_resp = Student.query.get(student_id)
+
         return jsonify({
             'success': True,
             'message': 'Ownership Verified Successfully! Claim Approved.',
@@ -204,12 +219,18 @@ def verify_claim():
                 'verification_score': score,
                 'status': 'Approved',
                 'finder_details': {
-                    'student_name': finder.student_name,
-                    'roll_number': finder.roll_number,
-                    'department': finder.department,
-                    'year': finder.year,
-                    'section': finder.section,
-                    'college_email': finder.college_email
+                    'student_name': finder.student_name if finder else 'N/A',
+                    'roll_number': finder.roll_number if finder else 'N/A',
+                    'department': finder.department if finder else 'N/A',
+                    'year': finder.year if finder else 'N/A',
+                    'section': finder.section if finder else 'N/A',
+                    'college_email': finder.college_email if finder else 'N/A',
+                    'phone_number': finder.phone_number or 'Not provided' if finder else 'N/A'
+                },
+                'claimant_details': {
+                    'student_name': claimant_resp.student_name if claimant_resp else 'N/A',
+                    'college_email': claimant_resp.college_email if claimant_resp else 'N/A',
+                    'phone_number': claimant_resp.phone_number or 'Not provided' if claimant_resp else 'N/A'
                 }
             }
         }), 200

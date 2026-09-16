@@ -196,12 +196,14 @@ def send_match_found_to_finder_email(student, lost_item, found_item, match_score
 
 def send_claim_approved_email(student, finder_details):
     """
-    Notify a student their ownership claim was approved.
+    Notify the lost-item claimant that their ownership claim was approved.
+    Includes the finder's contact details (Name, Roll, Dept, Email, Phone).
     """
     if not student or not student.college_email:
         return False
 
     subject = "✅ Claim Approved — Collect Your Item!"
+    phone_row = f"<tr><td style=\"padding:4px 0;color:#64748b;\">Phone</td><td style=\"font-weight:600;\">{finder_details.get('phone_number','Not provided')}</td></tr>" if finder_details.get('phone_number') else ""
 
     html = f"""
     <div style="font-family:Inter,Arial,sans-serif;max-width:600px;margin:0 auto;background:#fff;border:1px solid #e2e8f0;border-radius:12px;overflow:hidden;">
@@ -211,19 +213,23 @@ def send_claim_approved_email(student, finder_details):
       </div>
       <div style="padding:28px 24px;">
         <p style="font-size:15px;color:#1e293b;">Hi <strong>{student.student_name}</strong>,</p>
-        <p style="color:#475569;font-size:14px;">Your ownership claim has been verified and approved! Here are the finder's details so you can collect your item.</p>
+        <p style="color:#475569;font-size:14px;">Your ownership claim has been verified and approved! Here are the finder's contact details so you can collect your item.</p>
         
         <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:16px;margin:20px 0;">
-          <p style="margin:0 0 12px 0;font-size:13px;color:#15803d;font-weight:700;text-transform:uppercase;">Finder Details</p>
+          <p style="margin:0 0 12px 0;font-size:13px;color:#15803d;font-weight:700;text-transform:uppercase;">Finder's Contact Details</p>
           <table style="width:100%;font-size:13px;color:#1e293b;border-collapse:collapse;">
             <tr><td style="padding:4px 0;color:#64748b;">Name</td><td style="font-weight:600;">{finder_details.get('student_name','N/A')}</td></tr>
             <tr><td style="padding:4px 0;color:#64748b;">Roll No</td><td style="font-weight:600;font-family:monospace;">{finder_details.get('roll_number','N/A')}</td></tr>
             <tr><td style="padding:4px 0;color:#64748b;">Department</td><td style="font-weight:600;">{finder_details.get('department','N/A')}</td></tr>
             <tr><td style="padding:4px 0;color:#64748b;">Email</td><td><a href="mailto:{finder_details.get('college_email','')}" style="color:#2563eb;">{finder_details.get('college_email','N/A')}</a></td></tr>
+            {phone_row}
           </table>
         </div>
 
         <p style="color:#475569;font-size:13px;">Please contact the finder directly to arrange collection. Congratulations on recovering your item! 🎉</p>
+        <div style="text-align:center;margin-top:24px;">
+          <a href="https://findit-virid.vercel.app/dashboard" style="background:#059669;color:#fff;text-decoration:none;padding:12px 28px;border-radius:8px;font-weight:700;font-size:14px;">Go to Dashboard</a>
+        </div>
       </div>
       <div style="background:#f8fafc;padding:16px 24px;text-align:center;">
         <p style="color:#94a3b8;font-size:11px;margin:0;">FindIt Campus · Geethanjali Institute of Science &amp; Technology</p>
@@ -231,6 +237,54 @@ def send_claim_approved_email(student, finder_details):
     </div>
     """
     return _send_email(subject, [student.college_email], html)
+
+
+def send_claim_approved_to_finder_email(student, claimant_details):
+    """
+    Notify the finder that the lost-item owner's claim has been approved.
+    Includes the claimant's (lost user's) contact details (Name, Roll, Dept, Email, Phone)
+    so the finder can arrange return of the item.
+    """
+    if not student or not student.college_email:
+        return False
+
+    subject = "🎉 Ownership Verified — Item Can Be Returned!"
+    phone_row = f"<tr><td style=\"padding:4px 0;color:#64748b;\">Phone</td><td style=\"font-weight:600;\">{claimant_details.get('phone_number','Not provided')}</td></tr>" if claimant_details.get('phone_number') else ""
+
+    html = f"""
+    <div style="font-family:Inter,Arial,sans-serif;max-width:600px;margin:0 auto;background:#fff;border:1px solid #e2e8f0;border-radius:12px;overflow:hidden;">
+      <div style="background:linear-gradient(135deg,#2563eb,#7c3aed);padding:32px 24px;text-align:center;">
+        <h1 style="color:#fff;font-size:22px;margin:0;">🎉 Ownership Verified!</h1>
+        <p style="color:#bfdbfe;font-size:13px;margin:8px 0 0 0;">FindIt Campus — Smart Lost &amp; Found</p>
+      </div>
+      <div style="padding:28px 24px;">
+        <p style="font-size:15px;color:#1e293b;">Hi <strong>{student.student_name}</strong>,</p>
+        <p style="color:#475569;font-size:14px;">The owner of the item you found has successfully verified their ownership claim. Please contact them to arrange the return of the item.</p>
+
+        <div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;padding:16px;margin:20px 0;">
+          <p style="margin:0 0 12px 0;font-size:13px;color:#1e40af;font-weight:700;text-transform:uppercase;">Owner's Contact Details</p>
+          <table style="width:100%;font-size:13px;color:#1e293b;border-collapse:collapse;">
+            <tr><td style="padding:4px 0;color:#64748b;">Name</td><td style="font-weight:600;">{claimant_details.get('student_name','N/A')}</td></tr>
+            <tr><td style="padding:4px 0;color:#64748b;">Roll No</td><td style="font-weight:600;font-family:monospace;">{claimant_details.get('roll_number','N/A')}</td></tr>
+            <tr><td style="padding:4px 0;color:#64748b;">Department</td><td style="font-weight:600;">{claimant_details.get('department','N/A')}</td></tr>
+            <tr><td style="padding:4px 0;color:#64748b;">Email</td><td><a href="mailto:{claimant_details.get('college_email','')}" style="color:#2563eb;">{claimant_details.get('college_email','N/A')}</a></td></tr>
+            {phone_row}
+          </table>
+        </div>
+
+        <p style="color:#475569;font-size:13px;">Thank you for being a responsible community member! You've earned <strong>+50 points</strong> on the FindIt Campus leaderboard. 🏆</p>
+        <div style="text-align:center;margin-top:24px;">
+          <a href="https://findit-virid.vercel.app/dashboard" style="background:#2563eb;color:#fff;text-decoration:none;padding:12px 28px;border-radius:8px;font-weight:700;font-size:14px;">Go to Dashboard</a>
+        </div>
+      </div>
+      <div style="background:#f8fafc;padding:16px 24px;text-align:center;">
+        <p style="color:#94a3b8;font-size:11px;margin:0;">FindIt Campus · Geethanjali Institute of Science &amp; Technology</p>
+      </div>
+    </div>
+    """
+    return _send_email(subject, [student.college_email], html)
+
+
 
 
 def send_welcome_email(student):

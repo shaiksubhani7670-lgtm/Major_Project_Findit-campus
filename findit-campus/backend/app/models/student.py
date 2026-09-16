@@ -15,6 +15,7 @@ class Student(db.Model):
     year = db.Column(db.Integer, nullable=False)
     section = db.Column(db.String(10), nullable=False)
     college_email = db.Column(db.String(255), unique=True, nullable=False, index=True)
+    phone_number = db.Column(db.String(20), nullable=True)  # Optional; shared only after claim approval
     points = db.Column(db.Integer, default=0, nullable=False)  # Reward points for leaderboard
     is_email_verified = db.Column(db.Boolean, default=False, nullable=False)
     email_verification_token = db.Column(db.String(255), nullable=True)
@@ -41,6 +42,7 @@ class Student(db.Model):
             'section': self.section,
             'college_email': self.college_email,
             'email': self.college_email,
+            'phone_number': self.phone_number or '',
             'points': self.points,
             'is_email_verified': self.is_email_verified,
             'created_at': self.created_at.isoformat()

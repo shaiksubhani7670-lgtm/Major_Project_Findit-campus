@@ -101,3 +101,36 @@ def update_password():
     except Exception as e:
         db.session.rollback()
         return jsonify({'success': False, 'message': f'Failed to update password: {str(e)}'}), 500
+
+
+@profile_routes_bp.route('/phone', methods=['PUT'])
+@jwt_required()
+def update_phone():
+    """
+    Save or update the student's phone number. No OTP/SMS required.
+    Phone is only shared with the other party after a claim is approved.
+    """
+    student_id = int(get_jwt_identity())
+    student = Student.query.get(student_id)
+    if not student:
+        return jsonify({'success': False, 'message': 'Student not found'}), 404
+
+    data = request.get_json() or {}
+    phone = (data.get('phone_number') or '').strip()
+
+    # Basic validation: allow empty (clear) or 7-15 digit number (with optional + and spaces)
+    import re
+    if phone and not re.match(r'^\+?[\d\s\-]{7,15}$', phone):
+        return jsonify({'success': False, 'message': 'Invalid phone number format'}), 400
+
+    try:
+        student.phone_number = phone or None
+        db.session.commit()
+        return jsonify({
+            'success': True,
+            'message': 'Phone number saved successfully',
+            'data': {'phone_number': student.phone_number or ''}
+        }), 200
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'success': False, 'message': f'Failed to save phone number: {str(e)}'}), 500

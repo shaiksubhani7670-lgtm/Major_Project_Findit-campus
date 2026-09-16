@@ -92,6 +92,22 @@
                 <span id="prof-email-badge" class="inline-block text-[10px] font-bold px-2 py-0.5 rounded mt-1">Unverified</span>
               </div>
             </div>
+            <div class="flex justify-between py-1.5 items-center">
+              <span class="text-slate-400 font-medium">Phone Number</span>
+              <span id="prof-phone-display" class="font-semibold text-slate-900 text-right">Not set</span>
+            </div>
+          </div>
+
+          <!-- Phone Number Edit Section -->
+          <div class="pt-3 border-t border-slate-100 space-y-2">
+            <label class="block text-[11px] font-bold text-slate-600 uppercase tracking-wider">📱 Add / Update Phone Number</label>
+            <p class="text-[11px] text-slate-400 leading-relaxed">Your phone number is <strong>only shared</strong> with the other student after a claim is approved. No OTP or SMS required.</p>
+            <div class="flex gap-2">
+              <input type="tel" id="phone-input" class="flex-1 input-simple text-xs" placeholder="e.g. +91 98765 43210">
+              <button onclick="handleSavePhone()" id="save-phone-btn" class="btn-primary text-xs py-2.5 px-4 font-bold flex items-center gap-1.5">
+                <i data-lucide="save" class="w-3.5 h-3.5"></i> Save
+              </button>
+            </div>
           </div>
         </div>
 
@@ -172,6 +188,11 @@
     document.getElementById('prof-email').innerText = u.college_email || u.email || 'student@gist.edu.in';
     document.getElementById('update-email-input').value = u.college_email || u.email || '';
 
+    // Phone number
+    const phone = u.phone_number || '';
+    document.getElementById('prof-phone-display').innerText = phone || 'Not set';
+    document.getElementById('phone-input').value = phone;
+
     const badge = document.getElementById('prof-email-badge');
     if (u.is_email_verified) {
       badge.className = 'inline-block text-[10px] font-bold px-2.5 py-0.5 rounded bg-emerald-100 text-emerald-800 border border-emerald-300';
@@ -223,9 +244,42 @@
 
   function handlePasswordChange(e) {
     e.preventDefault();
-    showToast('Password updated successfully', 'success');
-    document.getElementById('curr-pass').value = '';
-    document.getElementById('new-pass').value = '';
+    const currPass = document.getElementById('curr-pass').value;
+    const newPass = document.getElementById('new-pass').value;
+    if (!currPass || !newPass) { showToast('Both fields are required', 'error'); return; }
+    apiFetch('/profile/password', {
+      method: 'PUT',
+      body: JSON.stringify({ current_password: currPass, new_password: newPass, confirm_password: newPass })
+    }).then(res => {
+      if (res && res.ok) {
+        showToast('Password updated successfully ✅', 'success');
+        document.getElementById('curr-pass').value = '';
+        document.getElementById('new-pass').value = '';
+      } else {
+        showToast((res && res.data && res.data.message) || 'Failed to update password', 'error');
+      }
+    });
+  }
+
+  async function handleSavePhone() {
+    const phone = document.getElementById('phone-input').value.trim();
+    const btn = document.getElementById('save-phone-btn');
+    btn.disabled = true;
+    const res = await apiFetch('/profile/phone', {
+      method: 'PUT',
+      body: JSON.stringify({ phone_number: phone })
+    });
+    btn.disabled = false;
+    if (res && res.ok) {
+      showToast('Phone number saved! It will be shared with the other student after claim approval. 📱', 'success');
+      document.getElementById('prof-phone-display').innerText = phone || 'Not set';
+      // Update local cache
+      const u = JSON.parse(localStorage.getItem('user') || '{}');
+      u.phone_number = phone;
+      localStorage.setItem('user', JSON.stringify(u));
+    } else {
+      showToast((res && res.data && res.data.message) || 'Failed to save phone number', 'error');
+    }
   }
 
   loadProfile();

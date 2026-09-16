@@ -82,9 +82,52 @@ def list_matches():
         # Include lost item name, found item name
         lost = LostItem.query.get(m.lost_report_id)
         found = FoundItem.query.get(m.found_report_id)
-        
+
         m_dict['lost_item'] = lost.to_dict() if lost else None
         m_dict['found_item'] = found.to_dict() if found else None
+
+        # If claim is approved, expose contact details of the other party ONLY
+        m_dict['approved_contact'] = None
+        m_dict['claim_status'] = None
+
+        try:
+            from app.models.claim import Claim
+            approved_claim = Claim.query.filter_by(match_id=m.match_id, status='Approved').first()
+            if approved_claim:
+                m_dict['claim_status'] = 'Approved'
+
+                is_lost_owner = lost and lost.student_id == student_id
+                is_finder = found and found.student_id == student_id
+
+                if is_lost_owner and found:
+                    # Lost user sees finder's contact details
+                    finder = Student.query.get(found.student_id)
+                    if finder:
+                        m_dict['approved_contact'] = {
+                            'role': 'Finder',
+                            'student_name': finder.student_name,
+                            'roll_number': finder.roll_number,
+                            'department': finder.department,
+                            'college_email': finder.college_email,
+                            'phone_number': finder.phone_number or 'Not provided'
+                        }
+                elif is_finder and lost:
+                    # Finder sees owner/claimant's contact details
+                    owner_claim = Claim.query.filter_by(match_id=m.match_id, status='Approved').first()
+                    if owner_claim:
+                        owner = Student.query.get(owner_claim.student_id)
+                        if owner:
+                            m_dict['approved_contact'] = {
+                                'role': 'Owner',
+                                'student_name': owner.student_name,
+                                'roll_number': owner.roll_number,
+                                'department': owner.department,
+                                'college_email': owner.college_email,
+                                'phone_number': owner.phone_number or 'Not provided'
+                            }
+        except Exception:
+            pass
+
         matches_data.append(m_dict)
 
     return jsonify({
@@ -92,6 +135,7 @@ def list_matches():
         'message': 'Matches retrieved successfully',
         'data': {'matches': matches_data}
     }), 200
+
 
 
 @match_routes_bp.route('/<int:match_id>', methods=['GET'])
