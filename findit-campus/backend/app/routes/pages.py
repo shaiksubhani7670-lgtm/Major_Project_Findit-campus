@@ -36,6 +36,7 @@ def matches_page():
     return render_template('student_matches.html')
 
 @pages_bp.route('/claims')
+@pages_bp.route('/claims-view')
 @pages_bp.route('/student/claims')
 def claims_page():
     return render_template('student_claims.html')

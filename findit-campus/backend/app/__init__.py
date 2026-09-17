@@ -66,12 +66,19 @@ def create_app(config_class=None):
         from app.models import campus_location, notification_log
         try:
             db.create_all()
-            # Safe schema upgrade for claims table if columns don't exist yet
+            # Safe schema upgrade for students and claims tables if columns don't exist yet
             with db.engine.connect() as conn:
+                try:
+                    conn.execute(db.text("ALTER TABLE students ADD COLUMN phone_number VARCHAR(20)"))
+                    conn.commit()
+                except Exception:
+                    pass
                 for col_def in [
                     ("handover_status", "VARCHAR(50)"),
                     ("handover_issue_description", "TEXT"),
                     ("contact_shared_at", "TIMESTAMP"),
+                    ("finder_handover_at", "TIMESTAMP"),
+                    ("owner_confirmed_at", "TIMESTAMP"),
                 ]:
                     try:
                         conn.execute(db.text(f"ALTER TABLE claims ADD COLUMN {col_def[0]} {col_def[1]}"))
