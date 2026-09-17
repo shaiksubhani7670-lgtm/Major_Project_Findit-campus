@@ -1,0 +1,235 @@
+{% extends "base.html" %}
+
+{% block title %}Campus Lost Alerts — FindIt Campus{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-slate-50 flex flex-col md:flex-row">
+
+  <!-- Left Sidebar Navigation -->
+  <aside class="hidden md:flex w-64 bg-white border-r border-slate-200 shrink-0 flex-col justify-between h-screen sticky top-0">
+    <div>
+      <div class="p-5 border-b border-slate-100 flex items-center gap-2.5">
+        <div class="w-8 h-8 rounded-lg bg-blue-600 flex items-center justify-center text-white shrink-0">
+          <i data-lucide="search" class="w-4 h-4"></i>
+        </div>
+        <div>
+          <span class="font-bold text-base text-slate-900 leading-none block">FindIt Campus</span>
+          <span class="text-[10px] text-slate-400 font-semibold block uppercase tracking-wider mt-0.5">GIST Lost &amp; Found</span>
+        </div>
+      </div>
+      <nav class="p-3 space-y-1">
+        <a href="/dashboard" class="flex items-center gap-3 px-3.5 py-2.5 text-xs font-medium text-slate-600 rounded-lg hover:bg-slate-100">
+          <i data-lucide="layout-dashboard" class="w-4 h-4"></i> Dashboard Home
+        </a>
+        <a href="/browse-lost" class="flex items-center gap-3 px-3.5 py-2.5 text-xs font-medium text-slate-600 rounded-lg hover:bg-slate-100">
+          <i data-lucide="search" class="w-4 h-4"></i> Browse Lost Items
+        </a>
+        <a href="/report-lost" class="flex items-center gap-3 px-3.5 py-2.5 text-xs font-medium text-slate-600 rounded-lg hover:bg-slate-100">
+          <i data-lucide="file-plus" class="w-4 h-4"></i> Report Lost Item
+        </a>
+        <a href="/report-found" class="flex items-center gap-3 px-3.5 py-2.5 text-xs font-medium text-slate-600 rounded-lg hover:bg-slate-100">
+          <i data-lucide="plus-circle" class="w-4 h-4"></i> Report Found Item
+        </a>
+        <a href="/my-reports" class="flex items-center gap-3 px-3.5 py-2.5 text-xs font-medium text-slate-600 rounded-lg hover:bg-slate-100">
+          <i data-lucide="archive" class="w-4 h-4"></i> My Activity Logs
+        </a>
+        <a href="/notifications" class="flex items-center gap-3 px-3.5 py-2.5 text-xs font-medium text-slate-600 rounded-lg hover:bg-slate-100">
+          <i data-lucide="bell" class="w-4 h-4"></i> Match Alerts
+        </a>
+        <div class="pt-2 pb-1"><p class="px-3.5 text-[9px] font-bold uppercase tracking-widest text-slate-400">Campus Tools</p></div>
+        <a href="/qr-locations" class="flex items-center gap-3 px-3.5 py-2.5 text-xs font-medium text-slate-600 rounded-lg hover:bg-slate-100">
+          <i data-lucide="qr-code" class="w-4 h-4"></i> Campus QR Codes
+        </a>
+        <a href="/campus-alerts" class="flex items-center gap-3 px-3.5 py-2.5 text-xs font-bold text-blue-600 bg-blue-50 rounded-lg">
+          <i data-lucide="radio" class="w-4 h-4 text-amber-500"></i> Campus Lost Alerts
+        </a>
+        <a href="/map" class="flex items-center gap-3 px-3.5 py-2.5 text-xs font-medium text-slate-600 rounded-lg hover:bg-slate-100">
+          <i data-lucide="map-pin" class="w-4 h-4 text-green-500"></i> Campus Map
+        </a>
+        <a href="/leaderboard" class="flex items-center gap-3 px-3.5 py-2.5 text-xs font-medium text-slate-600 rounded-lg hover:bg-slate-100">
+          <i data-lucide="trophy" class="w-4 h-4 text-yellow-500"></i> Leaderboard
+        </a>
+        <a href="/profile" class="flex items-center gap-3 px-3.5 py-2.5 text-xs font-medium text-slate-600 rounded-lg hover:bg-slate-100">
+          <i data-lucide="user" class="w-4 h-4"></i> Profile Settings
+        </a>
+      </nav>
+    </div>
+    <div class="p-4 border-t border-slate-100">
+      <button onclick="logout()" class="w-full flex items-center justify-center gap-2 px-3 py-2 text-xs font-semibold text-red-600 bg-red-50 hover:bg-red-100 rounded-lg">
+        <i data-lucide="log-out" class="w-3.5 h-3.5"></i> Logout
+      </button>
+    </div>
+  </aside>
+
+  <!-- Main Content -->
+  <main class="flex-1 p-6 md:p-8 space-y-6 max-w-6xl mx-auto w-full">
+
+    <!-- Header Banner -->
+    <div class="bg-gradient-to-r from-amber-500 via-orange-500 to-rose-500 text-white p-6 rounded-2xl shadow-md">
+      <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+          <div class="inline-flex items-center gap-2 px-3 py-1 bg-white/20 rounded-full text-xs font-bold mb-2">
+            <i data-lucide="shield" class="w-3.5 h-3.5"></i> Privacy Protected Broadcast
+          </div>
+          <h1 class="text-2xl md:text-3xl font-extrabold tracking-tight">Campus-Wide Lost Item Alerts</h1>
+          <p class="text-xs md:text-sm text-amber-100 mt-1 max-w-2xl leading-relaxed">
+            Have you spotted any of these lost items around campus? Help your fellow students! All owner identities remain confidential until verified ownership.
+          </p>
+        </div>
+        <a href="/report-lost" class="px-4 py-2.5 bg-white text-amber-800 hover:bg-amber-50 font-bold text-xs rounded-xl shadow-sm transition-all flex items-center gap-1.5 shrink-0">
+          <i data-lucide="file-plus" class="w-4 h-4"></i> Report Your Lost Item
+        </a>
+      </div>
+    </div>
+
+    <!-- Filter Bar -->
+    <div class="flex flex-col sm:flex-row items-center justify-between gap-3 bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
+      <div class="flex flex-wrap items-center gap-2 w-full sm:w-auto">
+        <select id="category-filter" onchange="filterAlerts()" class="text-xs border border-slate-200 rounded-lg px-3 py-2 outline-none focus:border-blue-600 bg-white">
+          <option value="">All Categories</option>
+          <option value="Electronics">Electronics</option>
+          <option value="College ID Card">College ID Card</option>
+          <option value="Books">Books / Notes</option>
+          <option value="Keys">Keys</option>
+          <option value="Wallets">Wallets / Purses</option>
+          <option value="Water Bottles">Water Bottles</option>
+          <option value="Accessories">Accessories</option>
+        </select>
+        <input type="text" id="keyword-filter" onkeyup="filterAlerts()" placeholder="Search description, color, location..."
+          class="text-xs border border-slate-200 rounded-lg px-3 py-2 outline-none focus:border-blue-600 w-full sm:w-64">
+      </div>
+      <span id="alerts-count-badge" class="text-xs font-semibold text-slate-500 font-mono shrink-0">Loading alerts...</span>
+    </div>
+
+    <!-- Alerts Grid -->
+    <div id="alerts-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+      <div class="col-span-full py-16 text-center text-slate-400 text-xs">
+        <div class="w-8 h-8 border-2 border-amber-500/30 border-t-amber-500 rounded-full animate-spin mx-auto mb-3"></div>
+        Checking campus alerts...
+      </div>
+    </div>
+
+  </main>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  let allAlerts = [];
+
+  async function loadAlerts() {
+    const grid = document.getElementById('alerts-grid');
+    const badge = document.getElementById('alerts-count-badge');
+
+    try {
+      const res = await apiFetch('/campus-alerts?days=30&limit=50');
+      if (res && res.ok && res.data && res.data.success) {
+        allAlerts = res.data.data.alerts || [];
+        badge.innerText = `${allAlerts.length} Active Alerts (Last 30 Days)`;
+        renderAlerts(allAlerts);
+      } else {
+        grid.innerHTML = `
+          <div class="col-span-full p-8 text-center bg-white rounded-xl border border-slate-200 text-slate-400 text-xs">
+            No active campus alerts found right now.
+          </div>`;
+        badge.innerText = '0 Alerts';
+      }
+    } catch (e) {
+      grid.innerHTML = `
+        <div class="col-span-full p-8 text-center bg-white rounded-xl border border-rose-200 text-rose-500 text-xs">
+          Failed to load alerts: ${e.message}
+        </div>`;
+    }
+  }
+
+  function renderAlerts(alerts) {
+    const grid = document.getElementById('alerts-grid');
+    if (!alerts || alerts.length === 0) {
+      grid.innerHTML = `
+        <div class="col-span-full p-12 text-center bg-white rounded-2xl border border-slate-200 text-slate-400 text-xs">
+          <i data-lucide="inbox" class="w-10 h-10 mx-auto mb-3 text-slate-300"></i>
+          <p class="font-bold text-slate-600 text-sm">No Lost Item Alerts Found</p>
+          <p class="text-slate-400 mt-1">There are no matching lost item alerts currently broadcast.</p>
+        </div>`;
+      lucide.createIcons();
+      return;
+    }
+
+    grid.innerHTML = alerts.map(a => {
+      const dateStr = a.date ? new Date(a.date).toLocaleDateString() : 'Recently';
+      const loc = a.location || 'Campus Grounds';
+      const reportFoundUrl = `/report-found?location=${encodeURIComponent(loc)}`;
+
+      // Format safe details
+      let detailsPills = '';
+      if (a.safe_details && Object.keys(a.safe_details).length > 0) {
+        detailsPills = Object.entries(a.safe_details).slice(0, 3).map(([k, v]) => `
+          <span class="text-[10px] font-semibold bg-slate-100 text-slate-600 px-2 py-0.5 rounded">${k}: ${v}</span>
+        `).join('');
+      }
+
+      return `
+        <div class="bg-white border border-slate-200 rounded-2xl p-5 flex flex-col justify-between shadow-sm hover:shadow-md hover:border-amber-300 transition-all">
+          <div>
+            <div class="flex items-center justify-between mb-2">
+              <span class="text-[10px] font-bold uppercase tracking-wider text-amber-700 bg-amber-50 px-2.5 py-0.5 rounded-full border border-amber-200">${a.category || 'General'}</span>
+              <span class="text-[10px] font-mono text-slate-400 font-semibold">${dateStr}</span>
+            </div>
+
+            <h3 class="font-extrabold text-slate-900 text-base mb-1">${a.item_name || 'Lost Item'}</h3>
+            
+            <div class="flex items-center gap-1.5 text-xs text-slate-600 mb-2">
+              <i data-lucide="map-pin" class="w-3.5 h-3.5 text-rose-500 shrink-0"></i>
+              <span class="font-semibold">Last seen near:</span>
+              <span class="text-slate-800 font-medium">${loc}</span>
+            </div>
+
+            ${a.color ? `
+            <div class="flex items-center gap-1.5 text-xs text-slate-600 mb-2">
+              <i data-lucide="palette" class="w-3.5 h-3.5 text-indigo-500 shrink-0"></i>
+              <span class="font-semibold">Color:</span>
+              <span class="text-slate-800 font-medium">${a.color}</span>
+            </div>` : ''}
+
+            <p class="text-xs text-slate-600 line-clamp-3 mb-3 leading-relaxed">${a.description || 'No description provided.'}</p>
+
+            ${detailsPills ? `<div class="flex flex-wrap gap-1.5 mb-3">${detailsPills}</div>` : ''}
+          </div>
+
+          <div class="pt-3 border-t border-slate-100 space-y-2">
+            <a href="${reportFoundUrl}" class="w-full flex items-center justify-center gap-1.5 py-2 px-3 text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-700 rounded-xl transition-colors shadow-sm">
+              <i data-lucide="plus-circle" class="w-3.5 h-3.5"></i> I Found This Item!
+            </a>
+            <p class="text-[10px] text-center text-slate-400">Owner contact is protected until verified.</p>
+          </div>
+        </div>
+      `;
+    }).join('');
+
+    lucide.createIcons();
+  }
+
+  function filterAlerts() {
+    const cat = (document.getElementById('category-filter').value || '').toLowerCase();
+    const q = (document.getElementById('keyword-filter').value || '').toLowerCase().trim();
+
+    let filtered = allAlerts;
+    if (cat) {
+      filtered = filtered.filter(a => (a.category || '').toLowerCase().includes(cat));
+    }
+    if (q) {
+      filtered = filtered.filter(a => 
+        (a.item_name || '').toLowerCase().includes(q) ||
+        (a.description || '').toLowerCase().includes(q) ||
+        (a.color || '').toLowerCase().includes(q) ||
+        (a.location || '').toLowerCase().includes(q)
+      );
+    }
+    renderAlerts(filtered);
+  }
+
+  document.addEventListener('DOMContentLoaded', () => {
+    loadAlerts();
+  });
+</script>
+{% endblock %}

@@ -234,17 +234,60 @@
                 </div>
                 <p class="text-[10px] text-emerald-700 font-medium pt-1 border-t border-emerald-200">Contact them directly to arrange item collection. 🎉</p>
               </div>` : ''}
+
+              ${(m.claim_status === 'Approved' || m.claim_status === 'Completed') ? `
+              <!-- Handover Tracking Section -->
+              <div class="mt-3 bg-slate-50 border border-slate-200 rounded-xl p-3.5 space-y-2.5">
+                <div class="flex items-center justify-between">
+                  <span class="text-[10px] font-bold uppercase tracking-wider text-slate-500">Handover Progress</span>
+                  ${m.handover_status === 'owner_confirmed' || m.claim_status === 'Completed' ? `
+                    <span class="text-[10px] font-extrabold text-emerald-700 bg-emerald-100 px-2.5 py-0.5 rounded-full">🎉 Recovered</span>
+                  ` : m.handover_status === 'finder_handed_over' ? `
+                    <span class="text-[10px] font-extrabold text-blue-700 bg-blue-100 px-2.5 py-0.5 rounded-full">📦 Handover In Progress</span>
+                  ` : m.handover_status === 'issue_reported' ? `
+                    <span class="text-[10px] font-extrabold text-rose-700 bg-rose-100 px-2.5 py-0.5 rounded-full">⚠️ Issue Reported</span>
+                  ` : `
+                    <span class="text-[10px] font-extrabold text-indigo-700 bg-indigo-100 px-2.5 py-0.5 rounded-full">🤝 Contact Details Shared</span>
+                  `}
+                </div>
+
+                ${m.handover_status === 'owner_confirmed' || m.claim_status === 'Completed' ? `
+                  <p class="text-[11px] text-emerald-800 bg-emerald-50 p-2.5 rounded-lg border border-emerald-200 leading-relaxed">
+                    ✅ The owner has confirmed receipt of the item. This lost item case is closed and marked as <strong>Recovered</strong>!
+                  </p>
+                ` : `
+                  <!-- Handover Actions -->
+                  <div class="space-y-2 pt-1 border-t border-slate-200">
+                    ${m.is_finder && m.handover_status !== 'finder_handed_over' ? `
+                      <button onclick="markHandedOver(${m.claim_id})" class="w-full py-2 px-3 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors flex items-center justify-center gap-1.5 shadow-sm">
+                        <i data-lucide="package-check" class="w-3.5 h-3.5"></i> Mark Item as Handed Over
+                      </button>
+                    ` : ''}
+
+                    ${m.is_lost_owner ? `
+                      <button onclick="confirmReceived(${m.claim_id})" class="w-full py-2 px-3 text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-700 rounded-lg transition-colors flex items-center justify-center gap-1.5 shadow-sm">
+                        <i data-lucide="check-check" class="w-3.5 h-3.5"></i> Confirm Item Received
+                      </button>
+                    ` : ''}
+
+                    <button onclick="promptReportIssue(${m.claim_id})" class="w-full py-1.5 px-2 text-[11px] font-semibold text-rose-600 hover:text-rose-700 hover:bg-rose-50 rounded-lg transition-colors flex items-center justify-center gap-1">
+                      <i data-lucide="alert-triangle" class="w-3 h-3"></i> Report Handover Issue
+                    </button>
+                  </div>
+                `}
+              </div>
+              ` : ''}
             </div>
 
             <div class="pt-4 mt-2 flex gap-2">
-              ${m.claim_status === 'Approved' ? `
-              <div class="flex-1 py-2.5 rounded-xl text-xs font-bold text-white bg-emerald-600 flex items-center justify-center gap-1.5">
+              ${m.claim_status === 'Approved' || m.claim_status === 'Completed' ? `
+              <div class="flex-1 py-2 rounded-xl text-xs font-bold text-white bg-emerald-600 flex items-center justify-center gap-1.5">
                 <span>✅ Claim Approved</span>
               </div>` : `
               <button onclick="openClaimModal(${m.id})" class="flex-1 py-2.5 rounded-xl text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-700 transition-colors flex items-center justify-center gap-1.5">
                 <i data-lucide="shield-check" class="w-3.5 h-3.5"></i> Claim Ownership
               </button>`}
-              <a href="/messages/${m.id}" class="px-3 py-2.5 rounded-xl text-xs font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 flex items-center justify-center gap-1.5 transition-colors">
+              <a href="/messages/${m.id}" class="px-3 py-2 rounded-xl text-xs font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 flex items-center justify-center gap-1.5 transition-colors">
                 <i data-lucide="message-circle" class="w-3.5 h-3.5"></i> Chat
               </a>
             </div>
@@ -307,6 +350,58 @@
       }, 2000);
     } else {
       showToast('Failed to submit claim. Please try again.', 'error');
+    }
+  }
+
+  async function markHandedOver(claimId) {
+    if (!claimId) return;
+    if (!confirm('Mark that you have physically handed over this item to the owner?')) return;
+    try {
+      const res = await apiFetch(`/claim/handover/${claimId}`, { method: 'POST' });
+      if (res && res.ok && res.data && res.data.success) {
+        showToast(res.data.message || 'Item marked as handed over!', 'success');
+        loadMatches();
+      } else {
+        showToast((res && res.data && res.data.message) || 'Failed to update handover', 'error');
+      }
+    } catch(e) {
+      showToast('Error marking handover: ' + e.message, 'error');
+    }
+  }
+
+  async function confirmReceived(claimId) {
+    if (!claimId) return;
+    if (!confirm('Confirm that you have physically received your item back? This will mark your report as Recovered.')) return;
+    try {
+      const res = await apiFetch(`/claim/confirm-received/${claimId}`, { method: 'POST' });
+      if (res && res.ok && res.data && res.data.success) {
+        showToast(res.data.message || 'Item confirmed recovered! 🎉', 'success');
+        loadMatches();
+      } else {
+        showToast((res && res.data && res.data.message) || 'Failed to confirm receipt', 'error');
+      }
+    } catch(e) {
+      showToast('Error confirming receipt: ' + e.message, 'error');
+    }
+  }
+
+  async function promptReportIssue(claimId) {
+    if (!claimId) return;
+    const issue = prompt('Please describe the handover issue (e.g. other party did not show up, item condition, etc.):');
+    if (!issue || !issue.trim()) return;
+    try {
+      const res = await apiFetch(`/claim/report-issue/${claimId}`, {
+        method: 'POST',
+        body: JSON.stringify({ description: issue.trim() })
+      });
+      if (res && res.ok && res.data && res.data.success) {
+        showToast(res.data.message || 'Issue reported. The other party has been notified.', 'info');
+        loadMatches();
+      } else {
+        showToast((res && res.data && res.data.message) || 'Failed to report issue', 'error');
+      }
+    } catch(e) {
+      showToast('Error reporting issue: ' + e.message, 'error');
     }
   }
 

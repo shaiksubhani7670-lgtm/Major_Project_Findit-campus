@@ -1,0 +1,252 @@
+{% extends "base.html" %}
+
+{% block title %}Campus QR Locations — FindIt Campus{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-slate-50 flex flex-col md:flex-row">
+
+  <!-- Left Sidebar Navigation -->
+  <aside class="hidden md:flex w-64 bg-white border-r border-slate-200 shrink-0 flex-col justify-between h-screen sticky top-0">
+    <div>
+      <div class="p-5 border-b border-slate-100 flex items-center gap-2.5">
+        <div class="w-8 h-8 rounded-lg bg-blue-600 flex items-center justify-center text-white shrink-0">
+          <i data-lucide="search" class="w-4 h-4"></i>
+        </div>
+        <div>
+          <span class="font-bold text-base text-slate-900 leading-none block">FindIt Campus</span>
+          <span class="text-[10px] text-slate-400 font-semibold block uppercase tracking-wider mt-0.5">GIST Lost &amp; Found</span>
+        </div>
+      </div>
+      <nav class="p-3 space-y-1">
+        <a href="/dashboard" class="flex items-center gap-3 px-3.5 py-2.5 text-xs font-medium text-slate-600 rounded-lg hover:bg-slate-100">
+          <i data-lucide="layout-dashboard" class="w-4 h-4"></i> Dashboard Home
+        </a>
+        <a href="/browse-lost" class="flex items-center gap-3 px-3.5 py-2.5 text-xs font-medium text-slate-600 rounded-lg hover:bg-slate-100">
+          <i data-lucide="search" class="w-4 h-4"></i> Browse Lost Items
+        </a>
+        <a href="/report-lost" class="flex items-center gap-3 px-3.5 py-2.5 text-xs font-medium text-slate-600 rounded-lg hover:bg-slate-100">
+          <i data-lucide="file-plus" class="w-4 h-4"></i> Report Lost Item
+        </a>
+        <a href="/report-found" class="flex items-center gap-3 px-3.5 py-2.5 text-xs font-medium text-slate-600 rounded-lg hover:bg-slate-100">
+          <i data-lucide="plus-circle" class="w-4 h-4"></i> Report Found Item
+        </a>
+        <a href="/my-reports" class="flex items-center gap-3 px-3.5 py-2.5 text-xs font-medium text-slate-600 rounded-lg hover:bg-slate-100">
+          <i data-lucide="archive" class="w-4 h-4"></i> My Activity Logs
+        </a>
+        <a href="/notifications" class="flex items-center gap-3 px-3.5 py-2.5 text-xs font-medium text-slate-600 rounded-lg hover:bg-slate-100">
+          <i data-lucide="bell" class="w-4 h-4"></i> Match Alerts
+        </a>
+        <div class="pt-2 pb-1"><p class="px-3.5 text-[9px] font-bold uppercase tracking-widest text-slate-400">Campus Tools</p></div>
+        <a href="/qr-locations" class="flex items-center gap-3 px-3.5 py-2.5 text-xs font-bold text-blue-600 bg-blue-50 rounded-lg">
+          <i data-lucide="qr-code" class="w-4 h-4"></i> Campus QR Codes
+        </a>
+        <a href="/campus-alerts" class="flex items-center gap-3 px-3.5 py-2.5 text-xs font-medium text-slate-600 rounded-lg hover:bg-slate-100">
+          <i data-lucide="radio" class="w-4 h-4 text-amber-500"></i> Campus Lost Alerts
+        </a>
+        <a href="/map" class="flex items-center gap-3 px-3.5 py-2.5 text-xs font-medium text-slate-600 rounded-lg hover:bg-slate-100">
+          <i data-lucide="map-pin" class="w-4 h-4 text-green-500"></i> Campus Map
+        </a>
+        <a href="/leaderboard" class="flex items-center gap-3 px-3.5 py-2.5 text-xs font-medium text-slate-600 rounded-lg hover:bg-slate-100">
+          <i data-lucide="trophy" class="w-4 h-4 text-yellow-500"></i> Leaderboard
+        </a>
+        <a href="/profile" class="flex items-center gap-3 px-3.5 py-2.5 text-xs font-medium text-slate-600 rounded-lg hover:bg-slate-100">
+          <i data-lucide="user" class="w-4 h-4"></i> Profile Settings
+        </a>
+      </nav>
+    </div>
+    <div class="p-4 border-t border-slate-100">
+      <button onclick="logout()" class="w-full flex items-center justify-center gap-2 px-3 py-2 text-xs font-semibold text-red-600 bg-red-50 hover:bg-red-100 rounded-lg">
+        <i data-lucide="log-out" class="w-3.5 h-3.5"></i> Logout
+      </button>
+    </div>
+  </aside>
+
+  <!-- Main Content -->
+  <main class="flex-1 p-6 md:p-8 space-y-6 max-w-6xl mx-auto w-full">
+
+    <!-- Top Info Banner -->
+    <div class="bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 text-white p-6 rounded-2xl shadow-md">
+      <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+          <div class="inline-flex items-center gap-2 px-3 py-1 bg-white/20 rounded-full text-xs font-bold mb-2">
+            <i data-lucide="qr-code" class="w-3.5 h-3.5"></i> Physical Campus QR Network
+          </div>
+          <h1 class="text-2xl md:text-3xl font-extrabold tracking-tight">Campus Location QR Codes</h1>
+          <p class="text-xs md:text-sm text-blue-100 mt-1 max-w-2xl leading-relaxed">
+            Scan any physical QR code posted around the campus (Library, Canteen, Labs, etc.) to immediately open the Found Item form with the location automatically pre-filled.
+          </p>
+        </div>
+        <div class="flex items-center gap-2 shrink-0">
+          <a href="/report-found" class="px-4 py-2.5 bg-white text-blue-700 hover:bg-blue-50 font-bold text-xs rounded-xl shadow-sm transition-all flex items-center gap-1.5">
+            <i data-lucide="plus-circle" class="w-4 h-4"></i> Report Found Item
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <!-- How It Works Card -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div class="bg-white border border-slate-200 rounded-xl p-4 flex items-start gap-3 shadow-sm">
+        <div class="w-9 h-9 rounded-lg bg-blue-100 text-blue-600 flex items-center justify-center shrink-0 font-bold">1</div>
+        <div>
+          <p class="font-bold text-slate-800 text-xs">Find an Item on Campus</p>
+          <p class="text-[11px] text-slate-500 mt-0.5">Spot an unattended item in the library, canteen, labs, or corridors.</p>
+        </div>
+      </div>
+      <div class="bg-white border border-slate-200 rounded-xl p-4 flex items-start gap-3 shadow-sm">
+        <div class="w-9 h-9 rounded-lg bg-indigo-100 text-indigo-600 flex items-center justify-center shrink-0 font-bold">2</div>
+        <div>
+          <p class="font-bold text-slate-800 text-xs">Scan Nearest Location QR</p>
+          <p class="text-[11px] text-slate-500 mt-0.5">Scan the QR poster on the wall with your phone camera.</p>
+        </div>
+      </div>
+      <div class="bg-white border border-slate-200 rounded-xl p-4 flex items-start gap-3 shadow-sm">
+        <div class="w-9 h-9 rounded-lg bg-emerald-100 text-emerald-600 flex items-center justify-center shrink-0 font-bold">3</div>
+        <div>
+          <p class="font-bold text-slate-800 text-xs">Auto-Filled &amp; Matched</p>
+          <p class="text-[11px] text-slate-500 mt-0.5">Location is auto-filled. AI instantly pairs it with owner reports.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Search & Filter Bar -->
+    <div class="flex flex-col sm:flex-row items-center justify-between gap-3 bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
+      <div class="relative w-full sm:w-80">
+        <i data-lucide="search" class="w-4 h-4 text-slate-400 absolute left-3 top-3"></i>
+        <input type="text" id="search-input" onkeyup="filterLocations()" placeholder="Search campus locations..."
+          class="w-full pl-9 pr-3 py-2 text-xs border border-slate-200 rounded-lg outline-none focus:border-blue-600">
+      </div>
+      <span id="location-count-badge" class="text-xs font-semibold text-slate-500 font-mono">Loading locations...</span>
+    </div>
+
+    <!-- Locations Grid -->
+    <div id="locations-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+      <div class="col-span-full py-16 text-center text-slate-400 text-xs">
+        <div class="w-8 h-8 border-2 border-blue-600/30 border-t-blue-600 rounded-full animate-spin mx-auto mb-3"></div>
+        Loading campus QR locations...
+      </div>
+    </div>
+
+  </main>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  let allLocations = [];
+
+  async function loadLocations() {
+    const grid = document.getElementById('locations-grid');
+    const badge = document.getElementById('location-count-badge');
+
+    try {
+      let res = await apiFetch('/qr/locations');
+      if (!res || !res.ok || !res.data || !res.data.success || !res.data.data.locations || res.data.data.locations.length === 0) {
+        // Attempt seeding if empty
+        const seedRes = await apiFetch('/qr/seed', { method: 'POST' });
+        if (seedRes && seedRes.ok) {
+          res = await apiFetch('/qr/locations');
+        }
+      }
+
+      if (res && res.ok && res.data && res.data.success) {
+        allLocations = res.data.data.locations || [];
+        badge.innerText = `${allLocations.length} Locations Active`;
+        renderLocations(allLocations);
+      } else {
+        grid.innerHTML = `
+          <div class="col-span-full p-8 text-center bg-white rounded-xl border border-slate-200 text-slate-500 text-xs">
+            No campus locations configured yet.
+          </div>`;
+        badge.innerText = '0 Locations';
+      }
+    } catch (e) {
+      grid.innerHTML = `
+        <div class="col-span-full p-8 text-center bg-white rounded-xl border border-rose-200 text-rose-500 text-xs">
+          Failed to load locations: ${e.message}
+        </div>`;
+    }
+  }
+
+  function renderLocations(locs) {
+    const grid = document.getElementById('locations-grid');
+    if (!locs || locs.length === 0) {
+      grid.innerHTML = `
+        <div class="col-span-full p-8 text-center bg-white rounded-xl border border-slate-200 text-slate-400 text-xs">
+          No matching campus locations found.
+        </div>`;
+      return;
+    }
+
+    grid.innerHTML = locs.map(loc => {
+      const qrUrl = `/api/qr/${encodeURIComponent(loc.location_key)}`;
+      const reportUrl = `/report-found?location=${encodeURIComponent(loc.location_key)}`;
+      const fullReportUrl = `${window.location.origin}${reportUrl}`;
+
+      return `
+        <div class="bg-white border border-slate-200 rounded-2xl p-5 flex flex-col justify-between shadow-sm hover:shadow-md hover:border-blue-300 transition-all loc-card" data-name="${(loc.location_name || '').toLowerCase()}" data-key="${(loc.location_key || '').toLowerCase()}">
+          <div>
+            <div class="flex items-center justify-between mb-3">
+              <span class="text-[10px] font-bold uppercase tracking-wider text-blue-600 bg-blue-50 px-2 py-0.5 rounded-md">${loc.building || 'Campus'}</span>
+              <span class="w-2 h-2 rounded-full bg-emerald-500" title="Active QR Code"></span>
+            </div>
+            
+            <h3 class="font-extrabold text-slate-800 text-sm mb-1">${loc.location_name}</h3>
+            <p class="text-[11px] text-slate-500 line-clamp-2">${loc.description || `Scan to report items found in ${loc.location_name}.`}</p>
+
+            <!-- QR Preview Image -->
+            <div class="my-4 bg-slate-50 rounded-xl p-3 border border-slate-100 flex flex-col items-center justify-center">
+              <img src="${qrUrl}" alt="QR code for ${loc.location_name}" class="w-36 h-36 object-contain rounded-lg shadow-sm border border-slate-200 bg-white p-1.5 hover:scale-105 transition-transform" />
+              <span class="text-[9px] font-mono text-slate-400 mt-2">key: ${loc.location_key}</span>
+            </div>
+          </div>
+
+          <div class="space-y-2 pt-2 border-t border-slate-100">
+            <a href="${reportUrl}" class="w-full flex items-center justify-center gap-1.5 py-2 px-3 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors shadow-sm">
+              <i data-lucide="external-link" class="w-3.5 h-3.5"></i> Test QR Link
+            </a>
+            <div class="flex gap-2">
+              <a href="${qrUrl}" download="FindIt_QR_${loc.location_key}.png" class="flex-1 flex items-center justify-center gap-1 py-1.5 px-2 text-[11px] font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-lg transition-colors">
+                <i data-lucide="download" class="w-3 h-3"></i> Download
+              </a>
+              <button onclick="copyLink('${fullReportUrl}')" class="flex-1 flex items-center justify-center gap-1 py-1.5 px-2 text-[11px] font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-lg transition-colors">
+                <i data-lucide="copy" class="w-3 h-3"></i> Copy Link
+              </button>
+            </div>
+          </div>
+        </div>
+      `;
+    }).join('');
+
+    lucide.createIcons();
+  }
+
+  function filterLocations() {
+    const q = (document.getElementById('search-input').value || '').toLowerCase().trim();
+    if (!q) {
+      renderLocations(allLocations);
+      return;
+    }
+    const filtered = allLocations.filter(loc => 
+      (loc.location_name || '').toLowerCase().includes(q) ||
+      (loc.location_key || '').toLowerCase().includes(q) ||
+      (loc.building || '').toLowerCase().includes(q)
+    );
+    renderLocations(filtered);
+  }
+
+  function copyLink(url) {
+    if (navigator.clipboard) {
+      navigator.clipboard.writeText(url).then(() => {
+        showToast('Link copied to clipboard!', 'success');
+      });
+    } else {
+      showToast(url, 'info');
+    }
+  }
+
+  document.addEventListener('DOMContentLoaded', () => {
+    loadLocations();
+  });
+</script>
+{% endblock %}

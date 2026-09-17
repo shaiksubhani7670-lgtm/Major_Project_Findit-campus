@@ -89,6 +89,14 @@ def import_students():
 def poster(report_id):
     return render_template('poster.html', report_id=report_id)
 
+@pages_bp.route('/qr-locations')
+def qr_locations():
+    return render_template('qr_locations.html')
+
+@pages_bp.route('/campus-alerts')
+def campus_alerts_page():
+    return render_template('campus_alerts.html')
+
 import os
 from flask import send_from_directory, current_app
 

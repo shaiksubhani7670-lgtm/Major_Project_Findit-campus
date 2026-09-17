@@ -7,6 +7,8 @@ from app.models.match import Match
 from app.models.claim import Claim
 from app.models.notification import Notification
 from app.models.uploaded_image import UploadedImage
+from app.models.campus_location import CampusLocation
+from app.models.notification_log import NotificationLog
 
 __all__ = [
     'Student',
@@ -18,5 +20,7 @@ __all__ = [
     'Claim',
     'Notification',
     'UploadedImage',
+    'CampusLocation',
+    'NotificationLog',
 ]
 

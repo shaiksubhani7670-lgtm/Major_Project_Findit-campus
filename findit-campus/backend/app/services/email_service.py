@@ -202,7 +202,7 @@ def send_claim_approved_email(student, finder_details):
     if not student or not student.college_email:
         return False
 
-    subject = "✅ Claim Approved — Collect Your Item!"
+    subject = "FindIt Campus — Claim Approved"
     phone_row = f"<tr><td style=\"padding:4px 0;color:#64748b;\">Phone</td><td style=\"font-weight:600;\">{finder_details.get('phone_number','Not provided')}</td></tr>" if finder_details.get('phone_number') else ""
 
     html = f"""
@@ -248,7 +248,7 @@ def send_claim_approved_to_finder_email(student, claimant_details):
     if not student or not student.college_email:
         return False
 
-    subject = "🎉 Ownership Verified — Item Can Be Returned!"
+    subject = "FindIt Campus — Owner Verified"
     phone_row = f"<tr><td style=\"padding:4px 0;color:#64748b;\">Phone</td><td style=\"font-weight:600;\">{claimant_details.get('phone_number','Not provided')}</td></tr>" if claimant_details.get('phone_number') else ""
 
     html = f"""
@@ -323,3 +323,126 @@ def send_welcome_email(student):
     </div>
     """
     return _send_email(subject, [student.college_email], html)
+
+
+def send_item_recovered_email(student, item, role='owner'):
+    """
+    Notify a student that their item has been marked as Recovered.
+    role='owner' → sent to the lost-item owner.
+    role='finder' → sent to the finder.
+    """
+    if not student or not student.college_email:
+        return False
+
+    item_name = item.item_name if item else 'Item'
+    if role == 'finder':
+        subject = f"FindIt Campus — Item Successfully Returned 🎉"
+        headline = "Item Successfully Returned!"
+        body = (
+            f"The owner has confirmed receipt of \"{item_name}\". "
+            f"Thank you for being a responsible member of the FindIt Campus community! "
+            f"You have earned <strong>+50 points</strong> on the leaderboard."
+        )
+    else:
+        subject = f"FindIt Campus — Item Recovered ✅"
+        headline = "Your Item Has Been Recovered!"
+        body = (
+            f"You have confirmed receipt of \"{item_name}\". "
+            f"Your item has been marked as <strong>Recovered</strong> in FindIt Campus. "
+            f"We hope this experience was helpful!"
+        )
+
+    html = f"""
+    <div style="font-family:Inter,Arial,sans-serif;max-width:600px;margin:0 auto;background:#fff;border:1px solid #e2e8f0;border-radius:12px;overflow:hidden;">
+      <div style="background:linear-gradient(135deg,#059669,#0d9488);padding:32px 24px;text-align:center;">
+        <h1 style="color:#fff;font-size:22px;margin:0;">🎉 {headline}</h1>
+        <p style="color:#a7f3d0;font-size:13px;margin:8px 0 0 0;">FindIt Campus — Smart Lost &amp; Found</p>
+      </div>
+      <div style="padding:28px 24px;">
+        <p style="font-size:15px;color:#1e293b;">Hi <strong>{student.student_name}</strong>,</p>
+        <p style="color:#475569;font-size:14px;line-height:1.6;">{body}</p>
+        <div style="text-align:center;margin-top:24px;">
+          <a href="https://findit-virid.vercel.app/dashboard" style="background:#059669;color:#fff;text-decoration:none;padding:12px 28px;border-radius:8px;font-weight:700;font-size:14px;">Go to Dashboard</a>
+        </div>
+      </div>
+      <div style="background:#f8fafc;padding:16px 24px;text-align:center;">
+        <p style="color:#94a3b8;font-size:11px;margin:0;">FindIt Campus · Geethanjali Institute of Science &amp; Technology</p>
+      </div>
+    </div>
+    """
+    return _send_email(subject, [student.college_email], html)
+
+
+def send_handover_arranged_email(student, item_name, other_party_name, role='owner'):
+    """
+    Notify a student that the physical handover has been arranged.
+    role='owner' → lost user being notified that finder marked handed over.
+    role='finder' → finder being notified that owner confirmed receipt.
+    """
+    if not student or not student.college_email:
+        return False
+
+    if role == 'finder':
+        subject = f"FindIt Campus — Handover Confirmed"
+        body = f"{other_party_name} has confirmed receipt of \"{item_name}\". The item has been successfully returned."
+    else:
+        subject = f"FindIt Campus — Finder Has Handed Over Your Item"
+        body = f"The finder has marked \"{item_name}\" as handed over. Please confirm receipt on your dashboard."
+
+    html = f"""
+    <div style="font-family:Inter,Arial,sans-serif;max-width:600px;margin:0 auto;background:#fff;border:1px solid #e2e8f0;border-radius:12px;overflow:hidden;">
+      <div style="background:linear-gradient(135deg,#2563eb,#7c3aed);padding:32px 24px;text-align:center;">
+        <h1 style="color:#fff;font-size:22px;margin:0;">📦 Handover Update</h1>
+        <p style="color:#bfdbfe;font-size:13px;margin:8px 0 0 0;">FindIt Campus — Smart Lost &amp; Found</p>
+      </div>
+      <div style="padding:28px 24px;">
+        <p style="font-size:15px;color:#1e293b;">Hi <strong>{student.student_name}</strong>,</p>
+        <p style="color:#475569;font-size:14px;line-height:1.6;">{body}</p>
+        <div style="text-align:center;margin-top:24px;">
+          <a href="https://findit-virid.vercel.app/matches" style="background:#2563eb;color:#fff;text-decoration:none;padding:12px 28px;border-radius:8px;font-weight:700;font-size:14px;">View Matches</a>
+        </div>
+      </div>
+      <div style="background:#f8fafc;padding:16px 24px;text-align:center;">
+        <p style="color:#94a3b8;font-size:11px;margin:0;">FindIt Campus · Geethanjali Institute of Science &amp; Technology</p>
+      </div>
+    </div>
+    """
+    return _send_email(subject, [student.college_email], html)
+
+
+def send_handover_issue_email(student, item_name, other_party_name, issue_description=None):
+    """
+    Notify student that a handover issue was reported.
+    """
+    if not student or not student.college_email:
+        return False
+
+    subject = f"FindIt Campus — Handover Issue Reported"
+    issue_text = f"<p style='color:#ef4444;'><strong>Reported Issue:</strong> {issue_description}</p>" if issue_description else ""
+
+    html = f"""
+    <div style="font-family:Inter,Arial,sans-serif;max-width:600px;margin:0 auto;background:#fff;border:1px solid #e2e8f0;border-radius:12px;overflow:hidden;">
+      <div style="background:linear-gradient(135deg,#ef4444,#dc2626);padding:32px 24px;text-align:center;">
+        <h1 style="color:#fff;font-size:22px;margin:0;">⚠️ Handover Issue Reported</h1>
+        <p style="color:#fecaca;font-size:13px;margin:8px 0 0 0;">FindIt Campus — Smart Lost &amp; Found</p>
+      </div>
+      <div style="padding:28px 24px;">
+        <p style="font-size:15px;color:#1e293b;">Hi <strong>{student.student_name}</strong>,</p>
+        <p style="color:#475569;font-size:14px;line-height:1.6;">
+          A handover issue has been reported regarding the item <strong>"{item_name}"</strong>.
+        </p>
+        {issue_text}
+        <p style="color:#475569;font-size:14px;line-height:1.6;">
+          Please communicate with {other_party_name} or visit the Student Affairs office if assistance is needed.
+        </p>
+        <div style="text-align:center;margin-top:24px;">
+          <a href="https://findit-virid.vercel.app/matches" style="background:#ef4444;color:#fff;text-decoration:none;padding:12px 28px;border-radius:8px;font-weight:700;font-size:14px;">View Matches</a>
+        </div>
+      </div>
+      <div style="background:#f8fafc;padding:16px 24px;text-align:center;">
+        <p style="color:#94a3b8;font-size:11px;margin:0;">FindIt Campus · Geethanjali Institute of Science &amp; Technology</p>
+      </div>
+    </div>
+    """
+    return _send_email(subject, [student.college_email], html)
+

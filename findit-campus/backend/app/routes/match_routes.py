@@ -1,3 +1,14 @@
+"""
+FindIt Campus — Match Routes
+Lists AI matches for the logged-in student, including handover status
+and two-way contact exchange (only after claim approval, never before).
+
+Privacy rules:
+  - Contact details are ONLY exposed when claim.status == 'Approved'
+  - Lost user sees Finder's contact; Finder sees Owner's contact
+  - Identities (owner vs finder) are never mixed up
+"""
+
 from flask import Blueprint, jsonify, request
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from app import db
@@ -5,8 +16,90 @@ from app.models.match import Match
 from app.models.lost_item import LostItem
 from app.models.found_item import FoundItem
 from app.models.student import Student
+from app.models.claim import Claim
 
 match_routes_bp = Blueprint('match_routes', __name__)
+
+
+def _build_contact(student: Student, role: str) -> dict:
+    """Return safe contact details for an approved claim. Never call before approval."""
+    return {
+        'role': role,
+        'student_name': student.student_name,
+        'roll_number': student.roll_number,
+        'department': student.department,
+        'college_email': student.college_email,
+        'phone_number': student.phone_number or 'Not provided',
+    }
+
+
+def _enrich_match(m: Match, student_id: int) -> dict:
+    """Add contact, claim status, and handover info to a match dict."""
+    m_dict = m.to_dict()
+
+    lost = LostItem.query.get(m.lost_report_id)
+    found = FoundItem.query.get(m.found_report_id)
+
+    m_dict['lost_item'] = lost.to_dict() if lost else None
+    m_dict['found_item'] = found.to_dict() if found else None
+
+    # Default — no contact, no claim info
+    m_dict['approved_contact'] = None
+    m_dict['claim_status'] = None
+    m_dict['display_status'] = 'Possible Match'
+    m_dict['handover_status'] = None
+    m_dict['claim_id'] = None
+
+    try:
+        approved_claim = Claim.query.filter_by(
+            match_id=m.match_id, status='Approved'
+        ).first()
+
+        # Also check Completed claims
+        if not approved_claim:
+            approved_claim = Claim.query.filter_by(
+                match_id=m.match_id, status='Completed'
+            ).first()
+
+        if approved_claim:
+            m_dict['claim_status'] = approved_claim.status
+            m_dict['display_status'] = approved_claim.display_status
+            m_dict['handover_status'] = approved_claim.handover_status
+            m_dict['claim_id'] = approved_claim.claim_id
+
+            is_lost_owner = bool(lost and lost.student_id == student_id)
+            is_finder = bool(found and found.student_id == student_id)
+            m_dict['is_lost_owner'] = is_lost_owner
+            m_dict['is_finder'] = is_finder
+
+            # Lost user → sees Finder's contact
+            if is_lost_owner and found:
+                finder = Student.query.get(found.student_id)
+                if finder:
+                    m_dict['approved_contact'] = _build_contact(finder, 'Finder')
+
+            # Finder → sees Owner's contact
+            elif is_finder and lost:
+                # The owner is the student who filed the claim (lost item owner)
+                owner = Student.query.get(approved_claim.student_id)
+                if owner:
+                    m_dict['approved_contact'] = _build_contact(owner, 'Owner')
+
+        else:
+            # Check for pending claim
+            pending_claim = Claim.query.filter_by(
+                match_id=m.match_id, student_id=student_id
+            ).first()
+            if pending_claim:
+                m_dict['claim_status'] = pending_claim.status
+                m_dict['display_status'] = pending_claim.display_status
+                m_dict['claim_id'] = pending_claim.claim_id
+
+    except Exception as e:
+        print(f'[MatchRoutes] Error enriching match {m.match_id}: {e}')
+
+    return m_dict
+
 
 @match_routes_bp.route('/run', methods=['POST'])
 @jwt_required()
@@ -42,10 +135,10 @@ def run_matching_endpoint():
 def list_matches():
     """
     List all matches related to the logged-in student's lost or found items.
+    Includes handover status and contact details (only when claim is Approved).
     """
     student_id = int(get_jwt_identity())
 
-    # Find matches where student is the owner of the lost item or the finder of the found item
     lost_reports = LostItem.query.filter_by(student_id=student_id).all()
     found_reports = FoundItem.query.filter_by(student_id=student_id).all()
 
@@ -72,63 +165,11 @@ def list_matches():
             'data': {'matches': []}
         }), 200
 
-    query = Match.query.filter(db.or_(*conditions))
+    matches = Match.query.filter(db.or_(*conditions)).order_by(
+        Match.created_at.desc(), Match.match_id.desc()
+    ).all()
 
-    matches = query.order_by(Match.created_at.desc(), Match.match_id.desc()).all()
-    matches_data = []
-
-    for m in matches:
-        m_dict = m.to_dict()
-        # Include lost item name, found item name
-        lost = LostItem.query.get(m.lost_report_id)
-        found = FoundItem.query.get(m.found_report_id)
-
-        m_dict['lost_item'] = lost.to_dict() if lost else None
-        m_dict['found_item'] = found.to_dict() if found else None
-
-        # If claim is approved, expose contact details of the other party ONLY
-        m_dict['approved_contact'] = None
-        m_dict['claim_status'] = None
-
-        try:
-            from app.models.claim import Claim
-            approved_claim = Claim.query.filter_by(match_id=m.match_id, status='Approved').first()
-            if approved_claim:
-                m_dict['claim_status'] = 'Approved'
-
-                is_lost_owner = lost and lost.student_id == student_id
-                is_finder = found and found.student_id == student_id
-
-                if is_lost_owner and found:
-                    # Lost user sees finder's contact details
-                    finder = Student.query.get(found.student_id)
-                    if finder:
-                        m_dict['approved_contact'] = {
-                            'role': 'Finder',
-                            'student_name': finder.student_name,
-                            'roll_number': finder.roll_number,
-                            'department': finder.department,
-                            'college_email': finder.college_email,
-                            'phone_number': finder.phone_number or 'Not provided'
-                        }
-                elif is_finder and lost:
-                    # Finder sees owner/claimant's contact details
-                    owner_claim = Claim.query.filter_by(match_id=m.match_id, status='Approved').first()
-                    if owner_claim:
-                        owner = Student.query.get(owner_claim.student_id)
-                        if owner:
-                            m_dict['approved_contact'] = {
-                                'role': 'Owner',
-                                'student_name': owner.student_name,
-                                'roll_number': owner.roll_number,
-                                'department': owner.department,
-                                'college_email': owner.college_email,
-                                'phone_number': owner.phone_number or 'Not provided'
-                            }
-        except Exception:
-            pass
-
-        matches_data.append(m_dict)
+    matches_data = [_enrich_match(m, student_id) for m in matches]
 
     return jsonify({
         'success': True,
@@ -137,31 +178,29 @@ def list_matches():
     }), 200
 
 
-
 @match_routes_bp.route('/<int:match_id>', methods=['GET'])
 @jwt_required()
 def get_match_detail(match_id):
     """
-    Get details of a match.
+    Get full details of a match including handover status and contact info.
+    Only accessible to students involved in the match.
     """
     student_id = int(get_jwt_identity())
     match = Match.query.get(match_id)
     if not match:
         return jsonify({'success': False, 'message': 'Match not found'}), 404
 
-    # Verify authorization: student must own either lost or found report
     lost = LostItem.query.get(match.lost_report_id)
     found = FoundItem.query.get(match.found_report_id)
 
     if not lost or not found:
         return jsonify({'success': False, 'message': 'Associated items not found'}), 404
 
+    # Authorization: student must own either lost or found report
     if lost.student_id != student_id and found.student_id != student_id:
         return jsonify({'success': False, 'message': 'Access denied'}), 403
 
-    m_dict = match.to_dict()
-    m_dict['lost_item'] = lost.to_dict()
-    m_dict['found_item'] = found.to_dict()
+    m_dict = _enrich_match(match, student_id)
 
     return jsonify({
         'success': True,

@@ -63,8 +63,21 @@ def create_app(config_class=None):
     with app.app_context():
         from app.models import student, account, lost_item, found_item, question_answer, match, claim, notification
         from app.models import messaging  # Message + PushSubscription
+        from app.models import campus_location, notification_log
         try:
             db.create_all()
+            # Safe schema upgrade for claims table if columns don't exist yet
+            with db.engine.connect() as conn:
+                for col_def in [
+                    ("handover_status", "VARCHAR(50)"),
+                    ("handover_issue_description", "TEXT"),
+                    ("contact_shared_at", "TIMESTAMP"),
+                ]:
+                    try:
+                        conn.execute(db.text(f"ALTER TABLE claims ADD COLUMN {col_def[0]} {col_def[1]}"))
+                        conn.commit()
+                    except Exception:
+                        pass
         except Exception as e:
             print(f"[App] db.create_all() notice: {e}")
 
@@ -83,6 +96,8 @@ def _register_blueprints(app):
     from app.routes.upload import upload_bp
     from app.routes.pages import pages_bp
     from app.routes.chatbot_routes import chatbot_bp
+    from app.routes.qr_routes import qr_routes_bp
+    from app.routes.campus_alert_routes import campus_alert_routes_bp
     from app.routes.feature_routes import (
         leaderboard_bp, stats_bp, timeline_bp, map_bp,
         push_bp, message_bp, import_bp
@@ -99,6 +114,8 @@ def _register_blueprints(app):
     app.register_blueprint(profile_routes_bp, url_prefix='/api/profile')
     app.register_blueprint(upload_bp, url_prefix='/api/upload')
     app.register_blueprint(chatbot_bp, url_prefix='/api/chatbot')
+    app.register_blueprint(qr_routes_bp, url_prefix='/api/qr')
+    app.register_blueprint(campus_alert_routes_bp, url_prefix='/api/campus-alerts')
     app.register_blueprint(leaderboard_bp, url_prefix='/api/leaderboard')
     app.register_blueprint(stats_bp, url_prefix='/api/stats')
     app.register_blueprint(timeline_bp, url_prefix='/api/timeline')

@@ -68,6 +68,20 @@
       <div id="wizard-progress-bar" class="h-full bg-blue-600 transition-all duration-300" style="width: 20%"></div>
     </div>
 
+    <!-- QR Code Location Pre-fill Banner -->
+    <div id="qr-prefill-banner" class="hidden bg-emerald-50 border border-emerald-200 rounded-2xl p-4 flex items-center justify-between shadow-sm">
+      <div class="flex items-center gap-3">
+        <div class="w-9 h-9 rounded-xl bg-emerald-600 text-white flex items-center justify-center shrink-0">
+          <i data-lucide="qr-code" class="w-5 h-5"></i>
+        </div>
+        <div>
+          <p class="text-xs font-bold text-emerald-900">📍 Location Pre-filled via Campus QR Code</p>
+          <p class="text-[11px] text-emerald-700" id="qr-prefill-label">Found location automatically set to: <strong id="qr-location-text">Library</strong></p>
+        </div>
+      </div>
+      <span class="text-[10px] font-bold text-emerald-800 bg-emerald-100 px-2.5 py-1 rounded-full uppercase tracking-wider">Auto-Selected</span>
+    </div>
+
     <!-- WIZARD STEPS CONTENT -->
     <div class="bg-white border border-gray-200 rounded-xl p-6 md:p-8 shadow-sm">
       
@@ -869,7 +883,76 @@
     }
   }
 
+  function handleLocationPrefill() {
+    const params = new URLSearchParams(window.location.search);
+    const locParam = params.get('location');
+    const lostRef = params.get('lost_ref');
+
+    if (locParam) {
+      const cleanLoc = decodeURIComponent(locParam).trim();
+      if (cleanLoc) {
+        const select = document.getElementById('c_location');
+        if (select) {
+          const LOCATION_MAP = {
+            'library': 'Library',
+            'canteen': 'Canteen',
+            'ground': 'Ground',
+            'parking': 'Parking Area',
+            'parking area': 'Parking Area',
+            'bus stop': 'Bus Stop',
+            'block a': 'Block A',
+            'block b': 'Block B',
+            'classroom_block_a': 'Block A',
+            'classroom_block_b': 'Block B',
+            'lab': 'Lab',
+            'lab_cse': 'Lab',
+            'lab_ece': 'Lab',
+            'lab_mech': 'Lab',
+            'classroom': 'Classroom',
+            'auditorium': 'Auditorium',
+            'hostel': 'Hostel',
+            'hostel_boys': 'Hostel',
+            'hostel_girls': 'Hostel',
+            'washroom_block_a': 'Block A',
+            'main_entrance': 'Others',
+            'corridor_main': 'Others',
+            'seminar_hall': 'Auditorium',
+            'others': 'Others'
+          };
+
+          const mappedName = LOCATION_MAP[cleanLoc.toLowerCase()] || cleanLoc;
+
+          let matched = false;
+          for (let i = 0; i < select.options.length; i++) {
+            if (select.options[i].value.toLowerCase() === mappedName.toLowerCase() ||
+                select.options[i].text.toLowerCase() === mappedName.toLowerCase()) {
+              select.selectedIndex = i;
+              matched = true;
+              break;
+            }
+          }
+
+          if (!matched) {
+            const opt = document.createElement('option');
+            opt.value = mappedName;
+            opt.text = mappedName;
+            opt.selected = true;
+            select.appendChild(opt);
+          }
+
+          const banner = document.getElementById('qr-prefill-banner');
+          const textEl = document.getElementById('qr-location-text');
+          if (banner && textEl) {
+            textEl.innerText = mappedName;
+            banner.classList.remove('hidden');
+          }
+        }
+      }
+    }
+  }
+
   if (!getToken()) window.location.href = '/login';
   initCategories();
+  handleLocationPrefill();
 </script>
 {% endblock %}

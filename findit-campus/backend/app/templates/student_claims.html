@@ -111,18 +111,27 @@
 
           let statusBadge = '';
           let statusIcon = '';
-          if (c.status === 'pending') {
-            statusBadge = 'bg-amber-50 text-amber-700 border border-amber-200';
-            statusIcon = '<i data-lucide="clock" class="w-4 h-4 text-amber-500"></i>';
-          } else if (c.status === 'approved') {
-            statusBadge = 'bg-blue-50 text-blue-700 border border-blue-200';
-            statusIcon = '<i data-lucide="check-circle" class="w-4 h-4 text-blue-500"></i>';
-          } else if (c.status === 'rejected') {
+          const dispStatus = c.display_status || c.status;
+          const dispLower = dispStatus.toLowerCase();
+
+          if (dispLower.includes('recovered') || dispLower.includes('completed')) {
+            statusBadge = 'bg-emerald-100 text-emerald-800 border border-emerald-300';
+            statusIcon = '<i data-lucide="check-circle-2" class="w-4 h-4 text-emerald-600"></i>';
+          } else if (dispLower.includes('handover arranged') || dispLower.includes('handed over') || dispLower.includes('progress')) {
+            statusBadge = 'bg-blue-100 text-blue-800 border border-blue-300';
+            statusIcon = '<i data-lucide="package" class="w-4 h-4 text-blue-600"></i>';
+          } else if (dispLower.includes('issue')) {
+            statusBadge = 'bg-rose-100 text-rose-800 border border-rose-300';
+            statusIcon = '<i data-lucide="alert-triangle" class="w-4 h-4 text-rose-600"></i>';
+          } else if (dispLower.includes('approved') || dispLower.includes('contact')) {
+            statusBadge = 'bg-indigo-100 text-indigo-800 border border-indigo-300';
+            statusIcon = '<i data-lucide="shield-check" class="w-4 h-4 text-indigo-600"></i>';
+          } else if (dispLower.includes('rejected')) {
             statusBadge = 'bg-rose-50 text-rose-700 border border-rose-200';
             statusIcon = '<i data-lucide="x-circle" class="w-4 h-4 text-rose-500"></i>';
           } else {
-            statusBadge = 'bg-emerald-50 text-emerald-700 border border-emerald-200';
-            statusIcon = '<i data-lucide="gift" class="w-4 h-4 text-emerald-500"></i>';
+            statusBadge = 'bg-amber-50 text-amber-700 border border-amber-200';
+            statusIcon = '<i data-lucide="clock" class="w-4 h-4 text-amber-500"></i>';
           }
 
           let responseBlock = '';
@@ -153,7 +162,7 @@
               <div class="flex items-center gap-2">
                 ${statusIcon}
                 <span class="text-[10px] text-slate-400 font-bold font-mono">Claim #${c.id}</span>
-                <span class="text-[9px] px-2.5 py-0.5 rounded-full capitalize font-extrabold ${statusBadge}">${c.status}</span>
+                <span class="text-[9px] px-2.5 py-0.5 rounded-full capitalize font-extrabold ${statusBadge}">${dispStatus}</span>
               </div>
               <h4 class="text-base font-bold text-slate-800">
                 Claim for: ${c.lost_item_name || 'Unknown Item'}
