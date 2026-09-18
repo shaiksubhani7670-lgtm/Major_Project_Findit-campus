@@ -125,7 +125,60 @@ def report_lost_item():
 
     except Exception as e:
         db.session.rollback()
-        return jsonify({'success': False, 'message': f'Failed to submit report: {str(e)}'}), 500
+        err_str = str(e)
+        # Self-healing: if a newly added column is missing from PostgreSQL, upgrade schema and retry once
+        if 'reported_at' in err_str or 'UndefinedColumn' in err_str or 'column' in err_str:
+            try:
+                from app import ensure_schema_upgrades
+                ensure_schema_upgrades()
+                retry_item = LostItem(
+                    student_id=student_id,
+                    category=category,
+                    item_name=item_name,
+                    color=color,
+                    location=location,
+                    date=lost_date,
+                    time=lost_time,
+                    description=description,
+                    image_path=image_path,
+                    image_paths=image_paths if image_paths else None,
+                    additional_details=additional_details,
+                    status='Searching',
+                    reported_at=datetime.now(timezone.utc),
+                    is_active=True
+                )
+                db.session.add(retry_item)
+                db.session.flush()
+                for qa in question_answers:
+                    q_text = qa.get('question', '').strip()
+                    a_text = qa.get('answer', '').strip()
+                    if q_text and a_text:
+                        db.session.add(QuestionAnswer(
+                            report_type='lost',
+                            report_id=retry_item.report_id,
+                            question=q_text,
+                            answer=a_text
+                        ))
+                db.session.commit()
+                # Points & matching
+                try:
+                    from app.models.student import Student
+                    reporter = Student.query.get(student_id)
+                    if reporter:
+                        reporter.points = (reporter.points or 0) + 5
+                        db.session.commit()
+                except Exception:
+                    pass
+                trigger_matching_async(retry_item.report_id, 'lost')
+                return jsonify({
+                    'success': True,
+                    'message': 'Lost Report Submitted Successfully (+5 points earned!)',
+                    'data': {'report_id': retry_item.report_id}
+                }), 201
+            except Exception as retry_err:
+                db.session.rollback()
+                return jsonify({'success': False, 'message': f'Failed to submit report: {str(retry_err)}'}), 500
+        return jsonify({'success': False, 'message': f'Failed to submit report: {err_str}'}), 500
 
 
 @lost_routes_bp.route('', methods=['GET'])

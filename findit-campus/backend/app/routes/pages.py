@@ -111,4 +111,16 @@ def serve_static_upload(report_type, filename):
     return serve_uploaded_file_by_path(f"{report_type}/{filename}")
 
 
+@pages_bp.route('/api/migrate-db', methods=['GET', 'POST'])
+def run_db_migration():
+    """Manual or automated trigger to apply schema upgrades."""
+    from app import ensure_schema_upgrades, db
+    try:
+        ensure_schema_upgrades(db.engine)
+        return {"success": True, "message": "Schema upgrade completed successfully"}, 200
+    except Exception as e:
+        return {"success": False, "error": str(e)}, 500
+
+
+
 

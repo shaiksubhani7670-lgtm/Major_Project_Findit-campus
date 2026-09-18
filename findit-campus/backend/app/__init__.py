@@ -23,6 +23,51 @@ ma = Marshmallow()
 limiter = Limiter(key_func=get_remote_address)
 
 
+def ensure_schema_upgrades(engine=None):
+    """
+    Ensure all newly added columns exist in PostgreSQL and SQLite databases.
+    Runs safe ALTER TABLE statements with per-column isolation to prevent transaction abort cascade.
+    """
+    if engine is None:
+        engine = db.engine
+
+    columns_to_ensure = [
+        ("students", "phone_number", "VARCHAR(20)"),
+        ("claims", "handover_status", "VARCHAR(50)"),
+        ("claims", "handover_issue_description", "TEXT"),
+        ("claims", "contact_shared_at", "TIMESTAMP"),
+        ("claims", "finder_handover_at", "TIMESTAMP"),
+        ("claims", "owner_confirmed_at", "TIMESTAMP"),
+        ("lost_items", "reported_at", "TIMESTAMP"),
+        ("lost_items", "is_active", "BOOLEAN DEFAULT TRUE"),
+        ("lost_items", "deleted_at", "TIMESTAMP"),
+        ("lost_items", "recovered_at", "TIMESTAMP"),
+        ("lost_items", "recovery_type", "VARCHAR(50)"),
+        ("lost_items", "image_paths", "JSON"),
+        ("lost_items", "additional_details", "JSON"),
+        ("found_items", "image_paths", "JSON"),
+        ("found_items", "additional_details", "JSON"),
+    ]
+
+    for table, col_name, col_type in columns_to_ensure:
+        try:
+            with engine.connect() as conn:
+                try:
+                    # PostgreSQL syntax with IF NOT EXISTS (supported on Neon / PostgreSQL 9.6+)
+                    conn.execute(db.text(f"ALTER TABLE {table} ADD COLUMN IF NOT EXISTS {col_name} {col_type}"))
+                    conn.commit()
+                except Exception:
+                    try:
+                        conn.rollback()
+                        # SQLite fallback syntax
+                        conn.execute(db.text(f"ALTER TABLE {table} ADD COLUMN {col_name} {col_type}"))
+                        conn.commit()
+                    except Exception:
+                        pass
+        except Exception:
+            pass
+
+
 def create_app(config_class=None):
     """
     Application factory pattern.
@@ -59,46 +104,20 @@ def create_app(config_class=None):
     # Register JWT callbacks
     _register_jwt_callbacks(app)
 
-    # Create database tables
+    # Create database tables & guarantee schema updates
     with app.app_context():
         from app.models import student, account, lost_item, found_item, question_answer, match, claim, notification
         from app.models import messaging  # Message + PushSubscription
         from app.models import campus_location, notification_log
         try:
             db.create_all()
-            # Safe schema upgrade for students and claims tables if columns don't exist yet
-            with db.engine.connect() as conn:
-                try:
-                    conn.execute(db.text("ALTER TABLE students ADD COLUMN phone_number VARCHAR(20)"))
-                    conn.commit()
-                except Exception:
-                    pass
-                for col_def in [
-                    ("handover_status", "VARCHAR(50)"),
-                    ("handover_issue_description", "TEXT"),
-                    ("contact_shared_at", "TIMESTAMP"),
-                    ("finder_handover_at", "TIMESTAMP"),
-                    ("owner_confirmed_at", "TIMESTAMP"),
-                ]:
-                    try:
-                        conn.execute(db.text(f"ALTER TABLE claims ADD COLUMN {col_def[0]} {col_def[1]}"))
-                        conn.commit()
-                    except Exception:
-                        pass
-                for col_def in [
-                    ("reported_at", "TIMESTAMP"),
-                    ("is_active", "BOOLEAN DEFAULT TRUE"),
-                    ("deleted_at", "TIMESTAMP"),
-                    ("recovered_at", "TIMESTAMP"),
-                    ("recovery_type", "VARCHAR(50)"),
-                ]:
-                    try:
-                        conn.execute(db.text(f"ALTER TABLE lost_items ADD COLUMN {col_def[0]} {col_def[1]}"))
-                        conn.commit()
-                    except Exception:
-                        pass
         except Exception as e:
             print(f"[App] db.create_all() notice: {e}")
+
+        try:
+            ensure_schema_upgrades(db.engine)
+        except Exception as e:
+            print(f"[App] ensure_schema_upgrades notice: {e}")
 
     return app
 
