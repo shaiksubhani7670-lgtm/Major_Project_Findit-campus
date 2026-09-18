@@ -6,20 +6,25 @@
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Caveat:wght@600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
   
+  html {
+    scroll-behavior: smooth;
+  }
+
   .font-cursive {
     font-family: 'Caveat', cursive, 'Brush Script MT', sans-serif;
   }
 
   /* Entrance animations respecting prefers-reduced-motion */
   @media (prefers-reduced-motion: no-preference) {
-    .story-card {
+    .story-card, .feature-card, .step-card {
       opacity: 0;
       transform: translateY(14px);
       animation: storyFadeUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
     }
-    .story-card:nth-child(1) { animation-delay: 0.1s; }
-    .story-card:nth-child(2) { animation-delay: 0.2s; }
-    .story-card:nth-child(3) { animation-delay: 0.3s; }
+    .story-card:nth-child(1), .step-card:nth-child(1) { animation-delay: 0.1s; }
+    .story-card:nth-child(2), .step-card:nth-child(2) { animation-delay: 0.2s; }
+    .story-card:nth-child(3), .step-card:nth-child(3) { animation-delay: 0.3s; }
+    .step-card:nth-child(4) { animation-delay: 0.4s; }
     @keyframes storyFadeUp {
       to {
         opacity: 1;
@@ -208,7 +213,107 @@
   </section>
 
   <!-- ============================================================ -->
-  <!-- 4. STUDENTS HELPING STUDENTS — HUMAN RECOVERY STORIES         -->
+  <!-- 4. HOW IT WORKS SECTION (NAV LINK: #how-it-works)            -->
+  <!-- ============================================================ -->
+  <section id="how-it-works" class="max-w-5xl mx-auto px-4 sm:px-6 pb-20 w-full space-y-10">
+    <div class="text-center space-y-2">
+      <div class="flex items-center justify-center gap-3">
+        <div class="h-0.5 w-10 bg-blue-500 rounded-full"></div>
+        <span class="text-xs font-black uppercase tracking-wider text-blue-600">STEP-BY-STEP PROCESS</span>
+        <div class="h-0.5 w-10 bg-blue-500 rounded-full"></div>
+      </div>
+      <h2 class="text-2xl sm:text-4xl font-black text-slate-900 tracking-tight">
+        How FindIt Campus Works <span class="text-blue-600">Autonomously.</span>
+      </h2>
+      <p class="text-xs sm:text-sm text-slate-500 max-w-2xl mx-auto leading-relaxed">
+        From the moment an item is lost or found to verified return — automated, secure, and student-focused.
+      </p>
+    </div>
+
+    <!-- 4 Step Cards Grid -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+      
+      <!-- Step 1 -->
+      <div class="step-card bg-white border border-slate-200/90 rounded-2xl p-5 flex flex-col justify-between shadow-2xs hover:shadow-md hover:border-blue-300 transition-all group">
+        <div class="space-y-3">
+          <div class="flex items-center justify-between">
+            <div class="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center font-bold text-sm">
+              <i data-lucide="file-plus" class="w-5 h-5"></i>
+            </div>
+            <span class="text-[11px] font-mono font-black text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full">01</span>
+          </div>
+          <h3 class="font-extrabold text-slate-900 text-sm group-hover:text-blue-600 transition-colors">1. Report in Seconds</h3>
+          <p class="text-xs text-slate-500 leading-relaxed">
+            Upload photos and describe your missing or discovered item. AI classifies category, color palette, and location.
+          </p>
+        </div>
+        <div class="pt-4 mt-2 border-t border-slate-100 text-[11px] font-semibold text-blue-600 flex items-center gap-1">
+          <span>Camera &amp; QR Support</span> <i data-lucide="chevron-right" class="w-3 h-3"></i>
+        </div>
+      </div>
+
+      <!-- Step 2 -->
+      <div class="step-card bg-white border border-slate-200/90 rounded-2xl p-5 flex flex-col justify-between shadow-2xs hover:shadow-md hover:border-indigo-300 transition-all group">
+        <div class="space-y-3">
+          <div class="flex items-center justify-between">
+            <div class="w-10 h-10 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center font-bold text-sm">
+              <i data-lucide="cpu" class="w-5 h-5"></i>
+            </div>
+            <span class="text-[11px] font-mono font-black text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-full">02</span>
+          </div>
+          <h3 class="font-extrabold text-slate-900 text-sm group-hover:text-indigo-600 transition-colors">2. AI Matching Engine</h3>
+          <p class="text-xs text-slate-500 leading-relaxed">
+            YOLOv8 vision and sentence-transformer embeddings compare visual details and descriptions in real time.
+          </p>
+        </div>
+        <div class="pt-4 mt-2 border-t border-slate-100 text-[11px] font-semibold text-indigo-600 flex items-center gap-1">
+          <span>Instant Notifications</span> <i data-lucide="chevron-right" class="w-3 h-3"></i>
+        </div>
+      </div>
+
+      <!-- Step 3 -->
+      <div class="step-card bg-white border border-slate-200/90 rounded-2xl p-5 flex flex-col justify-between shadow-2xs hover:shadow-md hover:border-emerald-300 transition-all group">
+        <div class="space-y-3">
+          <div class="flex items-center justify-between">
+            <div class="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center font-bold text-sm">
+              <i data-lucide="shield-check" class="w-5 h-5"></i>
+            </div>
+            <span class="text-[11px] font-mono font-black text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full">03</span>
+          </div>
+          <h3 class="font-extrabold text-slate-900 text-sm group-hover:text-emerald-600 transition-colors">3. Verify Ownership</h3>
+          <p class="text-xs text-slate-500 leading-relaxed">
+            The owner answers specific identifying questions about hidden marks or contents. Approved automatically at &ge;80%.
+          </p>
+        </div>
+        <div class="pt-4 mt-2 border-t border-slate-100 text-[11px] font-semibold text-emerald-600 flex items-center gap-1">
+          <span>Zero False Claims</span> <i data-lucide="chevron-right" class="w-3 h-3"></i>
+        </div>
+      </div>
+
+      <!-- Step 4 -->
+      <div class="step-card bg-white border border-slate-200/90 rounded-2xl p-5 flex flex-col justify-between shadow-2xs hover:shadow-md hover:border-sky-300 transition-all group">
+        <div class="space-y-3">
+          <div class="flex items-center justify-between">
+            <div class="w-10 h-10 rounded-xl bg-sky-50 text-sky-600 flex items-center justify-center font-bold text-sm">
+              <i data-lucide="handshake" class="w-5 h-5"></i>
+            </div>
+            <span class="text-[11px] font-mono font-black text-sky-600 bg-sky-50 px-2 py-0.5 rounded-full">04</span>
+          </div>
+          <h3 class="font-extrabold text-slate-900 text-sm group-hover:text-sky-600 transition-colors">4. Safe Handover</h3>
+          <p class="text-xs text-slate-500 leading-relaxed">
+            Direct two-way contact details (phone &amp; email) are unlocked. Arrange a campus meetup and confirm receipt!
+          </p>
+        </div>
+        <div class="pt-4 mt-2 border-t border-slate-100 text-[11px] font-semibold text-sky-600 flex items-center gap-1">
+          <span>+50 Reward Points</span> <i data-lucide="chevron-right" class="w-3 h-3"></i>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ============================================================ -->
+  <!-- 5. STUDENTS HELPING STUDENTS — HUMAN RECOVERY STORIES         -->
   <!-- ============================================================ -->
   <section id="stories" class="max-w-5xl mx-auto px-4 sm:px-6 pb-16 w-full space-y-8">
     
@@ -416,7 +521,7 @@
   </section>
 
   <!-- ============================================================ -->
-  <!-- 5. "FOUND SOMETHING?" BANNER                                 -->
+  <!-- 6. "FOUND SOMETHING?" BANNER                                 -->
   <!-- ============================================================ -->
   <section class="max-w-5xl mx-auto px-4 sm:px-6 pb-16 w-full">
     <div class="bg-gradient-to-r from-blue-50/70 via-white to-blue-50/50 border border-blue-200/80 rounded-3xl p-6 sm:p-9 shadow-sm relative overflow-hidden flex flex-col md:flex-row items-center justify-between gap-8">
@@ -473,41 +578,89 @@
   </section>
 
   <!-- ============================================================ -->
-  <!-- 6. THREE TECHNOLOGY FEATURE CARDS                            -->
+  <!-- 7. COMPLETE FEATURES GRID (NAV LINK: #features)              -->
   <!-- ============================================================ -->
-  <section id="features" class="max-w-5xl mx-auto px-4 sm:px-6 pb-20 w-full">
+  <section id="features" class="max-w-5xl mx-auto px-4 sm:px-6 pb-20 w-full space-y-10">
+    <div class="text-center space-y-2">
+      <div class="flex items-center justify-center gap-3">
+        <div class="h-0.5 w-10 bg-blue-500 rounded-full"></div>
+        <span class="text-xs font-black uppercase tracking-wider text-blue-600">SYSTEM CAPABILITIES</span>
+        <div class="h-0.5 w-10 bg-blue-500 rounded-full"></div>
+      </div>
+      <h2 class="text-2xl sm:text-4xl font-black text-slate-900 tracking-tight">
+        Engineered for Speed, Accuracy &amp; <span class="text-blue-600">Campus Privacy.</span>
+      </h2>
+      <p class="text-xs sm:text-sm text-slate-500 max-w-2xl mx-auto leading-relaxed">
+        Everything students and staff need to easily manage, locate, and recover lost belongings across campus.
+      </p>
+    </div>
+
+    <!-- 6 Feature Cards Grid -->
     <div class="grid grid-cols-1 md:grid-cols-3 gap-6 text-left">
       
       <!-- Feature 1: Image Detection -->
-      <div class="bg-white border border-slate-200/90 rounded-2xl p-6 space-y-3 shadow-2xs hover:shadow-sm transition-all">
+      <div class="feature-card bg-white border border-slate-200/90 rounded-2xl p-6 space-y-3 shadow-2xs hover:shadow-md hover:border-blue-300 transition-all">
         <div class="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center">
           <i data-lucide="camera" class="w-5 h-5"></i>
         </div>
         <h3 class="font-extrabold text-slate-900 text-base">Image Detection</h3>
         <p class="text-xs text-slate-500 leading-relaxed">
-          AI model classifies category, color, and object details from uploaded photos.
+          AI vision models classify categories, primary colors, and visual characteristics from uploaded photos.
         </p>
       </div>
 
       <!-- Feature 2: Smart Text Match -->
-      <div class="bg-white border border-slate-200/90 rounded-2xl p-6 space-y-3 shadow-2xs hover:shadow-sm transition-all">
+      <div class="feature-card bg-white border border-slate-200/90 rounded-2xl p-6 space-y-3 shadow-2xs hover:shadow-md hover:border-blue-300 transition-all">
         <div class="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center">
           <i data-lucide="search" class="w-5 h-5"></i>
         </div>
         <h3 class="font-extrabold text-slate-900 text-base">Smart Text Match</h3>
         <p class="text-xs text-slate-500 leading-relaxed">
-          NLP vector matching compares item descriptions to calculate similarity scores.
+          NLP vector embeddings compare descriptions, brands, and item context to calculate precise similarity scores.
         </p>
       </div>
 
       <!-- Feature 3: Ownership Proof -->
-      <div class="bg-white border border-slate-200/90 rounded-2xl p-6 space-y-3 shadow-2xs hover:shadow-sm transition-all">
+      <div class="feature-card bg-white border border-slate-200/90 rounded-2xl p-6 space-y-3 shadow-2xs hover:shadow-md hover:border-emerald-300 transition-all">
         <div class="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center">
           <i data-lucide="shield-check" class="w-5 h-5"></i>
         </div>
         <h3 class="font-extrabold text-slate-900 text-base">Ownership Proof</h3>
         <p class="text-xs text-slate-500 leading-relaxed">
-          Multi-question verification ensures items are returned only to true owners.
+          Multi-question verification ensures items are returned strictly to the true owners without exposing private data.
+        </p>
+      </div>
+
+      <!-- Feature 4: Interactive Campus Map -->
+      <div class="feature-card bg-white border border-slate-200/90 rounded-2xl p-6 space-y-3 shadow-2xs hover:shadow-md hover:border-blue-300 transition-all">
+        <div class="w-10 h-10 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center">
+          <i data-lucide="map-pin" class="w-5 h-5"></i>
+        </div>
+        <h3 class="font-extrabold text-slate-900 text-base">Campus Hotspot Map</h3>
+        <p class="text-xs text-slate-500 leading-relaxed">
+          Explore interactive campus heatmaps to see where items are frequently lost or recovered (Library, Canteen, Labs).
+        </p>
+      </div>
+
+      <!-- Feature 5: Fast QR Code Kiosks -->
+      <div class="feature-card bg-white border border-slate-200/90 rounded-2xl p-6 space-y-3 shadow-2xs hover:shadow-md hover:border-blue-300 transition-all">
+        <div class="w-10 h-10 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center">
+          <i data-lucide="qr-code" class="w-5 h-5"></i>
+        </div>
+        <h3 class="font-extrabold text-slate-900 text-base">Quick QR Kiosks</h3>
+        <p class="text-xs text-slate-500 leading-relaxed">
+          Scan campus QR codes placed at major college locations to file a found item in under 30 seconds.
+        </p>
+      </div>
+
+      <!-- Feature 6: Gamified Points & Badges -->
+      <div class="feature-card bg-white border border-slate-200/90 rounded-2xl p-6 space-y-3 shadow-2xs hover:shadow-md hover:border-amber-300 transition-all">
+        <div class="w-10 h-10 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center">
+          <i data-lucide="award" class="w-5 h-5"></i>
+        </div>
+        <h3 class="font-extrabold text-slate-900 text-base">Student Leaderboard</h3>
+        <p class="text-xs text-slate-500 leading-relaxed">
+          Earn points (+10 for reporting found items, +50 for confirmed handovers) and earn campus community badges!
         </p>
       </div>
 
@@ -515,9 +668,74 @@
   </section>
 
   <!-- ============================================================ -->
-  <!-- 7. FOOTER                                                    -->
+  <!-- 8. CAMPUS CONTACT & SUPPORT (NAV LINK: #contact)             -->
   <!-- ============================================================ -->
-  <footer id="contact" class="bg-white border-t border-slate-200 py-8 text-center text-xs text-slate-500 space-y-1.5">
+  <section id="contact" class="max-w-5xl mx-auto px-4 sm:px-6 pb-20 w-full space-y-10">
+    <div class="text-center space-y-2">
+      <div class="flex items-center justify-center gap-3">
+        <div class="h-0.5 w-10 bg-blue-500 rounded-full"></div>
+        <span class="text-xs font-black uppercase tracking-wider text-blue-600">CAMPUS SUPPORT</span>
+        <div class="h-0.5 w-10 bg-blue-500 rounded-full"></div>
+      </div>
+      <h2 class="text-2xl sm:text-4xl font-black text-slate-900 tracking-tight">
+        Need Assistance? <span class="text-blue-600">We're Here for You.</span>
+      </h2>
+      <p class="text-xs sm:text-sm text-slate-500 max-w-2xl mx-auto leading-relaxed">
+        Visit our central campus desk or reach out directly to the FindIt support team.
+      </p>
+    </div>
+
+    <!-- Contact Details Card -->
+    <div class="bg-white border border-slate-200/90 rounded-3xl p-8 sm:p-10 shadow-sm grid grid-cols-1 md:grid-cols-3 gap-8 text-left divide-y md:divide-y-0 md:divide-x divide-slate-100">
+      
+      <!-- Desk Info -->
+      <div class="space-y-3 pt-4 md:pt-0">
+        <div class="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center">
+          <i data-lucide="map-pin" class="w-5 h-5"></i>
+        </div>
+        <h3 class="font-extrabold text-slate-900 text-base">Central Helpdesk</h3>
+        <p class="text-xs text-slate-500 leading-relaxed">
+          Room 104, Administrative Block<br>
+          Geethanjali Institute of Science &amp; Technology (GIST)<br>
+          Gangavaram, Kovur, Nellore.
+        </p>
+      </div>
+
+      <!-- Hours & Communication -->
+      <div class="space-y-3 pt-6 md:pt-0 md:pl-8">
+        <div class="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center">
+          <i data-lucide="clock" class="w-5 h-5"></i>
+        </div>
+        <h3 class="font-extrabold text-slate-900 text-base">Hours &amp; Email</h3>
+        <p class="text-xs text-slate-500 leading-relaxed">
+          <strong>Operating Hours:</strong><br>
+          Monday &ndash; Saturday: 9:00 AM &ndash; 5:00 PM<br>
+          <strong class="mt-1 block">Support Email:</strong>
+          <a href="mailto:finditcampus@gmail.com" class="text-blue-600 hover:underline font-semibold">finditcampus@gmail.com</a>
+        </p>
+      </div>
+
+      <!-- Quick AI Assistant -->
+      <div class="space-y-3 pt-6 md:pt-0 md:pl-8">
+        <div class="w-10 h-10 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center">
+          <i data-lucide="bot" class="w-5 h-5"></i>
+        </div>
+        <h3 class="font-extrabold text-slate-900 text-base">24/7 AI Assistant</h3>
+        <p class="text-xs text-slate-500 leading-relaxed">
+          Click the purple chatbot icon at the bottom-right of your screen anytime to ask questions, check report status, or get quick help!
+        </p>
+        <button onclick="toggleChatbot()" class="inline-flex items-center gap-1.5 text-xs font-bold text-blue-600 hover:text-blue-700 bg-blue-50 px-3 py-1.5 rounded-lg transition-colors">
+          <i data-lucide="message-circle" class="w-3.5 h-3.5"></i> Open Assistant
+        </button>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ============================================================ -->
+  <!-- 9. FOOTER                                                    -->
+  <!-- ============================================================ -->
+  <footer class="bg-white border-t border-slate-200 py-8 text-center text-xs text-slate-500 space-y-1.5">
     <p class="font-semibold text-slate-700 text-sm">FindIt Campus — Smart Lost &amp; Found System</p>
     <p>Geethanjali Institute of Science and Technology (GIST)</p>
     <p class="text-[11px] text-slate-400 pt-1">&copy; 2026 FindIt Campus. All rights reserved.</p>

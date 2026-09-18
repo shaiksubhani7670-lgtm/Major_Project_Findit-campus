@@ -174,12 +174,21 @@
 
   <div id="chatbot-panel" style="display:none;position:fixed;bottom:88px;right:24px;z-index:200;width:340px;max-height:500px;background:#fff;border-radius:16px;box-shadow:0 8px 40px rgba(0,0,0,0.15);border:1px solid #e2e8f0;flex-direction:column;overflow:hidden;">
     <!-- Header -->
-    <div style="background:linear-gradient(135deg,#2563eb,#7c3aed);padding:14px 16px;display:flex;align-items:center;justify-content:space-between;">
+    <div style="background:linear-gradient(135deg,#1d4ed8,#6366f1);padding:12px 16px;display:flex;align-items:center;justify-content:space-between;box-shadow:0 2px 8px rgba(0,0,0,0.1);">
       <div style="display:flex;align-items:center;gap:10px;">
-        <div style="width:32px;height:32px;border-radius:50%;background:rgba(255,255,255,0.2);display:flex;align-items:center;justify-content:center;"><i data-lucide="bot" style="width:16px;height:16px;color:#fff;"></i></div>
-        <div><p style="color:#fff;font-weight:700;font-size:13px;margin:0;">FindIt Assistant</p><p style="color:#bfdbfe;font-size:10px;margin:0;">AI-powered help chatbot</p></div>
+        <div style="width:34px;height:34px;border-radius:50%;background:rgba(255,255,255,0.2);display:flex;align-items:center;justify-content:center;"><i data-lucide="bot" style="width:18px;height:18px;color:#fff;"></i></div>
+        <div>
+          <p style="color:#fff;font-weight:700;font-size:13px;margin:0;display:flex;align-items:center;gap:6px;">
+            FindIt Assistant
+            <span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:#34d399;box-shadow:0 0 6px #34d399;"></span>
+          </p>
+          <p style="color:#bfdbfe;font-size:10px;margin:0;">GIST 24/7 AI Campus Support</p>
+        </div>
       </div>
-      <button onclick="toggleChatbot()" style="background:transparent;border:none;color:#fff;cursor:pointer;padding:4px;"><i data-lucide="x" style="width:16px;height:16px;"></i></button>
+      <div style="display:flex;align-items:center;gap:4px;">
+        <button onclick="restartChat()" title="Restart chat" style="background:transparent;border:none;color:#bfdbfe;cursor:pointer;padding:4px;border-radius:4px;" onmouseenter="this.style.color='#fff'" onmouseleave="this.style.color='#bfdbfe'"><i data-lucide="rotate-ccw" style="width:15px;height:15px;"></i></button>
+        <button onclick="toggleChatbot()" title="Close chat" style="background:transparent;border:none;color:#bfdbfe;cursor:pointer;padding:4px;border-radius:4px;" onmouseenter="this.style.color='#fff'" onmouseleave="this.style.color='#bfdbfe'"><i data-lucide="x" style="width:16px;height:16px;"></i></button>
+      </div>
     </div>
     <!-- Messages -->
     <div id="chatbot-messages" style="flex:1;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:10px;max-height:320px;"></div>
@@ -239,7 +248,7 @@
       
       try {
         const response = await fetch(`${API_URL}${endpoint}`, { ...options, headers });
-        if (response.status === 401 && endpoint !== '/auth/login') {
+        if (response.status === 401 && endpoint !== '/auth/login' && endpoint !== '/chatbot/message') {
           logout();
           return null;
         }
@@ -257,35 +266,58 @@
     function toggleChatbot() {
       chatbotOpen = !chatbotOpen;
       const panel = document.getElementById('chatbot-panel');
+      if (!panel) return;
       panel.style.display = chatbotOpen ? 'flex' : 'none';
       panel.style.flexDirection = 'column';
-      document.getElementById('chatbot-badge').style.display = 'none';
+      const badge = document.getElementById('chatbot-badge');
+      if (badge) badge.style.display = 'none';
       if (chatbotOpen && !chatbotInitialized) {
         chatbotInitialized = true;
         sendChatMsg('', 'hi');
       }
     }
 
+    function restartChat() {
+      const msgs = document.getElementById('chatbot-messages');
+      if (msgs) msgs.innerHTML = '';
+      sendChatMsg('', 'hi');
+    }
+
     function appendChatMsg(text, isBot, quickReplies = []) {
       const msgs = document.getElementById('chatbot-messages');
+      if (!msgs) return;
       const div = document.createElement('div');
       div.style.cssText = `display:flex;justify-content:${isBot ? 'flex-start' : 'flex-end'};`;
-      div.innerHTML = `<div style="max-width:80%;padding:8px 12px;border-radius:12px;font-size:12px;line-height:1.5;
-        background:${isBot ? '#f1f5f9' : '#2563eb'};color:${isBot ? '#1e293b' : '#fff'};
-        border-radius:${isBot ? '4px 12px 12px 12px' : '12px 4px 12px 12px'};
-      ">${text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>').replace(/\n/g, '<br>')}</div>`;
+      
+      // Convert basic markdown format (bold, bullet points, links)
+      let formatted = text
+        .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+        .replace(/\*(.*?)\*/g, '<em>$1</em>')
+        .replace(/`([^`]+)`/g, '<code style="background:#e2e8f0;padding:1px 4px;border-radius:4px;font-size:11px;">$1</code>')
+        .replace(/\[(.*?)\]\((.*?)\)/g, '<a href="$2" target="_blank" style="color:#2563eb;text-decoration:underline;">$1</a>')
+        .replace(/\n/g, '<br>');
+
+      div.innerHTML = `<div style="max-width:85%;padding:9px 13px;border-radius:14px;font-size:12px;line-height:1.55;
+        background:${isBot ? '#f8fafc' : '#2563eb'};color:${isBot ? '#1e293b' : '#fff'};
+        border:${isBot ? '1px solid #e2e8f0' : 'none'};
+        border-radius:${isBot ? '4px 14px 14px 14px' : '14px 4px 14px 14px'};
+        box-shadow:0 1px 2px rgba(0,0,0,0.04);
+      ">${formatted}</div>`;
       msgs.appendChild(div);
       msgs.scrollTop = msgs.scrollHeight;
 
       // Quick replies
       const qrEl = document.getElementById('chatbot-quick-replies');
-      qrEl.innerHTML = (quickReplies || []).map(qr => `
-        <button onclick="sendChatMsg(null,'${qr.replace(/'/g,"\\'")}')"
-          style="padding:4px 10px;border-radius:20px;border:1px solid #e2e8f0;background:#f8fafc;
-          font-size:10px;font-weight:600;color:#374151;cursor:pointer;transition:background 0.15s;"
-          onmouseenter="this.style.background='#eff6ff'" onmouseleave="this.style.background='#f8fafc'">
-          ${qr}
-        </button>`).join('');
+      if (qrEl) {
+        qrEl.innerHTML = (quickReplies || []).map(qr => `
+          <button onclick="sendChatMsg(null,'${qr.replace(/'/g,"\\'")}')"
+            style="padding:4px 10px;border-radius:20px;border:1px solid #cbd5e1;background:#ffffff;
+            font-size:11px;font-weight:600;color:#1e293b;cursor:pointer;transition:all 0.15s;box-shadow:0 1px 2px rgba(0,0,0,0.03);"
+            onmouseenter="this.style.background='#eff6ff';this.style.borderColor='#93c5fd';this.style.color='#1d4ed8';" 
+            onmouseleave="this.style.background='#ffffff';this.style.borderColor='#cbd5e1';this.style.color='#1e293b';">
+            ${qr}
+          </button>`).join('');
+      }
       lucide.createIcons();
     }
 
@@ -296,13 +328,34 @@
       if (overrideMsg === undefined && input) input.value = '';
       if (msg !== 'hi') appendChatMsg(msg, false);
 
+      // Typing indicator
+      const msgs = document.getElementById('chatbot-messages');
+      const typingId = 'typing-' + Date.now();
+      if (msgs) {
+        const typingDiv = document.createElement('div');
+        typingDiv.id = typingId;
+        typingDiv.style.cssText = 'display:flex;justify-content:flex-start;';
+        typingDiv.innerHTML = `<div style="padding:7px 12px;border-radius:12px;background:#f1f5f9;color:#64748b;font-size:11px;display:flex;align-items:center;gap:4px;">
+          <span style="display:inline-block;width:5px;height:5px;border-radius:50%;background:#94a3b8;animation:pulse 1s infinite;"></span>
+          <span style="display:inline-block;width:5px;height:5px;border-radius:50%;background:#94a3b8;animation:pulse 1s infinite 0.2s;"></span>
+          <span style="display:inline-block;width:5px;height:5px;border-radius:50%;background:#94a3b8;animation:pulse 1s infinite 0.4s;"></span>
+        </div>`;
+        msgs.appendChild(typingDiv);
+        msgs.scrollTop = msgs.scrollHeight;
+      }
+
       const res = await apiFetch('/chatbot/message', { method: 'POST', body: JSON.stringify({ message: msg }) });
-      if (res && res.ok) {
+      const indicator = document.getElementById(typingId);
+      if (indicator) indicator.remove();
+
+      if (res && res.ok && res.data && res.data.data) {
         const d = res.data.data;
         appendChatMsg(d.message, true, d.quick_replies);
         if (d.redirect_url) {
-          setTimeout(() => window.location.href = d.redirect_url, 800);
+          setTimeout(() => window.location.href = d.redirect_url, 1000);
         }
+      } else {
+        appendChatMsg("I'm having a brief connection delay. Please try again or visit our Helpdesk in Admin Block Room 104.", true, ['Report a lost item', 'Helpdesk info']);
       }
     }
 
