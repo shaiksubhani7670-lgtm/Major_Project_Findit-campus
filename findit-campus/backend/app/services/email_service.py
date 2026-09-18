@@ -484,3 +484,44 @@ def send_handover_issue_email(student, item_name, other_party_name, issue_descri
     """
     return _send_email(subject, [student.college_email], html)
 
+
+def send_lost_item_self_recovered_email(student, item_name):
+    """
+    Send confirmation email when lost user recovers item themselves.
+    Subject: FindIt Campus — Lost Item Marked as Recovered
+    """
+    if not student or not student.college_email:
+        return False
+
+    subject = "FindIt Campus — Lost Item Marked as Recovered"
+    html = f"""
+    <div style="font-family:Inter,Arial,sans-serif;max-width:600px;margin:0 auto;background:#fff;border:1px solid #e2e8f0;border-radius:12px;overflow:hidden;">
+      <div style="background:linear-gradient(135deg,#059669,#10b981);padding:32px 24px;text-align:center;">
+        <h1 style="color:#fff;font-size:22px;margin:0;">🎉 Item Marked as Recovered!</h1>
+        <p style="color:#d1fae5;font-size:13px;margin:8px 0 0 0;">FindIt Campus — Smart Lost &amp; Found</p>
+      </div>
+      <div style="padding:28px 24px;">
+        <p style="font-size:15px;color:#1e293b;">Hi <strong>{student.student_name}</strong>,</p>
+        <p style="color:#475569;font-size:14px;line-height:1.6;">
+          Your lost-item report for <strong>"{item_name}"</strong> has been marked as recovered by you and is no longer active for AI matching.
+        </p>
+        <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:16px;margin:20px 0;">
+          <p style="margin:0;font-size:13px;color:#15803d;font-weight:600;">
+            Status: <strong>Recovered by Owner</strong>
+          </p>
+          <p style="margin:4px 0 0 0;font-size:12px;color:#475569;">
+            This report will no longer receive new match alerts or appear on campus community boards.
+          </p>
+        </div>
+        <div style="text-align:center;margin-top:24px;">
+          <a href="https://findit-virid.vercel.app/my-reports" style="background:#059669;color:#fff;text-decoration:none;padding:12px 28px;border-radius:8px;font-weight:700;font-size:14px;display:inline-block;">View My Reports</a>
+        </div>
+      </div>
+      <div style="background:#f8fafc;padding:16px 24px;text-align:center;">
+        <p style="color:#94a3b8;font-size:11px;margin:0;">FindIt Campus · Geethanjali Institute of Science &amp; Technology</p>
+      </div>
+    </div>
+    """
+    return _send_email(subject, [student.college_email], html)
+
+

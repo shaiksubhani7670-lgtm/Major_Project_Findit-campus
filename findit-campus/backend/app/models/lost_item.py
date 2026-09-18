@@ -19,7 +19,12 @@ class LostItem(db.Model):
     image_path = db.Column(db.String(500), nullable=True)  # Primary image (backward compat)
     image_paths = db.Column(db.JSON, nullable=True)  # Up to 5 image URLs
     additional_details = db.Column(db.JSON, nullable=True)  # Store category-specific fields as JSON
-    status = db.Column(db.String(50), default='Searching', nullable=False, index=True) # 'Searching', 'Matched', 'Claim Pending', 'Completed', 'Cancelled'
+    status = db.Column(db.String(50), default='Searching', nullable=False, index=True) # 'Searching', 'Matched', 'Claim Pending', 'Completed', 'Cancelled', 'RECOVERED BY OWNER'
+    reported_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), nullable=True)
+    is_active = db.Column(db.Boolean, default=True, nullable=False, index=True)
+    deleted_at = db.Column(db.DateTime, nullable=True)
+    recovered_at = db.Column(db.DateTime, nullable=True)
+    recovery_type = db.Column(db.String(50), nullable=True) # 'OWNER_FOUND', 'FINDER_RETURNED'
     created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
     updated_at = db.Column(
         db.DateTime,
@@ -38,6 +43,7 @@ class LostItem(db.Model):
 
     def to_dict(self):
         """Serialize lost item to dictionary."""
+        effective_reported = self.reported_at or self.created_at
         return {
             'report_id': self.report_id,
             'id': self.report_id,
@@ -53,9 +59,17 @@ class LostItem(db.Model):
             'image_paths': self.image_paths or ([self.image_path] if self.image_path else []),
             'additional_details': self.additional_details,
             'status': self.status,
+            'reported_at': effective_reported.isoformat() if effective_reported else None,
+            'is_active': self.is_active if self.is_active is not None else True,
+            'deleted_at': self.deleted_at.isoformat() if self.deleted_at else None,
+            'recovered_at': self.recovered_at.isoformat() if self.recovered_at else None,
+            'recovery_type': self.recovery_type,
+            'can_self_recover': bool(self.status not in ['RECOVERED BY OWNER', 'Completed', 'Cancelled'] and self.is_active is not False and self.deleted_at is None),
+            'can_delete': bool(self.status == 'RECOVERED BY OWNER' or self.is_active is False or self.deleted_at is not None),
             'created_at': self.created_at.isoformat(),
             'updated_at': self.updated_at.isoformat(),
         }
 
     def __repr__(self):
         return f'<LostItem {self.report_id}: {self.item_name}>'
+

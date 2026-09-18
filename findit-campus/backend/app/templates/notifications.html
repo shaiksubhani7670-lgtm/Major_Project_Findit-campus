@@ -278,13 +278,18 @@
                 <p>Color: ${found.color}</p>
               </div>
 
-              ${!isCompleted ? `
+              ${isCompleted ? `
+                <div class="p-2.5 bg-emerald-50 text-emerald-700 text-xs rounded-xl font-bold text-center border border-emerald-200">
+                  ✅ Ownership Verified — Claim Approved
+                </div>
+              ` : m.is_lost_owner ? `
                 <button onclick="openVerifyModal('${m.id || m.match_id}')" class="btn-premium w-full text-xs py-2.5 mt-2 flex items-center justify-center gap-1.5">
                   <i data-lucide="shield-check" class="w-3.5 h-3.5"></i> Verify Ownership to Claim
                 </button>
               ` : `
-                <div class="p-2.5 bg-emerald-50 text-emerald-700 text-xs rounded-xl font-bold text-center">
-                  Claim Processed Successfully
+                <div class="p-2.5 bg-slate-100 text-slate-500 text-xs rounded-xl font-semibold text-center border border-slate-200">
+                  <i data-lucide="clock" class="w-3.5 h-3.5 inline-block mr-1 text-slate-400"></i>
+                  Awaiting Owner to Verify Ownership
                 </div>
               `}
             </div>

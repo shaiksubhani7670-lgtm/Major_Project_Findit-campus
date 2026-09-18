@@ -139,7 +139,12 @@ class MatchingService:
 
     def _match_lost_item(self, lost_id: int):
         lost_item = LostItem.query.get(lost_id)
-        if not lost_item or lost_item.status == "Cancelled":
+        if not lost_item:
+            return []
+        # Immediately exclude if cancelled, completed, recovered by owner, or inactive
+        if lost_item.status in ["Cancelled", "Completed", "Returned", "RECOVERED BY OWNER", "RECOVERED_BY_OWNER"]:
+            return []
+        if getattr(lost_item, 'is_active', True) is False or getattr(lost_item, 'deleted_at', None) is not None:
             return []
 
         cutoff = datetime.now(timezone.utc) - timedelta(days=self.CANDIDATE_WINDOW_DAYS)
@@ -179,18 +184,30 @@ class MatchingService:
         cat = (found_item.category or '').strip().lower()
         synonyms = self.CATEGORY_SYNONYMS.get(cat, {cat}) | {cat}
 
+        # Exclude recovered by owner, cancelled, completed, or inactive lost reports
+        excluded_statuses = ["Completed", "Returned", "Cancelled", "RECOVERED BY OWNER", "RECOVERED_BY_OWNER"]
         candidates = LostItem.query.filter(
-            LostItem.status.notin_(["Completed", "Returned", "Cancelled"]),
+            LostItem.status.notin_(excluded_statuses),
             LostItem.created_at >= cutoff,
             db.func.lower(LostItem.category).in_(synonyms)
-        ).all()
+        )
+        if hasattr(LostItem, 'is_active'):
+            candidates = candidates.filter(LostItem.is_active.isnot(False))
+        if hasattr(LostItem, 'deleted_at'):
+            candidates = candidates.filter(LostItem.deleted_at.is_(None))
+        candidates = candidates.all()
 
         # If few candidates found, also retrieve recent searching items so AI can score them
         if len(candidates) < 5:
-            more_candidates = LostItem.query.filter(
-                LostItem.status.notin_(["Completed", "Returned", "Cancelled"]),
+            more_query = LostItem.query.filter(
+                LostItem.status.notin_(excluded_statuses),
                 LostItem.created_at >= cutoff,
-            ).order_by(LostItem.created_at.desc()).limit(20).all()
+            )
+            if hasattr(LostItem, 'is_active'):
+                more_query = more_query.filter(LostItem.is_active.isnot(False))
+            if hasattr(LostItem, 'deleted_at'):
+                more_query = more_query.filter(LostItem.deleted_at.is_(None))
+            more_candidates = more_query.order_by(LostItem.created_at.desc()).limit(20).all()
             cand_ids = {c.report_id for c in candidates}
             for mc in more_candidates:
                 if mc.report_id not in cand_ids:

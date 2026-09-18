@@ -1,6 +1,6 @@
 import os
 import threading
-from datetime import date, time
+from datetime import date, time, datetime, timezone
 from flask import Blueprint, request, jsonify
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from app import db
@@ -82,7 +82,9 @@ def report_lost_item():
             image_path=image_path,
             image_paths=image_paths if image_paths else None,
             additional_details=additional_details,
-            status='Searching'
+            status='Searching',
+            reported_at=datetime.now(timezone.utc),
+            is_active=True
         )
         db.session.add(lost_item)
         db.session.flush() # Get report_id
@@ -139,6 +141,15 @@ def list_lost_reports():
     my_items = request.args.get('my_items')
     if my_items == 'true':
         query = query.filter_by(student_id=student_id)
+        if request.args.get('show_deleted') != 'true':
+            query = query.filter(LostItem.deleted_at.is_(None))
+    else:
+        # Public browsing only shows active Searching / Matched items
+        query = query.filter(
+            LostItem.status.in_(['Searching', 'Matched']),
+            LostItem.is_active.isnot(False),
+            LostItem.deleted_at.is_(None)
+        )
 
     # Category filter
     category = request.args.get('category')
@@ -176,11 +187,28 @@ def list_lost_reports():
     pagination = query.paginate(page=page, per_page=per_page, error_out=False)
     
     reports_data = []
+    from app.models.match import Match
     for report in pagination.items:
         r_dict = report.to_dict()
         # Find related student details
         student = Student.query.get(report.student_id)
         r_dict['student_name'] = student.student_name if student else 'Unknown'
+
+        # Check for possible matches if owned by current user
+        if report.student_id == student_id:
+            r_dict['is_lost_owner'] = True
+            top_m = Match.query.filter_by(lost_report_id=report.report_id).order_by(Match.overall_score.desc()).first()
+            if top_m:
+                r_dict['has_possible_match'] = True
+                r_dict['match_id'] = top_m.match_id
+                r_dict['match_score'] = top_m.overall_score
+            else:
+                r_dict['has_possible_match'] = False
+                r_dict['match_id'] = None
+                r_dict['match_score'] = None
+        else:
+            r_dict['is_lost_owner'] = False
+
         reports_data.append(r_dict)
 
     return jsonify({
@@ -312,11 +340,58 @@ def update_lost_report(report_id):
         return jsonify({'success': False, 'message': f'Failed to update report: {str(e)}'}), 500
 
 
+@lost_routes_bp.route('/<int:report_id>/found-by-me', methods=['POST'])
+@lost_routes_bp.route('/<int:report_id>/self-recovered', methods=['POST'])
+@jwt_required()
+def self_recover_lost_item(report_id):
+    """
+    Lost user marks their item as found by themselves ("I Found My Item").
+    Status becomes 'RECOVERED BY OWNER', recovery_type = 'OWNER_FOUND',
+    is_active = False, and report is removed from active matching.
+    """
+    student_id = int(get_jwt_identity())
+    report = LostItem.query.get(report_id)
+    if not report:
+        return jsonify({'success': False, 'message': 'Report not found'}), 404
+
+    # Available ONLY to the Lost User who created the report
+    if report.student_id != student_id:
+        return jsonify({'success': False, 'message': 'Unauthorized: only the owner of this lost report can mark it as recovered'}), 403
+
+    try:
+        from datetime import datetime, timezone
+        report.status = 'RECOVERED BY OWNER'
+        report.recovery_type = 'OWNER_FOUND'
+        report.recovered_at = datetime.now(timezone.utc)
+        report.is_active = False
+        report.updated_at = datetime.now(timezone.utc)
+        db.session.commit()
+
+        # Send confirmation email to the lost user (no Finder notification)
+        try:
+            from app.services.email_service import send_lost_item_self_recovered_email
+            student = Student.query.get(student_id)
+            if student:
+                send_lost_item_self_recovered_email(student, report.item_name)
+        except Exception as e:
+            print(f"[LostRoutes] Self-recovery email error: {e}")
+
+        return jsonify({
+            'success': True,
+            'message': 'Your item has been marked as recovered.',
+            'data': report.to_dict()
+        }), 200
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'success': False, 'message': f'Failed to mark as recovered: {str(e)}'}), 500
+
+
 @lost_routes_bp.route('/<int:report_id>', methods=['DELETE'])
 @jwt_required()
 def delete_lost_report(report_id):
     """
-    Cancel/soft delete lost report.
+    Soft-delete / remove report from active lost-item list.
+    Allowed only by the Lost User who created the report.
     """
     student_id = int(get_jwt_identity())
     report = LostItem.query.get(report_id)
@@ -324,19 +399,21 @@ def delete_lost_report(report_id):
         return jsonify({'success': False, 'message': 'Report not found'}), 404
 
     if report.student_id != student_id:
-        return jsonify({'success': False, 'message': 'Unauthorized to cancel this report'}), 403
-
-    if report.status == 'Completed':
-        return jsonify({'success': False, 'message': 'Cannot cancel a completed report'}), 400
+        return jsonify({'success': False, 'message': 'Unauthorized to delete this report'}), 403
 
     try:
-        # Soft delete by marking as Cancelled
-        report.status = 'Cancelled'
+        from datetime import datetime, timezone
+        report.is_active = False
+        report.deleted_at = datetime.now(timezone.utc)
+        if report.status not in ['Completed', 'RECOVERED BY OWNER']:
+            report.status = 'RECOVERED BY OWNER'
+            if not report.recovery_type:
+                report.recovery_type = 'OWNER_FOUND'
         db.session.commit()
         return jsonify({
             'success': True,
-            'message': 'Report cancelled successfully'
+            'message': 'Report removed from active list.'
         }), 200
     except Exception as e:
         db.session.rollback()
-        return jsonify({'success': False, 'message': f'Failed to cancel report: {str(e)}'}), 500
+        return jsonify({'success': False, 'message': f'Failed to delete report: {str(e)}'}), 500

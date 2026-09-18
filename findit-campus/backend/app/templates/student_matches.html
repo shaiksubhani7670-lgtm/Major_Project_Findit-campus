@@ -301,11 +301,15 @@
             <div class="pt-4 mt-2 flex gap-2">
               ${m.claim_status === 'Approved' || m.claim_status === 'Completed' ? `
               <div class="flex-1 py-2 rounded-xl text-xs font-bold text-white bg-emerald-600 flex items-center justify-center gap-1.5">
-                <span>✅ Claim Approved</span>
-              </div>` : `
+                <span>✅ Ownership Verified</span>
+              </div>` : m.is_lost_owner ? `
               <button onclick="openClaimModal(${m.id})" class="flex-1 py-2.5 rounded-xl text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-700 transition-colors flex items-center justify-center gap-1.5">
-                <i data-lucide="shield-check" class="w-3.5 h-3.5"></i> Claim Ownership
-              </button>`}
+                <i data-lucide="shield-check" class="w-3.5 h-3.5"></i> Verify Ownership
+              </button>` : `
+              <div class="flex-1 py-2.5 rounded-xl text-xs font-semibold text-slate-500 bg-slate-100 flex items-center justify-center gap-1.5 border border-slate-200">
+                <i data-lucide="clock" class="w-3.5 h-3.5 text-slate-400"></i>
+                <span>Awaiting Owner Verification</span>
+              </div>`}
               <a href="/messages/${m.id}" class="px-3 py-2 rounded-xl text-xs font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 flex items-center justify-center gap-1.5 transition-colors">
                 <i data-lucide="message-circle" class="w-3.5 h-3.5"></i> Chat
               </a>

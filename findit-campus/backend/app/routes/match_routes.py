@@ -49,6 +49,8 @@ def _enrich_match(m: Match, student_id: int) -> dict:
     m_dict['display_status'] = 'Possible Match'
     m_dict['handover_status'] = None
     m_dict['claim_id'] = None
+    m_dict['is_lost_owner'] = bool(lost and lost.student_id == student_id)
+    m_dict['is_finder'] = bool(found and found.student_id == student_id)
 
     try:
         approved_claim = Claim.query.filter_by(
@@ -67,10 +69,8 @@ def _enrich_match(m: Match, student_id: int) -> dict:
             m_dict['handover_status'] = approved_claim.handover_status
             m_dict['claim_id'] = approved_claim.claim_id
 
-            is_lost_owner = bool(lost and lost.student_id == student_id)
-            is_finder = bool(found and found.student_id == student_id)
-            m_dict['is_lost_owner'] = is_lost_owner
-            m_dict['is_finder'] = is_finder
+            is_lost_owner = m_dict['is_lost_owner']
+            is_finder = m_dict['is_finder']
 
             # Lost user → sees Finder's contact
             if is_lost_owner and found:

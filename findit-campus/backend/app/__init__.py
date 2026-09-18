@@ -85,6 +85,18 @@ def create_app(config_class=None):
                         conn.commit()
                     except Exception:
                         pass
+                for col_def in [
+                    ("reported_at", "TIMESTAMP"),
+                    ("is_active", "BOOLEAN DEFAULT TRUE"),
+                    ("deleted_at", "TIMESTAMP"),
+                    ("recovered_at", "TIMESTAMP"),
+                    ("recovery_type", "VARCHAR(50)"),
+                ]:
+                    try:
+                        conn.execute(db.text(f"ALTER TABLE lost_items ADD COLUMN {col_def[0]} {col_def[1]}"))
+                        conn.commit()
+                    except Exception:
+                        pass
         except Exception as e:
             print(f"[App] db.create_all() notice: {e}")
 

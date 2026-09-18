@@ -314,6 +314,79 @@
 
   </main>
 </div>
+
+<!-- Dashboard Self-Recovery Confirmation Modal -->
+<div id="dashboard-self-recovery-modal" class="fixed inset-0 bg-slate-950/60 backdrop-blur-md z-50 flex items-center justify-center hidden p-4">
+  <div class="bg-white border border-slate-200 rounded-2xl max-w-md w-full mx-4 shadow-2xl overflow-hidden flex flex-col">
+    <div class="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50/80">
+      <div class="flex items-center gap-2.5">
+        <div class="w-8 h-8 rounded-xl bg-emerald-100 text-emerald-600 flex items-center justify-center">
+          <i data-lucide="check-circle-2" class="w-4 h-4"></i>
+        </div>
+        <h3 class="text-base font-extrabold text-slate-900 font-display">Did you find your lost item?</h3>
+      </div>
+      <button onclick="closeDashboardSelfRecoveryModal()" class="w-8 h-8 flex items-center justify-center rounded-xl text-slate-400 hover:bg-slate-100">
+        <i data-lucide="x" class="w-4 h-4"></i>
+      </button>
+    </div>
+    <div class="p-6 space-y-3 text-xs text-slate-600 leading-relaxed">
+      <p id="dashboard-self-recovery-item-title" class="font-bold text-slate-900"></p>
+      <p>If you found the item yourself, this report will be removed from active matching and marked as recovered.</p>
+    </div>
+    <div class="p-4 border-t border-slate-100 flex justify-end gap-2 bg-slate-50/50">
+      <button onclick="closeDashboardSelfRecoveryModal()" class="btn-secondary text-xs py-2 px-4">Cancel</button>
+      <button id="dashboard-self-recovery-submit-btn" onclick="confirmDashboardSelfRecovery()" class="py-2 px-4 rounded-xl text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-700 transition-colors shadow-sm">
+        Yes, I Found It
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Dashboard Delete Confirmation Modal -->
+<div id="dashboard-delete-modal" class="fixed inset-0 bg-slate-950/60 backdrop-blur-md z-50 flex items-center justify-center hidden p-4">
+  <div class="bg-white border border-slate-200 rounded-2xl max-w-md w-full mx-4 shadow-2xl overflow-hidden flex flex-col">
+    <div class="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50/80">
+      <div class="flex items-center gap-2.5">
+        <div class="w-8 h-8 rounded-xl bg-rose-100 text-rose-600 flex items-center justify-center">
+          <i data-lucide="trash-2" class="w-4 h-4"></i>
+        </div>
+        <h3 class="text-base font-extrabold text-slate-900 font-display">Delete this lost-item report?</h3>
+      </div>
+      <button onclick="closeDashboardDeleteModal()" class="w-8 h-8 flex items-center justify-center rounded-xl text-slate-400 hover:bg-slate-100">
+        <i data-lucide="x" class="w-4 h-4"></i>
+      </button>
+    </div>
+    <div class="p-6 space-y-3 text-xs text-slate-600 leading-relaxed">
+      <p id="dashboard-delete-item-title" class="font-bold text-slate-900"></p>
+      <p>Since you have recovered your item, this report will no longer be active for AI matching.</p>
+    </div>
+    <div class="p-4 border-t border-slate-100 flex justify-end gap-2 bg-slate-50/50">
+      <button onclick="closeDashboardDeleteModal()" class="btn-secondary text-xs py-2 px-4">Cancel</button>
+      <button id="dashboard-delete-submit-btn" onclick="confirmDashboardDeleteReport()" class="py-2 px-4 rounded-xl text-xs font-bold text-white bg-rose-600 hover:bg-rose-700 transition-colors shadow-sm">
+        Delete Report
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Dashboard Item Details Modal -->
+<div id="dashboard-details-modal" class="fixed inset-0 bg-slate-950/60 backdrop-blur-md z-50 flex items-center justify-center hidden p-4">
+  <div class="bg-white border border-slate-200 rounded-2xl max-w-lg w-full mx-4 shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+    <div class="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50/80">
+      <div>
+        <h3 id="dashboard-details-title" class="text-base font-extrabold text-slate-900 font-display">Item Details</h3>
+        <p id="dashboard-details-subtitle" class="text-xs text-slate-500 font-medium"></p>
+      </div>
+      <button onclick="closeDashboardItemDetails()" class="w-8 h-8 flex items-center justify-center rounded-xl text-slate-400 hover:bg-slate-100">
+        <i data-lucide="x" class="w-4 h-4"></i>
+      </button>
+    </div>
+    <div id="dashboard-details-body" class="p-6 overflow-y-auto space-y-4"></div>
+    <div class="p-4 border-t border-slate-100 flex justify-end bg-slate-50/50">
+      <button onclick="closeDashboardItemDetails()" class="btn-secondary text-xs py-2 px-4">Close</button>
+    </div>
+  </div>
+</div>
 {% endblock %}
 
 {% block scripts %}
@@ -392,13 +465,27 @@
     let items = [];
 
     try {
-      const lostRes = await apiFetch('/lost?limit=10');
+      // First try fetching student's own reports (both lost and found)
+      const lostRes = await apiFetch('/lost?my_items=true&limit=10');
       if (lostRes && lostRes.ok && lostRes.data && lostRes.data.data) {
         const lostList = extractArray(lostRes.data.data, 'reports');
         items.push(...lostList.map(i => ({ ...i, type: 'LOST' })));
       }
+      const foundRes = await apiFetch('/found?my_items=true&limit=10');
+      if (foundRes && foundRes.ok && foundRes.data && foundRes.data.data) {
+        const foundList = extractArray(foundRes.data.data, 'items') || extractArray(foundRes.data.data, 'reports');
+        items.push(...foundList.map(i => ({ ...i, type: 'FOUND' })));
+      }
+      // If student has no personal reports yet, fallback to general recent lost items
+      if (items.length === 0) {
+        const genLost = await apiFetch('/lost?limit=6');
+        if (genLost && genLost.ok && genLost.data && genLost.data.data) {
+          const gList = extractArray(genLost.data.data, 'reports');
+          items.push(...gList.map(i => ({ ...i, type: 'LOST' })));
+        }
+      }
     } catch(e) {
-      console.error("Error fetching lost reports:", e);
+      console.error("Error fetching reports:", e);
     }
 
     if (items.length === 0) {
@@ -411,34 +498,69 @@
       `;
     } else {
       items.sort((a, b) => new Date(b.created_at || b.date_lost || b.date_found || b.date || 0) - new Date(a.created_at || a.date_lost || a.date_found || a.date || 0));
+      window.dashboardItemsCache = items;
       reportsContainer.innerHTML = items.slice(0, 5).map(item => {
         const imgUrl = getImageUrl(item);
+        const isLost = item.type === 'LOST';
+        const isRecoveredByOwner = item.status === 'RECOVERED BY OWNER';
+        const displayStatus = isLost && (item.status === 'Searching' || !item.status) ? 'LOST' : item.status;
+        const canSelfRecover = isLost && !isRecoveredByOwner && item.status !== 'Completed' && item.status !== 'Cancelled';
+        const canDelete = isLost && (isRecoveredByOwner || item.status === 'Cancelled' || item.is_active === false);
+        const hasMatch = isLost && (item.has_possible_match || (item.matches && item.matches.length > 0));
+
         return `
-        <div class="card-flat p-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 hover:border-slate-300 transition-colors overflow-hidden">
-          <div class="flex items-center gap-3 min-w-0 flex-1">
-            ${imgUrl ? `
-              <img src="${imgUrl}" alt="${item.item_name || 'Item'}" class="w-11 h-11 rounded-lg object-cover border border-slate-200 shrink-0 bg-slate-100" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
-              <div class="w-11 h-11 rounded-lg ${item.type === 'LOST' ? 'bg-red-50 text-red-700 border border-red-200' : 'bg-emerald-50 text-emerald-700 border border-emerald-200'} flex items-center justify-center font-bold text-xs shrink-0" style="display:none;">
-                <i data-lucide="${item.type === 'LOST' ? 'help-circle' : 'check-circle'}" class="w-5 h-5"></i>
+        <div class="card-flat p-4 space-y-3 hover:border-slate-300 transition-colors overflow-hidden flex flex-col justify-between">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div class="flex items-center gap-3 min-w-0 flex-1">
+              ${imgUrl ? `
+                <img src="${imgUrl}" alt="${item.item_name || 'Item'}" class="w-12 h-12 rounded-lg object-cover border border-slate-200 shrink-0 bg-slate-100" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                <div class="w-12 h-12 rounded-lg ${isRecoveredByOwner ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : isLost ? 'bg-blue-50 text-blue-700 border border-blue-200' : 'bg-emerald-50 text-emerald-700 border border-emerald-200'} flex items-center justify-center font-bold text-xs shrink-0" style="display:none;">
+                  <i data-lucide="${isRecoveredByOwner ? 'check-check' : isLost ? 'help-circle' : 'check-circle'}" class="w-5 h-5"></i>
+                </div>
+              ` : `
+                <div class="w-12 h-12 rounded-lg ${isRecoveredByOwner ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : isLost ? 'bg-blue-50 text-blue-700 border border-blue-200' : 'bg-emerald-50 text-emerald-700 border border-emerald-200'} flex items-center justify-center font-bold text-xs shrink-0">
+                  <i data-lucide="${isRecoveredByOwner ? 'check-check' : isLost ? 'help-circle' : 'check-circle'}" class="w-5 h-5"></i>
+                </div>
+              `}
+              <div class="min-w-0 flex-1">
+                <div class="flex items-center gap-2 flex-wrap">
+                  <span class="px-2 py-0.5 rounded-full text-[9px] font-extrabold uppercase tracking-wider ${isRecoveredByOwner ? 'bg-emerald-50 text-emerald-800 border border-emerald-300' : isLost ? 'bg-blue-50 text-blue-700 border border-blue-200' : 'bg-emerald-50 text-emerald-700 border border-emerald-200'} shrink-0">
+                    ${displayStatus}
+                  </span>
+                  <span class="font-bold text-xs text-slate-900 truncate block">${item.item_name || item.title || 'Reported Item'}</span>
+                </div>
+                <span class="text-[11px] text-slate-500 block truncate max-w-[220px] sm:max-w-md mt-0.5">${item.description || 'No description.'}</span>
               </div>
-            ` : `
-              <div class="w-11 h-11 rounded-lg ${item.type === 'LOST' ? 'bg-red-50 text-red-700 border border-red-200' : 'bg-emerald-50 text-emerald-700 border border-emerald-200'} flex items-center justify-center font-bold text-xs shrink-0">
-                <i data-lucide="${item.type === 'LOST' ? 'help-circle' : 'check-circle'}" class="w-5 h-5"></i>
-              </div>
-            `}
-            <div class="min-w-0 flex-1">
-              <div class="flex items-center gap-2 flex-wrap">
-                <span class="px-1.5 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider ${item.type === 'LOST' ? 'bg-red-50 text-red-700 border border-red-200' : 'bg-emerald-50 text-emerald-700 border border-emerald-200'} shrink-0">
-                  ${item.type}
-                </span>
-                <span class="font-bold text-xs text-slate-900 truncate block">${item.item_name || item.title || 'Reported Item'}</span>
-              </div>
-              <span class="text-[11px] text-slate-500 block truncate max-w-[200px] sm:max-w-xs mt-0.5">${item.description || 'No description.'}</span>
+            </div>
+            <div class="flex sm:flex-col items-center sm:items-end justify-between sm:justify-start text-xs sm:text-right shrink-0 pt-2 sm:pt-0 border-t sm:border-t-0 border-slate-100">
+              <span class="text-[11px] font-semibold text-slate-600 block">${item.location_lost || item.location_found || item.location || 'Campus'}</span>
+              <span class="text-[10px] text-slate-400 font-mono">${item.date_lost || item.date_found || item.date || item.created_at ? new Date(item.date_lost || item.date_found || item.date || item.created_at).toLocaleDateString() : ''}</span>
             </div>
           </div>
-          <div class="flex sm:flex-col items-center sm:items-end justify-between sm:justify-start text-xs sm:text-right shrink-0 pt-2 sm:pt-0 border-t sm:border-t-0 border-slate-100">
-            <span class="text-[11px] font-semibold text-slate-600 block">${item.location_lost || item.location_found || item.location || 'Campus'}</span>
-            <span class="text-[10px] text-slate-400 font-mono">${item.date_lost || item.date_found || item.date || item.created_at ? new Date(item.date_lost || item.date_found || item.date || item.created_at).toLocaleDateString() : ''}</span>
+
+          <!-- Actions Bar for Section 9 -->
+          <div class="pt-2 border-t border-slate-100 flex flex-wrap gap-2 items-center">
+            <button onclick="viewDashboardItemDetails(${item.report_id || item.id}, '${item.type}')" class="py-1.5 px-3 rounded-lg text-xs font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 transition-colors flex items-center gap-1">
+              <i data-lucide="eye" class="w-3.5 h-3.5"></i> View Details
+            </button>
+
+            ${canSelfRecover ? `
+              <button onclick="openDashboardSelfRecoveryModal(${item.report_id || item.id}, '${(item.item_name || 'Item').replace(/'/g, "\\'")}')" class="py-1.5 px-3 rounded-lg text-xs font-bold text-emerald-700 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 transition-colors flex items-center gap-1 shadow-sm">
+                <i data-lucide="check-circle" class="w-3.5 h-3.5"></i> I Found My Item
+              </button>
+            ` : ''}
+
+            ${hasMatch ? `
+              <a href="/matches" class="py-1.5 px-3 rounded-lg text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-700 transition-colors flex items-center gap-1 shadow-sm">
+                <i data-lucide="sparkles" class="w-3.5 h-3.5"></i> View Possible Match &amp; Verify
+              </a>
+            ` : ''}
+
+            ${canDelete ? `
+              <button onclick="openDashboardDeleteModal(${item.report_id || item.id}, '${(item.item_name || 'Item').replace(/'/g, "\\'")}')" class="py-1.5 px-3 rounded-lg text-xs font-semibold text-rose-600 hover:bg-rose-50 border border-rose-200 transition-colors flex items-center gap-1">
+                <i data-lucide="trash-2" class="w-3.5 h-3.5"></i> Delete Report
+              </button>
+            ` : ''}
           </div>
         </div>
         `;
@@ -686,6 +808,155 @@
       overlay.classList.add('hidden');
       drawer.classList.add('-translate-x-full');
     }
+  }
+
+  let dashboardPendingReportId = null;
+
+  function openDashboardSelfRecoveryModal(reportId, itemName) {
+    dashboardPendingReportId = reportId;
+    const titleEl = document.getElementById('dashboard-self-recovery-item-title');
+    if (titleEl) titleEl.innerText = `Item: "${itemName}"`;
+    const modal = document.getElementById('dashboard-self-recovery-modal');
+    if (modal) modal.classList.remove('hidden');
+    lucide.createIcons();
+  }
+
+  function closeDashboardSelfRecoveryModal() {
+    const modal = document.getElementById('dashboard-self-recovery-modal');
+    if (modal) modal.classList.add('hidden');
+    dashboardPendingReportId = null;
+  }
+
+  async function confirmDashboardSelfRecovery() {
+    if (!dashboardPendingReportId) return;
+    const btn = document.getElementById('dashboard-self-recovery-submit-btn');
+    if (btn) {
+      btn.disabled = true;
+      btn.innerText = 'Updating...';
+    }
+
+    try {
+      const res = await apiFetch(`/lost/${dashboardPendingReportId}/found-by-me`, { method: 'POST' });
+      if (btn) {
+        btn.disabled = false;
+        btn.innerText = 'Yes, I Found It';
+      }
+      closeDashboardSelfRecoveryModal();
+
+      if (res && res.ok && res.data && res.data.success) {
+        showToast('Your item has been marked as recovered.', 'success');
+        loadDashboard();
+      } else {
+        showToast((res && res.data && res.data.message) || 'Failed to update report status.', 'error');
+      }
+    } catch(e) {
+      if (btn) {
+        btn.disabled = false;
+        btn.innerText = 'Yes, I Found It';
+      }
+      closeDashboardSelfRecoveryModal();
+      showToast('Error updating status: ' + e.message, 'error');
+    }
+  }
+
+  function openDashboardDeleteModal(reportId, itemName) {
+    dashboardPendingReportId = reportId;
+    const titleEl = document.getElementById('dashboard-delete-item-title');
+    if (titleEl) titleEl.innerText = `Item: "${itemName}"`;
+    const modal = document.getElementById('dashboard-delete-modal');
+    if (modal) modal.classList.remove('hidden');
+    lucide.createIcons();
+  }
+
+  function closeDashboardDeleteModal() {
+    const modal = document.getElementById('dashboard-delete-modal');
+    if (modal) modal.classList.add('hidden');
+    dashboardPendingReportId = null;
+  }
+
+  async function confirmDashboardDeleteReport() {
+    if (!dashboardPendingReportId) return;
+    const btn = document.getElementById('dashboard-delete-submit-btn');
+    if (btn) {
+      btn.disabled = true;
+      btn.innerText = 'Deleting...';
+    }
+
+    try {
+      const res = await apiFetch(`/lost/${dashboardPendingReportId}`, { method: 'DELETE' });
+      if (btn) {
+        btn.disabled = false;
+        btn.innerText = 'Delete Report';
+      }
+      closeDashboardDeleteModal();
+
+      if (res && res.ok) {
+        showToast('Report removed from active list.', 'success');
+        loadDashboard();
+      } else {
+        showToast((res && res.data && res.data.message) || 'Failed to delete report.', 'error');
+      }
+    } catch(e) {
+      if (btn) {
+        btn.disabled = false;
+        btn.innerText = 'Delete Report';
+      }
+      closeDashboardDeleteModal();
+      showToast('Error deleting report: ' + e.message, 'error');
+    }
+  }
+
+  function viewDashboardItemDetails(reportId, itemType) {
+    const items = window.dashboardItemsCache || [];
+    const item = items.find(x => (x.report_id || x.id) == reportId && (x.type === itemType || !itemType));
+    if (!item) return;
+
+    document.getElementById('dashboard-details-title').innerText = item.item_name || item.title || 'Report Details';
+    document.getElementById('dashboard-details-subtitle').innerText = `${item.category || 'General'} · ${item.type === 'LOST' ? 'Lost Report' : 'Found Report'}`;
+
+    const imgUrl = getImageUrl(item);
+    const isLost = item.type === 'LOST';
+    const isRecoveredByOwner = item.status === 'RECOVERED BY OWNER';
+    const statusText = isLost && (item.status === 'Searching' || !item.status) ? 'LOST' : item.status;
+    const matchingStatus = (isRecoveredByOwner || item.is_active === false || item.status === 'Completed' || item.status === 'Cancelled')
+      ? 'Inactive (Not participating in AI matching)'
+      : 'Active (Participating in AI continuous matching)';
+
+    const body = document.getElementById('dashboard-details-body');
+    body.innerHTML = `
+      ${imgUrl ? `
+        <div class="rounded-xl overflow-hidden border border-slate-200 bg-slate-50 flex justify-center max-h-56">
+          <img src="${imgUrl}" alt="${item.item_name}" class="object-contain max-h-56 w-full">
+        </div>
+      ` : ''}
+      <div class="space-y-2.5 text-xs">
+        <div class="grid grid-cols-2 gap-2 bg-slate-50 p-3 rounded-xl border border-slate-100">
+          <div><span class="text-slate-400 block text-[10px] uppercase font-bold">Current Status</span><span class="font-extrabold text-slate-800">${statusText}</span></div>
+          <div><span class="text-slate-400 block text-[10px] uppercase font-bold">Matching Status</span><span class="font-semibold ${matchingStatus.startsWith('Active') ? 'text-emerald-600' : 'text-slate-500'}">${matchingStatus}</span></div>
+          <div><span class="text-slate-400 block text-[10px] uppercase font-bold">Location</span><span class="font-medium text-slate-700">${item.location_lost || item.location_found || item.location || 'Campus'}</span></div>
+          <div><span class="text-slate-400 block text-[10px] uppercase font-bold">Report Date</span><span class="font-mono text-slate-700">${item.date_lost || item.date_found || item.date || 'N/A'}</span></div>
+          <div><span class="text-slate-400 block text-[10px] uppercase font-bold">Report Created</span><span class="font-mono text-slate-700">${item.reported_at || item.created_at ? new Date(item.reported_at || item.created_at).toLocaleString() : 'N/A'}</span></div>
+          ${item.recovered_at ? `<div><span class="text-slate-400 block text-[10px] uppercase font-bold">Recovered At</span><span class="font-mono text-emerald-700 font-bold">${new Date(item.recovered_at).toLocaleString()}</span></div>` : ''}
+        </div>
+        <div>
+          <span class="text-slate-400 block text-[10px] uppercase font-bold mb-1">Description</span>
+          <p class="text-slate-700 bg-white p-3 rounded-xl border border-slate-200 leading-relaxed">${item.description || 'No description provided.'}</p>
+        </div>
+        ${isLost && !isRecoveredByOwner && item.status !== 'Completed' ? `
+          <div class="p-3 rounded-xl bg-blue-50/70 border border-blue-200 text-blue-800 text-[11px] leading-relaxed">
+            💡 <strong>Two-Hour Self-Recovery Window</strong>: If you find this item yourself, click <strong>"I Found My Item"</strong> to take it down from matching and mark it as recovered.
+          </div>
+        ` : ''}
+      </div>
+    `;
+
+    document.getElementById('dashboard-details-modal').classList.remove('hidden');
+    lucide.createIcons();
+  }
+
+  function closeDashboardItemDetails() {
+    const modal = document.getElementById('dashboard-details-modal');
+    if (modal) modal.classList.add('hidden');
   }
 
   loadDashboard();
