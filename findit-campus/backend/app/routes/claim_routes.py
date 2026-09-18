@@ -316,35 +316,39 @@ def verify_claim():
         except Exception as e:
             print(f'[ClaimRoutes] In-app notification error: {e}')
 
-        # Email to lost user (claimant) — idempotent
+        # Email to lost user (claimant) — idempotent (key: match_id + user_id + notification_type)
         try:
             from app.services.email_service import send_claim_approved_email
-            key_claimant = f'claim_approved_match{match_id}_student{student_id}'
+            key_claimant = f"{match_id}_{student_id}_CONTACT_SHARED_TO_LOST_USER"
             _safe_send_email(
                 idempotency_key=key_claimant,
-                event_type='claim_approved',
+                event_type='CONTACT_SHARED_TO_LOST_USER',
                 send_fn=send_claim_approved_email,
                 recipient_email=claimant_student.college_email if claimant_student else None,
                 student=claimant_student,
                 finder_details=finder_details,
+                item_name=lost.item_name if lost else 'Lost Item',
+                category=lost.category if lost else 'General',
             )
         except Exception as e:
-            print(f'[ClaimRoutes] claim_approved email error: {e}')
+            print(f'[ClaimRoutes] CONTACT_SHARED_TO_LOST_USER email error: {e}')
 
-        # Email to finder — idempotent
+        # Email to finder — idempotent (key: match_id + user_id + notification_type)
         try:
             from app.services.email_service import send_claim_approved_to_finder_email
-            key_finder = f'owner_verified_match{match_id}_student{found.student_id}'
+            key_finder = f"{match_id}_{found.student_id}_CONTACT_SHARED_TO_FINDER"
             _safe_send_email(
                 idempotency_key=key_finder,
-                event_type='owner_verified',
+                event_type='CONTACT_SHARED_TO_FINDER',
                 send_fn=send_claim_approved_to_finder_email,
                 recipient_email=finder_student.college_email if finder_student else None,
                 student=finder_student,
                 claimant_details=claimant_details,
+                item_name=found.item_name if found else 'Found Item',
+                category=found.category if found else 'General',
             )
         except Exception as e:
-            print(f'[ClaimRoutes] owner_verified email error: {e}')
+            print(f'[ClaimRoutes] CONTACT_SHARED_TO_FINDER email error: {e}')
 
         return jsonify({
             'success': True,

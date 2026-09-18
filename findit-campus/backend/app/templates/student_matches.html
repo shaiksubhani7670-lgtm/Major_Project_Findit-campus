@@ -178,7 +178,14 @@
           card.innerHTML = `
             <div class="space-y-3">
               <div class="flex justify-between items-start">
-                <span class="text-[10px] text-slate-400 font-bold font-mono">Match #${m.id}</span>
+                <div>
+                  <span class="text-[10px] text-slate-400 font-bold font-mono">Match #${m.id}</span>
+                  <div class="mt-1">
+                    <span class="text-[10px] px-2.5 py-0.5 rounded-full font-bold border ${m.claim_status === 'Approved' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : m.claim_status === 'Completed' ? 'bg-emerald-600 text-white border-emerald-600' : 'bg-indigo-50 text-indigo-700 border-indigo-200'}">
+                      ${m.display_status || 'Possible Match'}
+                    </span>
+                  </div>
+                </div>
                 <span class="text-[9px] px-2.5 py-0.5 rounded-full border font-bold ${scoreColor} ${badgeBg}">${m.overall_score || 0}% match</span>
               </div>
               <h3 class="text-base font-bold text-slate-800">${m.lost_item ? m.lost_item.item_name : 'Item Match'}</h3>
@@ -205,45 +212,57 @@
 
               ${m.claim_status === 'Approved' && m.approved_contact ? `
               <!-- ✅ Approved Contact Card -->
-              <div class="mt-3 bg-emerald-50 border border-emerald-200 rounded-xl p-4 space-y-2">
-                <div class="flex items-center gap-2 mb-2">
+              <div class="mt-3 bg-emerald-50 border border-emerald-200 rounded-xl p-4 space-y-3">
+                <div class="flex items-center gap-2">
                   <span class="text-emerald-600 text-base">✅</span>
-                  <p class="text-[11px] font-extrabold text-emerald-800 uppercase tracking-wider">Claim Approved — ${m.approved_contact.role}'s Contact</p>
+                  <p class="text-xs font-extrabold text-emerald-900 uppercase tracking-wide">
+                    ${m.is_lost_owner ? 'Ownership Verified — Contact Finder' : 'Ownership Verified — Contact Owner'}
+                  </p>
                 </div>
-                <div class="space-y-1.5 text-xs">
-                  <div class="flex justify-between">
-                    <span class="text-slate-500">Name</span>
-                    <span class="font-semibold text-slate-800">${m.approved_contact.student_name}</span>
+                <div class="space-y-1.5 text-xs bg-white p-3 rounded-lg border border-emerald-100 shadow-sm">
+                  <div class="flex justify-between items-center py-0.5 border-b border-slate-50">
+                    <span class="text-slate-500 font-medium">${m.approved_contact.role} Name</span>
+                    <span class="font-bold text-slate-900">${m.approved_contact.student_name}</span>
                   </div>
-                  <div class="flex justify-between">
-                    <span class="text-slate-500">Roll No</span>
-                    <span class="font-semibold font-mono text-slate-800">${m.approved_contact.roll_number}</span>
+                  <div class="flex justify-between items-center py-0.5 border-b border-slate-50">
+                    <span class="text-slate-500 font-medium">${m.approved_contact.role} College Email</span>
+                    <a href="mailto:${m.approved_contact.college_email}" class="font-bold text-indigo-600 hover:underline">${m.approved_contact.college_email}</a>
                   </div>
-                  <div class="flex justify-between">
-                    <span class="text-slate-500">Department</span>
-                    <span class="font-semibold text-slate-800">${m.approved_contact.department}</span>
-                  </div>
-                  <div class="flex justify-between items-center">
-                    <span class="text-slate-500">Email</span>
-                    <a href="mailto:${m.approved_contact.college_email}" class="font-semibold text-indigo-600 hover:underline">${m.approved_contact.college_email}</a>
-                  </div>
-                  <div class="flex justify-between items-center">
-                    <span class="text-slate-500">Phone</span>
-                    <span class="font-semibold text-slate-800">${m.approved_contact.phone_number || 'Not provided'}</span>
+                  <div class="flex justify-between items-center py-0.5">
+                    <span class="text-slate-500 font-medium">${m.approved_contact.role} Phone Number</span>
+                    <span class="font-bold text-slate-900">${m.approved_contact.phone_number && m.approved_contact.phone_number !== 'Not provided' ? m.approved_contact.phone_number : 'Not provided'}</span>
                   </div>
                 </div>
-                <p class="text-[10px] text-emerald-700 font-medium pt-1 border-t border-emerald-200">Contact them directly to arrange item collection. 🎉</p>
+
+                <!-- Contact Action Buttons: Call, Email, Arrange Handover -->
+                <div class="pt-1 flex flex-wrap gap-2">
+                  ${m.approved_contact.phone_number && m.approved_contact.phone_number !== 'Not provided' ? `
+                    <a href="tel:${m.approved_contact.phone_number}" class="flex-1 min-w-[100px] py-2 px-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-center text-xs font-bold transition-colors flex items-center justify-center gap-1.5 shadow-sm">
+                      <i data-lucide="phone" class="w-3.5 h-3.5"></i> Call ${m.approved_contact.role}
+                    </a>
+                  ` : `
+                    <span class="flex-1 min-w-[100px] py-2 px-2.5 bg-slate-100 text-slate-400 rounded-lg text-center text-xs font-semibold flex items-center justify-center gap-1.5 cursor-not-allowed">
+                      <i data-lucide="phone-off" class="w-3.5 h-3.5"></i> No Phone
+                    </span>
+                  `}
+                  <a href="mailto:${m.approved_contact.college_email}?subject=${encodeURIComponent('FindIt Campus — Arrange Handover for ' + (m.lost_item ? m.lost_item.item_name : 'Item'))}" class="flex-1 min-w-[100px] py-2 px-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-center text-xs font-bold transition-colors flex items-center justify-center gap-1.5 shadow-sm">
+                    <i data-lucide="mail" class="w-3.5 h-3.5"></i> Email ${m.approved_contact.role}
+                  </a>
+                  <button onclick="scrollToHandover(${m.id})" class="flex-1 min-w-[120px] py-2 px-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-center text-xs font-bold transition-colors flex items-center justify-center gap-1.5 shadow-sm">
+                    <i data-lucide="handshake" class="w-3.5 h-3.5"></i> Arrange Handover
+                  </button>
+                </div>
               </div>` : ''}
 
               ${(m.claim_status === 'Approved' || m.claim_status === 'Completed') ? `
               <!-- Handover Tracking Section -->
-              <div class="mt-3 bg-slate-50 border border-slate-200 rounded-xl p-3.5 space-y-2.5">
+              <div id="handover-section-${m.id}" class="mt-3 bg-slate-50 border border-slate-200 rounded-xl p-3.5 space-y-2.5 transition-all">
                 <div class="flex items-center justify-between">
                   <span class="text-[10px] font-bold uppercase tracking-wider text-slate-500">Handover Progress</span>
                   ${m.handover_status === 'owner_confirmed' || m.claim_status === 'Completed' ? `
                     <span class="text-[10px] font-extrabold text-emerald-700 bg-emerald-100 px-2.5 py-0.5 rounded-full">🎉 Recovered</span>
                   ` : m.handover_status === 'finder_handed_over' ? `
-                    <span class="text-[10px] font-extrabold text-blue-700 bg-blue-100 px-2.5 py-0.5 rounded-full">📦 Handover In Progress</span>
+                    <span class="text-[10px] font-extrabold text-blue-700 bg-blue-100 px-2.5 py-0.5 rounded-full">📦 Handover Arranged</span>
                   ` : m.handover_status === 'issue_reported' ? `
                     <span class="text-[10px] font-extrabold text-rose-700 bg-rose-100 px-2.5 py-0.5 rounded-full">⚠️ Issue Reported</span>
                   ` : `
@@ -315,6 +334,15 @@
   function closeClaimModal() {
     document.getElementById('claim-modal').classList.add('hidden');
     activeMatchId = null;
+  }
+
+  function scrollToHandover(matchId) {
+    const el = document.getElementById(`handover-section-${matchId}`);
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      el.classList.add('ring-2', 'ring-indigo-400');
+      setTimeout(() => el.classList.remove('ring-2', 'ring-indigo-400'), 2500);
+    }
   }
 
   async function submitClaim() {
