@@ -1,20 +1,26 @@
 {% extends "base.html" %}
 
-{% block title %}FindIt Campus — Smart Lost &amp; Found{% endblock %}
+{% block title %}FindIt Campus — Smart Lost &amp; Found System{% endblock %}
 
 {% block content %}
 <style>
+  @import url('https://fonts.googleapis.com/css2?family=Caveat:wght@600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+  
+  .font-cursive {
+    font-family: 'Caveat', cursive, 'Brush Script MT', sans-serif;
+  }
+
   /* Entrance animations respecting prefers-reduced-motion */
   @media (prefers-reduced-motion: no-preference) {
-    .recovery-card {
+    .story-card {
       opacity: 0;
-      transform: translateY(12px);
-      animation: recoveryFadeUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+      transform: translateY(14px);
+      animation: storyFadeUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
     }
-    .recovery-card:nth-child(1) { animation-delay: 0.1s; }
-    .recovery-card:nth-child(2) { animation-delay: 0.2s; }
-    .recovery-card:nth-child(3) { animation-delay: 0.3s; }
-    @keyframes recoveryFadeUp {
+    .story-card:nth-child(1) { animation-delay: 0.1s; }
+    .story-card:nth-child(2) { animation-delay: 0.2s; }
+    .story-card:nth-child(3) { animation-delay: 0.3s; }
+    @keyframes storyFadeUp {
       to {
         opacity: 1;
         transform: translateY(0);
@@ -23,324 +29,496 @@
   }
 </style>
 
-<div class="min-h-screen bg-slate-50 flex flex-col justify-between">
+<div class="min-h-screen bg-[#F8FAFC] flex flex-col justify-between">
   
-  <!-- Navigation Header (Preserved exactly as in screenshot) -->
-  <header class="bg-white border-b border-slate-200">
-    <div class="max-w-6xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
-      <div class="flex items-center gap-3">
-        <div class="w-8 h-8 rounded-lg bg-blue-600 flex items-center justify-center text-white">
-          <i data-lucide="search" class="w-4 h-4"></i>
+  <!-- ============================================================ -->
+  <!-- 1. NAVIGATION HEADER                                         -->
+  <!-- ============================================================ -->
+  <header class="bg-white border-b border-slate-200/80 sticky top-0 z-40">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 h-18 py-3.5 flex items-center justify-between">
+      
+      <!-- Brand Logo -->
+      <a href="/" class="flex items-center gap-3 group">
+        <div class="w-9 h-9 rounded-xl bg-blue-600 flex items-center justify-center text-white shadow-sm shadow-blue-500/20 group-hover:bg-blue-700 transition-colors">
+          <i data-lucide="search" class="w-4.5 h-4.5"></i>
         </div>
         <div>
-          <span class="font-bold text-base text-slate-900 leading-none block">FindIt Campus</span>
-          <span class="text-[10px] text-slate-400 font-semibold block tracking-wider uppercase">GIST LOST &amp; FOUND</span>
+          <span class="font-extrabold text-base text-slate-900 tracking-tight leading-none block">FindIt Campus</span>
+          <span class="text-[9.5px] text-slate-400 font-bold block tracking-wider uppercase mt-0.5">GIST LOST &amp; FOUND</span>
         </div>
-      </div>
+      </a>
       
+      <!-- Nav Links -->
+      <nav class="hidden md:flex items-center gap-8 text-xs font-semibold text-slate-600">
+        <a href="/" class="text-blue-600 hover:text-blue-700 transition-colors">Home</a>
+        <a href="#how-it-works" class="hover:text-blue-600 transition-colors">How It Works</a>
+        <a href="#stories" class="hover:text-blue-600 transition-colors">Stories</a>
+        <a href="#features" class="hover:text-blue-600 transition-colors">Features</a>
+        <a href="#contact" class="hover:text-blue-600 transition-colors">Contact</a>
+      </nav>
+
+      <!-- Student Login Button -->
       <div class="flex items-center gap-3">
-        <a id="nav-login-btn" href="/login" class="btn-primary text-xs py-2 px-4">Student Login</a>
+        <a id="nav-login-btn" href="/login" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs py-2.5 px-5 rounded-lg transition-all shadow-sm">
+          Student Login
+        </a>
       </div>
+
     </div>
   </header>
 
-  <!-- Hero Section (Preserved layout & typography) -->
-  <main class="flex-1 max-w-4xl mx-auto px-4 py-12 sm:py-16 flex flex-col items-center justify-center text-center space-y-8">
-    
-    <div class="space-y-4">
-      <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-50 border border-blue-200 text-xs font-semibold text-blue-700">
-        <i data-lucide="sparkles" class="w-3.5 h-3.5"></i> AI-Powered Campus Lost &amp; Found System
-      </span>
+  <!-- ============================================================ -->
+  <!-- 2. SPLIT HERO SECTION                                        -->
+  <!-- ============================================================ -->
+  <section class="max-w-6xl mx-auto px-4 sm:px-6 pt-10 pb-8 sm:pt-14 sm:pb-12">
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center">
       
-      <h1 class="text-3xl sm:text-5xl font-extrabold text-slate-900 tracking-tight leading-tight">
-        Recover Lost Belongings on Campus <br>
-        <span class="text-blue-600">Quickly &amp; Autonomously.</span>
-      </h1>
-      
-      <p class="text-sm sm:text-base text-slate-600 max-w-2xl mx-auto leading-relaxed">
-        Report missing items, compare descriptions using AI image &amp; text matching, and safely verify ownership online.
-      </p>
-    </div>
-
-    <!-- Action Buttons (Preserved from screenshot) -->
-    <div class="flex flex-wrap justify-center gap-3">
-      <a id="hero-dashboard-btn" href="/login" class="btn-primary text-sm py-2.5 px-6 flex items-center gap-2">
-        <i data-lucide="log-in" class="w-4 h-4"></i> Login to Dashboard
-      </a>
-      <a href="/login?redirect=/report-found" class="btn-emerald text-sm py-2.5 px-6 flex items-center gap-2">
-        <i data-lucide="plus-circle" class="w-4 h-4"></i> Report Found Item
-      </a>
-    </div>
-
-    <!-- Statistics Panel (Preserved from screenshot) -->
-    <div class="w-full max-w-3xl grid grid-cols-3 gap-4 bg-white border border-slate-200 rounded-xl p-6 shadow-sm">
-      <div class="text-center">
-        <div id="stat-lost" class="text-2xl sm:text-3xl font-extrabold text-slate-900 font-mono">148</div>
-        <div class="text-[10px] text-slate-400 font-bold uppercase tracking-wider mt-1">Lost Items Reported</div>
-      </div>
-      <div class="text-center border-x border-slate-100">
-        <div id="stat-found" class="text-2xl sm:text-3xl font-extrabold text-slate-900 font-mono">112</div>
-        <div class="text-[10px] text-slate-400 font-bold uppercase tracking-wider mt-1">Found Items Submitted</div>
-      </div>
-      <div class="text-center">
-        <div id="stat-recovered" class="text-2xl sm:text-3xl font-extrabold text-emerald-600 font-mono">87</div>
-        <div class="text-[10px] text-slate-400 font-bold uppercase tracking-wider mt-1">Returned to Owner</div>
-      </div>
-    </div>
-
-
-    <!-- ============================================================ -->
-    <!-- STUDENTS HELPING STUDENTS — HUMAN RECOVERY STORIES           -->
-    <!-- ============================================================ -->
-    <section class="w-full max-w-3xl pt-2 pb-2 space-y-6 text-center">
-      
-      <!-- Section Title & Subtitle -->
-      <div class="space-y-1.5">
-        <span class="text-[11px] font-extrabold uppercase tracking-widest text-blue-600 bg-blue-50 px-3 py-1 rounded-full border border-blue-100 inline-block">
-          STUDENTS HELPING STUDENTS
+      <!-- Left Column: Text & CTA -->
+      <div class="lg:col-span-7 space-y-6 text-left">
+        
+        <!-- System Badge -->
+        <span class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-blue-50 border border-blue-200/70 text-xs font-semibold text-blue-700">
+          <i data-lucide="sparkles" class="w-3.5 h-3.5 text-blue-600"></i> AI-Powered Campus Lost &amp; Found System
         </span>
-        <h2 class="text-xl sm:text-2xl font-extrabold text-slate-900 tracking-tight">
-          "Found It. Returned It. Made Someone's Day."
-        </h2>
-        <p class="text-xs sm:text-sm text-slate-500 max-w-xl mx-auto leading-relaxed">
-          Students across campus are helping return lost belongings to their rightful owners.
+        
+        <!-- Main Headline -->
+        <h1 class="text-3xl sm:text-5xl font-black text-slate-900 tracking-tight leading-[1.15]">
+          Recover Lost Belongings on Campus <br class="hidden sm:inline">
+          <span class="text-blue-600">Quickly &amp; Autonomously.</span>
+        </h1>
+        
+        <!-- Subtitle -->
+        <p class="text-sm sm:text-base text-slate-600 max-w-xl leading-relaxed">
+          Report missing items, compare descriptions using AI image &amp; text matching, and safely verify ownership online.
+        </p>
+
+        <!-- CTA Buttons -->
+        <div class="flex flex-wrap items-center gap-3 pt-2">
+          <a id="hero-dashboard-btn" href="/login" class="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold text-sm py-3 px-6 rounded-xl shadow-sm hover:shadow transition-all">
+            <i data-lucide="log-in" class="w-4 h-4"></i> Login to Dashboard
+          </a>
+          <a href="/login?redirect=/report-found" class="inline-flex items-center gap-2 bg-[#05603A] hover:bg-[#044c2e] text-white font-semibold text-sm py-3 px-6 rounded-xl shadow-sm hover:shadow transition-all">
+            <i data-lucide="plus-circle" class="w-4 h-4"></i> Report Found Item
+          </a>
+        </div>
+
+      </div>
+
+      <!-- Right Column: College Building Visual + Floating Step Card + Cursive Note -->
+      <div class="lg:col-span-5 relative mt-4 lg:mt-0">
+        
+        <div class="relative rounded-3xl overflow-hidden shadow-lg border border-slate-200/80 bg-white">
+          <img 
+            src="/static/images/recovery/campus_hero_building.jpg" 
+            alt="Geethanjali Government College campus building"
+            class="w-full h-[320px] sm:h-[370px] object-cover object-center"
+          />
+
+          <!-- Floating Glass Card: Find, Match, Return -->
+          <div class="absolute top-5 right-5 bg-white/95 backdrop-blur-md p-3.5 sm:p-4 rounded-2xl border border-white/80 shadow-xl max-w-[200px] space-y-3">
+            
+            <div class="flex items-start gap-2.5">
+              <div class="w-7 h-7 rounded-lg bg-blue-100/80 text-blue-600 flex items-center justify-center shrink-0 mt-0.5">
+                <i data-lucide="search" class="w-3.5 h-3.5"></i>
+              </div>
+              <div>
+                <h4 class="text-xs font-bold text-slate-900 leading-none">Find</h4>
+                <p class="text-[10px] text-slate-500 mt-1 leading-tight">Report missing items</p>
+              </div>
+            </div>
+
+            <div class="flex items-start gap-2.5">
+              <div class="w-7 h-7 rounded-lg bg-indigo-100/80 text-indigo-600 flex items-center justify-center shrink-0 mt-0.5">
+                <i data-lucide="git-merge" class="w-3.5 h-3.5"></i>
+              </div>
+              <div>
+                <h4 class="text-xs font-bold text-slate-900 leading-none">Match</h4>
+                <p class="text-[10px] text-slate-500 mt-1 leading-tight">AI finds possible matches</p>
+              </div>
+            </div>
+
+            <div class="flex items-start gap-2.5">
+              <div class="w-7 h-7 rounded-lg bg-sky-100/80 text-sky-600 flex items-center justify-center shrink-0 mt-0.5">
+                <i data-lucide="box" class="w-3.5 h-3.5"></i>
+              </div>
+              <div>
+                <h4 class="text-xs font-bold text-slate-900 leading-none">Return</h4>
+                <p class="text-[10px] text-slate-500 mt-1 leading-tight">Items back to their owners</p>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- Cursive Handwriting Annotation -->
+        <div class="mt-4 flex flex-col items-center sm:items-end justify-center select-none pointer-events-none transform sm:rotate-[-2deg]">
+          <span class="font-cursive text-2xl sm:text-3xl text-emerald-800 font-bold tracking-wide">
+            A kinder Campus Starts with You
+          </span>
+          <svg class="w-40 h-3 text-emerald-600 mt-0.5" viewBox="0 0 160 14" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M4 10C50 3 110 12 156 4" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/>
+          </svg>
+        </div>
+
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ============================================================ -->
+  <!-- 3. STATISTICS BAR                                            -->
+  <!-- ============================================================ -->
+  <section class="max-w-5xl mx-auto px-4 sm:px-6 mb-16 w-full">
+    <div class="bg-white border border-slate-200/90 rounded-2xl p-6 sm:p-7 shadow-sm grid grid-cols-1 sm:grid-cols-3 gap-6 sm:gap-0 sm:divide-x sm:divide-slate-100 items-center">
+      
+      <!-- Stat 1: Lost Items -->
+      <div class="flex items-center gap-4 sm:justify-center">
+        <div class="w-11 h-11 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
+          <i data-lucide="file-text" class="w-5 h-5"></i>
+        </div>
+        <div>
+          <div id="stat-lost" class="text-3xl font-black text-slate-900 font-mono leading-none">148</div>
+          <div class="text-[10.5px] font-extrabold text-slate-400 uppercase tracking-wider mt-1">LOST ITEMS REPORTED</div>
+        </div>
+      </div>
+
+      <!-- Stat 2: Found Items -->
+      <div class="flex items-center gap-4 sm:justify-center">
+        <div class="w-11 h-11 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
+          <i data-lucide="search" class="w-5 h-5"></i>
+        </div>
+        <div>
+          <div id="stat-found" class="text-3xl font-black text-slate-900 font-mono leading-none">112</div>
+          <div class="text-[10.5px] font-extrabold text-slate-400 uppercase tracking-wider mt-1">FOUND ITEMS SUBMITTED</div>
+        </div>
+      </div>
+
+      <!-- Stat 3: Returned to Owner -->
+      <div class="flex items-center gap-4 sm:justify-center">
+        <div class="w-11 h-11 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
+          <i data-lucide="users" class="w-5 h-5"></i>
+        </div>
+        <div>
+          <div id="stat-recovered" class="text-3xl font-black text-emerald-600 font-mono leading-none">87</div>
+          <div class="text-[10.5px] font-extrabold text-slate-400 uppercase tracking-wider mt-1">RETURNED TO OWNER</div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ============================================================ -->
+  <!-- 4. STUDENTS HELPING STUDENTS — HUMAN RECOVERY STORIES         -->
+  <!-- ============================================================ -->
+  <section id="stories" class="max-w-5xl mx-auto px-4 sm:px-6 pb-16 w-full space-y-8">
+    
+    <!-- Section Header -->
+    <div class="text-center space-y-2">
+      <div class="flex items-center justify-center gap-3">
+        <div class="h-0.5 w-10 bg-blue-500 rounded-full"></div>
+        <span class="text-xs font-black uppercase tracking-wider text-blue-600">STUDENTS HELPING STUDENTS</span>
+        <div class="h-0.5 w-10 bg-blue-500 rounded-full"></div>
+      </div>
+      
+      <h2 class="text-2xl sm:text-4xl font-black text-slate-900 tracking-tight">
+        Found It. Returned It. <span class="text-blue-600">Made Someone's Day.</span>
+      </h2>
+      
+      <div class="flex flex-col sm:flex-row items-center justify-between gap-4 pt-2">
+        <p class="text-xs sm:text-sm text-slate-500 max-w-2xl text-center sm:text-left">
+          Real campus moments where students help return lost belongings to their rightful owners.
+        </p>
+        <a href="#stories" class="text-xs font-bold text-blue-600 hover:text-blue-700 flex items-center gap-1.5 shrink-0 border border-blue-200 bg-white hover:bg-blue-50 px-3.5 py-1.5 rounded-lg transition-colors shadow-2xs">
+          View More Stories <i data-lucide="arrow-right" class="w-3.5 h-3.5"></i>
+        </a>
+      </div>
+    </div>
+
+    <!-- 3 Human Recovery Cards Grid -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+
+      <!-- STORY CARD 1: Rahul Kumar -->
+      <div class="story-card bg-white border border-slate-200/90 rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-all flex flex-col justify-between group">
+        <div>
+          <!-- Handover Photo with Badge -->
+          <div class="relative overflow-hidden aspect-[4/3] bg-slate-100">
+            <img 
+              src="/static/images/recovery/handover_phone.jpg" 
+              alt="Two students exchanging a recovered phone outside campus library"
+              class="w-full h-full object-cover object-center group-hover:scale-[1.02] transition-transform duration-300"
+              loading="lazy"
+            />
+            <div class="absolute bottom-3 left-3">
+              <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10.5px] font-extrabold bg-emerald-50 border border-emerald-200/80 text-emerald-700 shadow-sm backdrop-blur-xs">
+                <i data-lucide="check" class="w-3 h-3 text-emerald-600 stroke-[3]"></i> Successfully Returned
+              </span>
+            </div>
+          </div>
+
+          <!-- Card Content -->
+          <div class="p-5 space-y-4">
+            <!-- Student Profile -->
+            <div class="flex items-center gap-3">
+              <img 
+                src="/static/images/recovery/avatar_rahul.jpg" 
+                alt="Rahul Kumar profile" 
+                class="w-10 h-10 rounded-full object-cover border border-slate-200 shadow-2xs"
+              />
+              <div>
+                <h4 class="font-bold text-sm text-slate-900 leading-tight">Rahul Kumar</h4>
+                <p class="text-[11px] text-slate-500 font-medium mt-0.5">CSE • 3rd Year</p>
+              </div>
+            </div>
+
+            <!-- Item & Date Info -->
+            <div class="flex items-center justify-between text-xs pt-1 border-t border-slate-100">
+              <div class="flex items-center gap-2">
+                <div class="w-7 h-7 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
+                  <i data-lucide="smartphone" class="w-3.5 h-3.5"></i>
+                </div>
+                <div>
+                  <span class="font-bold text-slate-900 block leading-tight text-[11.5px]">Black Samsung Mobile</span>
+                  <span class="text-[10.5px] text-slate-400 block">Found at Library</span>
+                </div>
+              </div>
+              <div class="flex items-center gap-1 text-[11px] text-slate-400 shrink-0">
+                <i data-lucide="calendar" class="w-3.5 h-3.5"></i>
+                <span>Sep 15, 2026</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Student Quote -->
+        <div class="px-5 pb-5 pt-1 text-slate-600 italic text-xs font-medium">
+          "Happy to help a fellow student!"
+        </div>
+      </div>
+
+      <!-- STORY CARD 2: Priya S -->
+      <div class="story-card bg-white border border-slate-200/90 rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-all flex flex-col justify-between group">
+        <div>
+          <!-- Handover Photo with Badge -->
+          <div class="relative overflow-hidden aspect-[4/3] bg-slate-100">
+            <img 
+              src="/static/images/recovery/handover_wallet.jpg" 
+              alt="Students returning leather wallet"
+              class="w-full h-full object-cover object-center group-hover:scale-[1.02] transition-transform duration-300"
+              loading="lazy"
+            />
+            <div class="absolute bottom-3 left-3">
+              <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10.5px] font-extrabold bg-emerald-50 border border-emerald-200/80 text-emerald-700 shadow-sm backdrop-blur-xs">
+                <i data-lucide="check" class="w-3 h-3 text-emerald-600 stroke-[3]"></i> Successfully Returned
+              </span>
+            </div>
+          </div>
+
+          <!-- Card Content -->
+          <div class="p-5 space-y-4">
+            <!-- Student Profile -->
+            <div class="flex items-center gap-3">
+              <img 
+                src="/static/images/recovery/avatar_priya.jpg" 
+                alt="Priya S profile" 
+                class="w-10 h-10 rounded-full object-cover border border-slate-200 shadow-2xs"
+              />
+              <div>
+                <h4 class="font-bold text-sm text-slate-900 leading-tight">Priya S</h4>
+                <p class="text-[11px] text-slate-500 font-medium mt-0.5">AI &amp; ML • 4th Year</p>
+              </div>
+            </div>
+
+            <!-- Item & Date Info -->
+            <div class="flex items-center justify-between text-xs pt-1 border-t border-slate-100">
+              <div class="flex items-center gap-2">
+                <div class="w-7 h-7 rounded-lg bg-amber-50 text-amber-700 flex items-center justify-center shrink-0">
+                  <i data-lucide="wallet" class="w-3.5 h-3.5"></i>
+                </div>
+                <div>
+                  <span class="font-bold text-slate-900 block leading-tight text-[11.5px]">Wallet (Brown)</span>
+                  <span class="text-[10.5px] text-slate-400 block">Found at Canteen</span>
+                </div>
+              </div>
+              <div class="flex items-center gap-1 text-[11px] text-slate-400 shrink-0">
+                <i data-lucide="calendar" class="w-3.5 h-3.5"></i>
+                <span>Sep 12, 2026</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Student Quote -->
+        <div class="px-5 pb-5 pt-1 text-slate-600 italic text-xs font-medium">
+          "Small action, big impact!"
+        </div>
+      </div>
+
+      <!-- STORY CARD 3: Hemanth R -->
+      <div class="story-card bg-white border border-slate-200/90 rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-all flex flex-col justify-between group">
+        <div>
+          <!-- Handover Photo with Badge -->
+          <div class="relative overflow-hidden aspect-[4/3] bg-slate-100">
+            <img 
+              src="/static/images/recovery/handover_backpack.jpg" 
+              alt="Students returning blue laptop backpack"
+              class="w-full h-full object-cover object-center group-hover:scale-[1.02] transition-transform duration-300"
+              loading="lazy"
+            />
+            <div class="absolute bottom-3 left-3">
+              <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10.5px] font-extrabold bg-emerald-50 border border-emerald-200/80 text-emerald-700 shadow-sm backdrop-blur-xs">
+                <i data-lucide="check" class="w-3 h-3 text-emerald-600 stroke-[3]"></i> Successfully Returned
+              </span>
+            </div>
+          </div>
+
+          <!-- Card Content -->
+          <div class="p-5 space-y-4">
+            <!-- Student Profile -->
+            <div class="flex items-center gap-3">
+              <img 
+                src="/static/images/recovery/avatar_hemanth.jpg" 
+                alt="Hemanth R profile" 
+                class="w-10 h-10 rounded-full object-cover border border-slate-200 shadow-2xs"
+              />
+              <div>
+                <h4 class="font-bold text-sm text-slate-900 leading-tight">Hemanth R</h4>
+                <p class="text-[11px] text-slate-500 font-medium mt-0.5">ECE • 3rd Year</p>
+              </div>
+            </div>
+
+            <!-- Item & Date Info -->
+            <div class="flex items-center justify-between text-xs pt-1 border-t border-slate-100">
+              <div class="flex items-center gap-2">
+                <div class="w-7 h-7 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
+                  <i data-lucide="backpack" class="w-3.5 h-3.5"></i>
+                </div>
+                <div>
+                  <span class="font-bold text-slate-900 block leading-tight text-[11.5px]">Blue Backpack</span>
+                  <span class="text-[10.5px] text-slate-400 block">Found at Classroom Block</span>
+                </div>
+              </div>
+              <div class="flex items-center gap-1 text-[11px] text-slate-400 shrink-0">
+                <i data-lucide="calendar" class="w-3.5 h-3.5"></i>
+                <span>Sep 10, 2026</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Student Quote -->
+        <div class="px-5 pb-5 pt-1 text-slate-600 italic text-xs font-medium">
+          "Glad it reached the right owner!"
+        </div>
+      </div>
+
+    </div>
+
+  </section>
+
+  <!-- ============================================================ -->
+  <!-- 5. "FOUND SOMETHING?" BANNER                                 -->
+  <!-- ============================================================ -->
+  <section class="max-w-5xl mx-auto px-4 sm:px-6 pb-16 w-full">
+    <div class="bg-gradient-to-r from-blue-50/70 via-white to-blue-50/50 border border-blue-200/80 rounded-3xl p-6 sm:p-9 shadow-sm relative overflow-hidden flex flex-col md:flex-row items-center justify-between gap-8">
+      
+      <!-- Left: Title, Subtitle, and Buttons -->
+      <div class="space-y-4 max-w-md text-left">
+        <!-- Doodle Sparkle -->
+        <div class="w-7 h-7 text-blue-500">
+          <i data-lucide="sparkles" class="w-6 h-6"></i>
+        </div>
+
+        <div>
+          <h3 class="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight leading-snug">
+            Found something?
+          </h3>
+          <p class="text-xs sm:text-sm text-slate-600 mt-1">
+            Someone on campus may be looking for it.
+          </p>
+        </div>
+
+        <div class="flex flex-wrap items-center gap-3 pt-2">
+          <a href="/login?redirect=/report-found" class="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs py-2.5 px-5 rounded-xl shadow-sm transition-all">
+            <i data-lucide="plus-circle" class="w-4 h-4"></i> Report Found Item
+          </a>
+          <a href="/qr-locations" class="inline-flex items-center gap-2 bg-white hover:bg-slate-50 text-blue-700 font-semibold text-xs py-2.5 px-5 rounded-xl border border-blue-300 shadow-sm transition-all">
+            <i data-lucide="qr-code" class="w-4 h-4 text-blue-600"></i> Scan QR to Report Quickly
+          </a>
+        </div>
+      </div>
+
+      <!-- Right: Cursive Note & Student Photo -->
+      <div class="flex items-center gap-5 sm:gap-7 shrink-0">
+        <div class="text-center sm:text-right select-none">
+          <span class="font-cursive text-2xl sm:text-3xl text-emerald-800 font-bold leading-tight block">
+            Be the reason<br>someone smiles<br>today!
+          </span>
+          <svg class="w-28 h-3 text-emerald-600 mx-auto sm:ml-auto mr-0 mt-1" viewBox="0 0 100 12" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M2 9C30 3 70 10 98 4" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/>
+          </svg>
+        </div>
+
+        <!-- Student Photo with subtle background glow -->
+        <div class="relative w-32 h-32 sm:w-40 sm:h-40 shrink-0">
+          <div class="absolute inset-0 bg-blue-200/50 rounded-full blur-xl"></div>
+          <img 
+            src="/static/images/recovery/student_thumbs_up.jpg" 
+            alt="Student giving thumbs up"
+            class="relative w-full h-full object-cover rounded-full border-4 border-white shadow-md"
+          />
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ============================================================ -->
+  <!-- 6. THREE TECHNOLOGY FEATURE CARDS                            -->
+  <!-- ============================================================ -->
+  <section id="features" class="max-w-5xl mx-auto px-4 sm:px-6 pb-20 w-full">
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 text-left">
+      
+      <!-- Feature 1: Image Detection -->
+      <div class="bg-white border border-slate-200/90 rounded-2xl p-6 space-y-3 shadow-2xs hover:shadow-sm transition-all">
+        <div class="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center">
+          <i data-lucide="camera" class="w-5 h-5"></i>
+        </div>
+        <h3 class="font-extrabold text-slate-900 text-base">Image Detection</h3>
+        <p class="text-xs text-slate-500 leading-relaxed">
+          AI model classifies category, color, and object details from uploaded photos.
         </p>
       </div>
 
-      <!-- 3 Human Photo Recovery Cards -->
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-left">
-
-        <!-- CARD 1: Phone Handover -->
-        <div class="card-flat recovery-card overflow-hidden flex flex-col justify-between group hover:-translate-y-1 transition-all duration-200 hover:shadow-md">
-          <div>
-            <!-- Human Photo (45–55% height) -->
-            <div class="relative overflow-hidden aspect-[4/3] bg-slate-100">
-              <img 
-                src="/static/images/recovery/handover_phone.jpg" 
-                alt="College student returning a recovered smartphone to another student outside the campus library."
-                loading="lazy"
-                width="400"
-                height="300"
-                class="w-full h-full object-cover object-center group-hover:scale-[1.02] transition-transform duration-300"
-              />
-              <div class="absolute top-2.5 left-2.5">
-                <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-600 text-white shadow-sm">
-                  <i data-lucide="check-circle" class="w-3 h-3"></i> ✓ Successfully Returned
-                </span>
-              </div>
-            </div>
-
-            <!-- Card Body -->
-            <div class="p-4 space-y-2">
-              <!-- Visual Handover Flow -->
-              <div class="flex items-center gap-1.5 text-[10px] font-bold text-slate-400 pb-0.5">
-                <span class="text-blue-600">Found</span>
-                <i data-lucide="arrow-right" class="w-3 h-3 text-slate-300"></i>
-                <span class="text-indigo-600">Verified</span>
-                <i data-lucide="arrow-right" class="w-3 h-3 text-slate-300"></i>
-                <span class="text-emerald-600">Returned</span>
-              </div>
-
-              <!-- Finder Info (Privacy-safe) -->
-              <div>
-                <h4 class="font-extrabold text-sm text-slate-900 leading-tight">Rahul Kumar</h4>
-                <p class="text-[11px] text-slate-500 font-medium">AI &amp; ML • 3rd Year</p>
-              </div>
-
-              <!-- Item Info -->
-              <p class="text-xs text-slate-700 leading-snug">
-                Returned a <span class="font-bold text-slate-900">Black Samsung Phone</span>
-              </p>
-            </div>
-          </div>
-
-          <!-- Card Footer (Location & Owner Privacy) -->
-          <div class="p-4 pt-0 border-t border-slate-100 mt-2 space-y-1 text-[11px]">
-            <div class="flex items-center justify-between text-slate-500">
-              <span class="flex items-center gap-1">
-                <i data-lucide="map-pin" class="w-3 h-3 text-rose-500"></i> Library
-              </span>
-              <span class="text-[10px] text-slate-400 font-mono">Yesterday</span>
-            </div>
-            <p class="text-emerald-700 font-semibold flex items-center gap-1 text-[10.5px]">
-              <i data-lucide="shield-check" class="w-3 h-3 text-emerald-600"></i> "Successfully returned"
-            </p>
-          </div>
+      <!-- Feature 2: Smart Text Match -->
+      <div class="bg-white border border-slate-200/90 rounded-2xl p-6 space-y-3 shadow-2xs hover:shadow-sm transition-all">
+        <div class="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center">
+          <i data-lucide="search" class="w-5 h-5"></i>
         </div>
-
-        <!-- CARD 2: Wallet Handover -->
-        <div class="card-flat recovery-card overflow-hidden flex flex-col justify-between group hover:-translate-y-1 transition-all duration-200 hover:shadow-md">
-          <div>
-            <!-- Human Photo (45–55% height) -->
-            <div class="relative overflow-hidden aspect-[4/3] bg-slate-100">
-              <img 
-                src="/static/images/recovery/handover_wallet.jpg" 
-                alt="Female student returning a recovered leather wallet to another student along the classroom corridor."
-                loading="lazy"
-                width="400"
-                height="300"
-                class="w-full h-full object-cover object-center group-hover:scale-[1.02] transition-transform duration-300"
-              />
-              <div class="absolute top-2.5 left-2.5">
-                <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-600 text-white shadow-sm">
-                  <i data-lucide="check-circle" class="w-3 h-3"></i> ✓ Successfully Returned
-                </span>
-              </div>
-            </div>
-
-            <!-- Card Body -->
-            <div class="p-4 space-y-2">
-              <!-- Visual Handover Flow -->
-              <div class="flex items-center gap-1.5 text-[10px] font-bold text-slate-400 pb-0.5">
-                <span class="text-blue-600">Found</span>
-                <i data-lucide="arrow-right" class="w-3 h-3 text-slate-300"></i>
-                <span class="text-indigo-600">Verified</span>
-                <i data-lucide="arrow-right" class="w-3 h-3 text-slate-300"></i>
-                <span class="text-emerald-600">Returned</span>
-              </div>
-
-              <!-- Finder Info (Privacy-safe) -->
-              <div>
-                <h4 class="font-extrabold text-sm text-slate-900 leading-tight">Priya Sharma</h4>
-                <p class="text-[11px] text-slate-500 font-medium">ECE • 2nd Year</p>
-              </div>
-
-              <!-- Item Info -->
-              <p class="text-xs text-slate-700 leading-snug">
-                Returned a <span class="font-bold text-slate-900">Brown Leather Wallet</span>
-              </p>
-            </div>
-          </div>
-
-          <!-- Card Footer (Location & Owner Privacy) -->
-          <div class="p-4 pt-0 border-t border-slate-100 mt-2 space-y-1 text-[11px]">
-            <div class="flex items-center justify-between text-slate-500">
-              <span class="flex items-center gap-1">
-                <i data-lucide="map-pin" class="w-3 h-3 text-rose-500"></i> Lecture Hall Corridor
-              </span>
-              <span class="text-[10px] text-slate-400 font-mono">2 days ago</span>
-            </div>
-            <p class="text-emerald-700 font-semibold flex items-center gap-1 text-[10.5px]">
-              <i data-lucide="shield-check" class="w-3 h-3 text-emerald-600"></i> "Successfully returned"
-            </p>
-          </div>
-        </div>
-
-        <!-- CARD 3: Backpack Handover -->
-        <div class="card-flat recovery-card overflow-hidden flex flex-col justify-between group hover:-translate-y-1 transition-all duration-200 hover:shadow-md">
-          <div>
-            <!-- Human Photo (45–55% height) -->
-            <div class="relative overflow-hidden aspect-[4/3] bg-slate-100">
-              <img 
-                src="/static/images/recovery/handover_backpack.jpg" 
-                alt="Two students exchanging a recovered navy blue laptop backpack in the campus courtyard."
-                loading="lazy"
-                width="400"
-                height="300"
-                class="w-full h-full object-cover object-center group-hover:scale-[1.02] transition-transform duration-300"
-              />
-              <div class="absolute top-2.5 left-2.5">
-                <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-600 text-white shadow-sm">
-                  <i data-lucide="check-circle" class="w-3 h-3"></i> ✓ Successfully Returned
-                </span>
-              </div>
-            </div>
-
-            <!-- Card Body -->
-            <div class="p-4 space-y-2">
-              <!-- Visual Handover Flow -->
-              <div class="flex items-center gap-1.5 text-[10px] font-bold text-slate-400 pb-0.5">
-                <span class="text-blue-600">Found</span>
-                <i data-lucide="arrow-right" class="w-3 h-3 text-slate-300"></i>
-                <span class="text-indigo-600">Verified</span>
-                <i data-lucide="arrow-right" class="w-3 h-3 text-slate-300"></i>
-                <span class="text-emerald-600">Returned</span>
-              </div>
-
-              <!-- Finder Info (Privacy-safe) -->
-              <div>
-                <h4 class="font-extrabold text-sm text-slate-900 leading-tight">Sai Teja</h4>
-                <p class="text-[11px] text-slate-500 font-medium">CSE • 4th Year</p>
-              </div>
-
-              <!-- Item Info -->
-              <p class="text-xs text-slate-700 leading-snug">
-                Returned a <span class="font-bold text-slate-900">Blue Backpack</span>
-              </p>
-            </div>
-          </div>
-
-          <!-- Card Footer (Location & Owner Privacy) -->
-          <div class="p-4 pt-0 border-t border-slate-100 mt-2 space-y-1 text-[11px]">
-            <div class="flex items-center justify-between text-slate-500">
-              <span class="flex items-center gap-1">
-                <i data-lucide="map-pin" class="w-3 h-3 text-rose-500"></i> Classroom Block
-              </span>
-              <span class="text-[10px] text-slate-400 font-mono">This week</span>
-            </div>
-            <p class="text-emerald-700 font-semibold flex items-center gap-1 text-[10.5px]">
-              <i data-lucide="shield-check" class="w-3 h-3 text-emerald-600"></i> "Successfully returned"
-            </p>
-          </div>
-        </div>
-
+        <h3 class="font-extrabold text-slate-900 text-base">Smart Text Match</h3>
+        <p class="text-xs text-slate-500 leading-relaxed">
+          NLP vector matching compares item descriptions to calculate similarity scores.
+        </p>
       </div>
 
-      <!-- Community CTA Immediately Below Recovery Cards (Section 19) -->
-      <div class="p-5 bg-white border border-slate-200 rounded-xl shadow-sm flex flex-col sm:flex-row items-center justify-between gap-4 text-center sm:text-left">
-        <div>
-          <h4 class="font-bold text-slate-900 text-xs sm:text-sm flex items-center justify-center sm:justify-start gap-1.5">
-            <i data-lucide="heart-handshake" class="w-4 h-4 text-emerald-600"></i> Found something?
-          </h4>
-          <p class="text-xs text-slate-500 mt-0.5">
-            Someone on campus may be looking for it. Help a classmate get it back.
-          </p>
+      <!-- Feature 3: Ownership Proof -->
+      <div class="bg-white border border-slate-200/90 rounded-2xl p-6 space-y-3 shadow-2xs hover:shadow-sm transition-all">
+        <div class="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center">
+          <i data-lucide="shield-check" class="w-5 h-5"></i>
         </div>
-        <div class="flex flex-wrap items-center justify-center gap-2 shrink-0">
-          <a href="/login?redirect=/report-found" class="btn-emerald text-xs py-2 px-4 flex items-center gap-1.5 shadow-sm">
-            <i data-lucide="plus-circle" class="w-3.5 h-3.5"></i> Report Found Item
-          </a>
-          <a href="/qr-locations" class="btn-secondary text-xs py-2 px-3 flex items-center gap-1.5">
-            <i data-lucide="qr-code" class="w-3.5 h-3.5 text-slate-500"></i> Scan QR to Report Quickly
-          </a>
-        </div>
+        <h3 class="font-extrabold text-slate-900 text-base">Ownership Proof</h3>
+        <p class="text-xs text-slate-500 leading-relaxed">
+          Multi-question verification ensures items are returned only to true owners.
+        </p>
       </div>
 
-    </section>
-
-
-    <!-- Simple Feature Grid (Preserved exactly from screenshot) -->
-    <div class="w-full max-w-3xl grid grid-cols-1 md:grid-cols-3 gap-4 text-left pt-2">
-      <div class="card-flat p-5 space-y-2">
-        <div class="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center">
-          <i data-lucide="camera" class="w-4 h-4"></i>
-        </div>
-        <h3 class="font-bold text-slate-900 text-sm">Image Detection</h3>
-        <p class="text-xs text-slate-500 leading-relaxed">AI model classifies category, color, and object details from uploaded photos.</p>
-      </div>
-
-      <div class="card-flat p-5 space-y-2">
-        <div class="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center">
-          <i data-lucide="search" class="w-4 h-4"></i>
-        </div>
-        <h3 class="font-bold text-slate-900 text-sm">Smart Text Match</h3>
-        <p class="text-xs text-slate-500 leading-relaxed">NLP vector matching compares item descriptions to calculate similarity scores.</p>
-      </div>
-
-      <div class="card-flat p-5 space-y-2">
-        <div class="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center">
-          <i data-lucide="shield-check" class="w-4 h-4"></i>
-        </div>
-        <h3 class="font-bold text-slate-900 text-sm">Ownership Proof</h3>
-        <p class="text-xs text-slate-500 leading-relaxed">Multi-question verification ensures items are returned only to true owners.</p>
-      </div>
     </div>
+  </section>
 
-  </main>
-
-  <!-- Simple Footer (Preserved from screenshot) -->
-  <footer class="bg-white border-t border-slate-200 py-6 text-center text-xs text-slate-500 space-y-1">
-    <p class="font-semibold text-slate-700">FindIt Campus — Smart Lost &amp; Found System</p>
+  <!-- ============================================================ -->
+  <!-- 7. FOOTER                                                    -->
+  <!-- ============================================================ -->
+  <footer id="contact" class="bg-white border-t border-slate-200 py-8 text-center text-xs text-slate-500 space-y-1.5">
+    <p class="font-semibold text-slate-700 text-sm">FindIt Campus — Smart Lost &amp; Found System</p>
     <p>Geethanjali Institute of Science and Technology (GIST)</p>
     <p class="text-[11px] text-slate-400 pt-1">&copy; 2026 FindIt Campus. All rights reserved.</p>
   </footer>
@@ -388,4 +566,3 @@
   });
 </script>
 {% endblock %}
-
