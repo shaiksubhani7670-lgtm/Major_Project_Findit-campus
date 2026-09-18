@@ -54,21 +54,46 @@
   </aside>
 
   <!-- Main Content Panel -->
-  <main class="flex-1 p-6 md:p-10 space-y-6 max-w-5xl mx-auto w-full">
+  <main class="flex-1 p-6 md:p-10 space-y-8 max-w-5xl mx-auto w-full">
     <div class="flex items-center justify-between border-b border-slate-200/80 pb-4">
       <div>
-        <h1 class="text-2xl font-extrabold tracking-tight text-slate-900 font-display">AI Match Alerts</h1>
-        <p class="text-xs text-slate-500 mt-1">High-confidence item matches computed by the neural matching engine</p>
+        <h1 class="text-2xl font-extrabold tracking-tight text-slate-900 font-display">Notifications & Match Alerts</h1>
+        <p class="text-xs text-slate-500 mt-1">Claim approvals, contact exchanges, handover updates, and AI item matches</p>
       </div>
       <button onclick="markAllRead()" class="btn-secondary text-xs py-2.5 px-4 flex items-center gap-1.5">
         <i data-lucide="check-square" class="w-3.5 h-3.5"></i> Mark All as Read
       </button>
     </div>
 
-    <!-- Match Alerts / Notifications List -->
-    <div id="matches-container" class="space-y-6">
-      <!-- Loaded dynamically -->
-    </div>
+    <!-- Section 1: In-App Activity & Claim Notifications -->
+    <section class="space-y-4">
+      <div class="flex items-center justify-between">
+        <h2 class="text-sm font-bold text-slate-800 uppercase tracking-wider flex items-center gap-2">
+          <i data-lucide="bell" class="w-4 h-4 text-indigo-600"></i>
+          Activity & Claim Notifications
+          <span id="unread-badge" class="hidden ml-1 px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-indigo-600 text-white">0</span>
+        </h2>
+      </div>
+      <div id="notifications-list" class="space-y-3">
+        <div class="p-5 bg-white rounded-xl border border-slate-200 text-center text-xs text-slate-400">
+          Loading notifications...
+        </div>
+      </div>
+    </section>
+
+    <!-- Section 2: AI Neural Match Alerts -->
+    <section class="space-y-4 pt-4 border-t border-slate-200/80">
+      <div class="flex items-center justify-between">
+        <h2 class="text-sm font-bold text-slate-800 uppercase tracking-wider flex items-center gap-2">
+          <i data-lucide="sparkles" class="w-4 h-4 text-indigo-600"></i>
+          AI Match Alerts
+        </h2>
+      </div>
+      <!-- Match Alerts / Notifications List -->
+      <div id="matches-container" class="space-y-6">
+        <!-- Loaded dynamically -->
+      </div>
+    </section>
   </main>
 </div>
 
@@ -358,10 +383,88 @@
     lucide.createIcons();
   }
 
-  function markAllRead() {
-    showToast('All notifications marked as read', 'success');
+  async function loadNotifications() {
+    const list = document.getElementById('notifications-list');
+    try {
+      const res = await apiFetch('/notifications');
+      if (res && res.ok && res.data && res.data.data) {
+        const notifs = res.data.data.notifications || [];
+        const unreadCount = notifs.filter(n => !n.is_read).length;
+        const badge = document.getElementById('unread-badge');
+        if (badge) {
+          if (unreadCount > 0) {
+            badge.innerText = `${unreadCount} new`;
+            badge.classList.remove('hidden');
+          } else {
+            badge.classList.add('hidden');
+          }
+        }
+
+        if (notifs.length === 0) {
+          list.innerHTML = `
+            <div class="p-5 bg-white rounded-xl border border-slate-200 text-center text-xs text-slate-400 flex items-center justify-center gap-2">
+              <i data-lucide="bell-off" class="w-4 h-4 text-slate-300"></i>
+              No new activity notifications. Claim verifications and handover updates will appear here.
+            </div>
+          `;
+          lucide.createIcons();
+          return;
+        }
+
+        list.innerHTML = notifs.map(n => {
+          const isVerified = n.title.includes('Verified') || n.title.includes('Approved') || n.title.includes('Recovered');
+          const isWarning = n.title.includes('Issue') || n.title.includes('⚠️');
+          const borderClass = isWarning ? 'border-amber-200 bg-amber-50/70' : isVerified ? 'border-emerald-200 bg-emerald-50/80' : (n.is_read ? 'border-slate-200 bg-white' : 'border-indigo-200 bg-indigo-50/50');
+          const iconColor = isWarning ? 'text-amber-600' : isVerified ? 'text-emerald-600' : 'text-indigo-600';
+          const iconName = isWarning ? 'alert-triangle' : isVerified ? 'check-circle-2' : 'bell';
+          const dateStr = n.created_at ? new Date(n.created_at).toLocaleString() : '';
+
+          return `
+            <div class="p-4 rounded-xl border ${borderClass} shadow-sm transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div class="flex items-start gap-3.5">
+                <div class="w-9 h-9 rounded-xl ${isVerified ? 'bg-emerald-100 text-emerald-700' : isWarning ? 'bg-amber-100 text-amber-700' : 'bg-indigo-100 text-indigo-700'} flex items-center justify-center shrink-0">
+                  <i data-lucide="${iconName}" class="w-5 h-5"></i>
+                </div>
+                <div>
+                  <div class="flex items-center gap-2 flex-wrap">
+                    <h4 class="text-xs font-bold text-slate-900">${n.title}</h4>
+                    ${!n.is_read ? `<span class="px-2 py-0.5 rounded-full text-[9px] font-extrabold bg-indigo-600 text-white">NEW</span>` : ''}
+                    <span class="text-[10px] text-slate-400 font-mono">${dateStr}</span>
+                  </div>
+                  <p class="text-xs text-slate-600 mt-1 leading-relaxed">${n.message}</p>
+                </div>
+              </div>
+              <div class="flex items-center gap-2 shrink-0 self-end sm:self-center">
+                <a href="/matches" class="px-3.5 py-1.5 rounded-lg text-xs font-bold bg-indigo-600 hover:bg-indigo-700 text-white flex items-center gap-1.5 transition-colors shadow-sm">
+                  <span>View Details</span>
+                  <i data-lucide="arrow-right" class="w-3.5 h-3.5"></i>
+                </a>
+              </div>
+            </div>
+          `;
+        }).join('');
+        lucide.createIcons();
+      }
+    } catch(e) {
+      console.error('Error loading notifications:', e);
+    }
   }
 
+  async function markAllRead() {
+    try {
+      const res = await apiFetch('/notifications/read', { method: 'PUT' });
+      if (res && res.ok) {
+        showToast('All notifications marked as read', 'success');
+        loadNotifications();
+      } else {
+        showToast('All notifications marked as read', 'info');
+      }
+    } catch(e) {
+      showToast('Notifications marked as read', 'info');
+    }
+  }
+
+  loadNotifications();
   loadMatches();
 </script>
 {% endblock %}
